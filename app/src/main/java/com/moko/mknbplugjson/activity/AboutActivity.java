@@ -9,10 +9,11 @@ import android.widget.TextView;
 import com.moko.ble.lib.utils.MokoUtils;
 import com.moko.mknbplugjson.BaseApplication;
 import com.moko.mknbplugjson.R;
+import com.moko.mknbplugjson.R2;
 import com.moko.mknbplugjson.base.BaseActivity;
 import com.moko.mknbplugjson.utils.ToastUtils;
 import com.moko.mknbplugjson.utils.Utils;
-import com.moko.support.event.MQTTConnectionCompleteEvent;
+import com.moko.support.json.event.MQTTConnectionCompleteEvent;
 
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
@@ -25,7 +26,7 @@ import butterknife.ButterKnife;
 
 public class AboutActivity extends BaseActivity {
 
-    @BindView(R.id.tv_soft_version)
+    @BindView(R2.id.tv_soft_version)
     TextView tvSoftVersion;
 
     @Override

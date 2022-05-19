@@ -8,23 +8,25 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.moko.mknbplugjson.AppConstants;
 import com.moko.mknbplugjson.R;
+import com.moko.mknbplugjson.R2;
 import com.moko.mknbplugjson.base.BaseActivity;
 import com.moko.mknbplugjson.entity.MQTTConfig;
 import com.moko.mknbplugjson.entity.MokoDevice;
 import com.moko.mknbplugjson.utils.SPUtiles;
-import com.moko.support.MQTTConstants;
-import com.moko.support.MQTTSupport;
-import com.moko.support.entity.ConfigInfo;
-import com.moko.support.entity.MsgDeviceInfo;
-import com.moko.support.entity.MsgReadResult;
-import com.moko.support.event.DeviceOnlineEvent;
-import com.moko.support.event.MQTTMessageArrivedEvent;
-import com.moko.support.handler.MQTTMessageAssembler;
+import com.moko.support.json.MQTTConstants;
+import com.moko.support.json.MQTTMessageAssembler;
+import com.moko.support.json.MQTTSupport;
+import com.moko.support.json.entity.DeviceParams;
+import com.moko.support.json.entity.DeviceStatus;
+import com.moko.support.json.entity.LWTSettings;
+import com.moko.support.json.entity.MQTTSettings;
+import com.moko.support.json.entity.MsgCommon;
+import com.moko.support.json.event.DeviceOnlineEvent;
+import com.moko.support.json.event.MQTTMessageArrivedEvent;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.greenrobot.eventbus.Subscribe;
@@ -39,29 +41,39 @@ import butterknife.ButterKnife;
 public class SettingForDeviceActivity extends BaseActivity {
 
     public static String TAG = SettingForDeviceActivity.class.getSimpleName();
-    @BindView(R.id.tv_type)
+    @BindView(R2.id.tv_type)
     TextView tvType;
-    @BindView(R.id.tv_host)
+    @BindView(R2.id.tv_host)
     TextView tvHost;
-    @BindView(R.id.tv_port)
+    @BindView(R2.id.tv_port)
     TextView tvPort;
-    @BindView(R.id.tv_client_id)
+    @BindView(R2.id.tv_client_id)
     TextView tvClientId;
-    @BindView(R.id.tv_user_name)
+    @BindView(R2.id.tv_user_name)
     TextView tvUserName;
-    @BindView(R.id.tv_password)
+    @BindView(R2.id.tv_password)
     TextView tvPassword;
-    @BindView(R.id.tv_clean_session)
+    @BindView(R2.id.tv_clean_session)
     TextView tvCleanSession;
-    @BindView(R.id.tv_qos)
+    @BindView(R2.id.tv_qos)
     TextView tvQos;
-    @BindView(R.id.tv_keep_alive)
+    @BindView(R2.id.tv_keep_alive)
     TextView tvKeepAlive;
-    @BindView(R.id.tv_device_id)
+    @BindView(R2.id.tv_lwt)
+    TextView tvLwt;
+    @BindView(R2.id.tv_lwt_retain)
+    TextView tvLwtRetain;
+    @BindView(R2.id.tv_lwt_qos)
+    TextView tvLwtQos;
+    @BindView(R2.id.tv_lwt_topic)
+    TextView tvLwtTopic;
+    @BindView(R2.id.tv_lwt_payload)
+    TextView tvLwtPayload;
+    @BindView(R2.id.tv_device_id)
     TextView tvDeviceId;
-    @BindView(R.id.tv_subscribe_topic)
+    @BindView(R2.id.tv_subscribe_topic)
     TextView tvSubscribeTopic;
-    @BindView(R.id.tv_publish_topic)
+    @BindView(R2.id.tv_publish_topic)
     TextView tvPublishTopic;
 
     private MokoDevice mMokoDevice;
@@ -86,6 +98,7 @@ public class SettingForDeviceActivity extends BaseActivity {
             finish();
         }, 30 * 1000);
         getSettingForDevice();
+        getSettingForLWT();
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -95,41 +108,63 @@ public class SettingForDeviceActivity extends BaseActivity {
         final String message = event.getMessage();
         if (TextUtils.isEmpty(message))
             return;
-        int msg_id;
+        MsgCommon<JsonObject> msgCommon;
         try {
-            JsonObject object = new Gson().fromJson(message, JsonObject.class);
-            JsonElement element = object.get("msg_id");
-            msg_id = element.getAsInt();
+            Type type = new TypeToken<MsgCommon<JsonObject>>() {
+            }.getType();
+            msgCommon = new Gson().fromJson(message, type);
         } catch (Exception e) {
-            e.printStackTrace();
             return;
         }
-        if (msg_id == MQTTConstants.READ_MSG_ID_CONFIG_INFO) {
-            Type type = new TypeToken<MsgReadResult<ConfigInfo>>() {
-            }.getType();
-            MsgReadResult<ConfigInfo> result = new Gson().fromJson(message, type);
-            if (!mMokoDevice.deviceId.equals(result.device_info.device_id)) {
+        if (!mMokoDevice.deviceId.equals(msgCommon.device_info.device_id)) {
+            return;
+        }
+        mMokoDevice.isOnline = true;
+        if (msgCommon.msg_id == MQTTConstants.READ_MSG_ID_DEVICE_STATUS) {
+            if (mHandler.hasMessages(0)) {
+                dismissLoadingProgressDialog();
+                mHandler.removeMessages(0);
+            }
+            if (msgCommon.result_code != 0) {
                 return;
             }
-            dismissLoadingProgressDialog();
-            mHandler.removeMessages(0);
-            tvHost.setText(result.data.host);
-            tvPort.setText(String.valueOf(result.data.port));
-            tvCleanSession.setText(result.data.clean_session == 0 ? "NO" : "YES");
-            tvUserName.setText(result.data.username);
-            tvPassword.setText(result.data.password);
-            tvQos.setText(String.valueOf(result.data.qos));
-            tvKeepAlive.setText(String.valueOf(result.data.keep_alive));
-            tvClientId.setText(result.data.client_id);
-            tvDeviceId.setText(result.data.device_id);
+            Type infoType = new TypeToken<MQTTSettings>() {
+            }.getType();
+            MQTTSettings mqttSettings = new Gson().fromJson(msgCommon.data, infoType);
+            tvHost.setText(mqttSettings.host);
+            tvPort.setText(String.valueOf(mqttSettings.port));
+            tvUserName.setText(mqttSettings.username);
+            tvPassword.setText(mqttSettings.password);
+            tvClientId.setText(mqttSettings.client_id);
+            tvCleanSession.setText(mqttSettings.clean_session == 0 ? "NO" : "YES");
+            tvQos.setText(String.valueOf(mqttSettings.qos));
+            tvKeepAlive.setText(String.valueOf(mqttSettings.keep_alive));
+            tvDeviceId.setText(mMokoDevice.deviceId);
 
-            if (result.data.connect_type == 0) {
+            if (mqttSettings.encryption_type == 0) {
                 tvType.setText(getString(R.string.mqtt_connct_mode_tcp));
             } else {
                 tvType.setText("SSL");
             }
-            tvSubscribeTopic.setText(result.data.subscribe_topic);
-            tvPublishTopic.setText(result.data.publish_topic);
+            tvSubscribeTopic.setText(mqttSettings.subscribe_topic);
+            tvPublishTopic.setText(mqttSettings.publish_topic);
+        }
+        if (msgCommon.msg_id == MQTTConstants.READ_MSG_ID_LWT_SETTINGS) {
+            if (mHandler.hasMessages(0)) {
+                dismissLoadingProgressDialog();
+                mHandler.removeMessages(0);
+            }
+            if (msgCommon.result_code != 0) {
+                return;
+            }
+            Type infoType = new TypeToken<LWTSettings>() {
+            }.getType();
+            LWTSettings lwtSettings = new Gson().fromJson(msgCommon.data, infoType);
+            tvLwt.setText(String.valueOf(lwtSettings.lwt_enable));
+            tvLwtRetain.setText(String.valueOf(lwtSettings.lwt_retain));
+            tvLwtQos.setText(String.valueOf(lwtSettings.lwt_qos));
+            tvLwtTopic.setText(lwtSettings.lwt_topic);
+            tvLwtPayload.setText(String.valueOf(lwtSettings.lwt_message));
         }
     }
 
@@ -157,12 +192,29 @@ public class SettingForDeviceActivity extends BaseActivity {
         } else {
             appTopic = appMqttConfig.topicPublish;
         }
-        MsgDeviceInfo deviceInfo = new MsgDeviceInfo();
-        deviceInfo.device_id = mMokoDevice.deviceId;
-        deviceInfo.mac = mMokoDevice.mac;
-        String message = MQTTMessageAssembler.assembleReadDeviceConfigInfo(deviceInfo);
+        DeviceParams deviceParams = new DeviceParams();
+        deviceParams.device_id = mMokoDevice.deviceId;
+        deviceParams.mac = mMokoDevice.mac;
+        String message = MQTTMessageAssembler.assembleReadSettingsForDevice(deviceParams);
         try {
-            MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.READ_MSG_ID_CONFIG_INFO, appMqttConfig.qos);
+            MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.READ_MSG_ID_DEVICE_SETTINGS, appMqttConfig.qos);
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
+    }
+    private void getSettingForLWT() {
+        String appTopic;
+        if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
+            appTopic = mMokoDevice.topicSubscribe;
+        } else {
+            appTopic = appMqttConfig.topicPublish;
+        }
+        DeviceParams deviceParams = new DeviceParams();
+        deviceParams.device_id = mMokoDevice.deviceId;
+        deviceParams.mac = mMokoDevice.mac;
+        String message = MQTTMessageAssembler.assembleReadSettingsForLWT(deviceParams);
+        try {
+            MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.READ_MSG_ID_LWT_SETTINGS, appMqttConfig.qos);
         } catch (MqttException e) {
             e.printStackTrace();
         }

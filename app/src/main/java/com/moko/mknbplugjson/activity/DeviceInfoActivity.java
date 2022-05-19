@@ -8,23 +8,23 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.moko.mknbplugjson.AppConstants;
 import com.moko.mknbplugjson.R;
+import com.moko.mknbplugjson.R2;
 import com.moko.mknbplugjson.base.BaseActivity;
 import com.moko.mknbplugjson.entity.MQTTConfig;
 import com.moko.mknbplugjson.entity.MokoDevice;
 import com.moko.mknbplugjson.utils.SPUtiles;
-import com.moko.support.MQTTConstants;
-import com.moko.support.MQTTSupport;
-import com.moko.support.entity.MsgDeviceInfo;
-import com.moko.support.entity.MsgReadResult;
-import com.moko.support.entity.SystemInfo;
-import com.moko.support.event.DeviceOnlineEvent;
-import com.moko.support.event.MQTTMessageArrivedEvent;
-import com.moko.support.handler.MQTTMessageAssembler;
+import com.moko.support.json.MQTTConstants;
+import com.moko.support.json.MQTTMessageAssembler;
+import com.moko.support.json.MQTTSupport;
+import com.moko.support.json.entity.DeviceParams;
+import com.moko.support.json.entity.MsgCommon;
+import com.moko.support.json.entity.SystemInfo;
+import com.moko.support.json.event.DeviceOnlineEvent;
+import com.moko.support.json.event.MQTTMessageArrivedEvent;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.greenrobot.eventbus.Subscribe;
@@ -37,18 +37,20 @@ import butterknife.ButterKnife;
 
 public class DeviceInfoActivity extends BaseActivity {
 
-    @BindView(R.id.tv_product_model)
+    @BindView(R2.id.tv_product_model)
     TextView tvProductModel;
-    @BindView(R.id.tv_manufacturer)
+    @BindView(R2.id.tv_manufacturer)
     TextView tvManufacturer;
-    @BindView(R.id.tv_device_hardware_version)
+    @BindView(R2.id.tv_device_hardware_version)
     TextView tvDeviceHardwareVersion;
-    @BindView(R.id.tv_device_software_version)
-    TextView tvDeviceSoftwareVersion;
-    @BindView(R.id.tv_device_firmware_version)
+    @BindView(R2.id.tv_device_firmware_version)
     TextView tvDeviceFirmwareVersion;
-    @BindView(R.id.tv_device_mac)
+    @BindView(R2.id.tv_device_mac)
     TextView tvDeviceMac;
+    @BindView(R2.id.tv_device_imei)
+    TextView tvDeviceImei;
+    @BindView(R2.id.tv_device_iccid)
+    TextView tvDeviceIccid;
     private MokoDevice mMokoDevice;
     private MQTTConfig appMqttConfig;
 
@@ -79,30 +81,36 @@ public class DeviceInfoActivity extends BaseActivity {
         final String message = event.getMessage();
         if (TextUtils.isEmpty(message))
             return;
-        int msg_id;
+        MsgCommon<JsonObject> msgCommon;
         try {
-            JsonObject object = new Gson().fromJson(message, JsonObject.class);
-            JsonElement element = object.get("msg_id");
-            msg_id = element.getAsInt();
+            Type type = new TypeToken<MsgCommon<JsonObject>>() {
+            }.getType();
+            msgCommon = new Gson().fromJson(message, type);
         } catch (Exception e) {
-            e.printStackTrace();
             return;
         }
-        if (msg_id == MQTTConstants.READ_MSG_ID_DEVICE_INFO) {
-            Type type = new TypeToken<MsgReadResult<SystemInfo>>() {
-            }.getType();
-            MsgReadResult<SystemInfo> result = new Gson().fromJson(message, type);
-            if (!mMokoDevice.deviceId.equals(result.device_info.device_id)) {
+        if (!mMokoDevice.deviceId.equals(msgCommon.device_info.device_id)) {
+            return;
+        }
+        mMokoDevice.isOnline = true;
+        if (msgCommon.msg_id == MQTTConstants.READ_MSG_ID_DEVICE_STATUS) {
+            if (mHandler.hasMessages(0)) {
+                dismissLoadingProgressDialog();
+                mHandler.removeMessages(0);
+            }
+            if (msgCommon.result_code != 0) {
                 return;
             }
-            dismissLoadingProgressDialog();
-            mHandler.removeMessages(0);
-            tvProductModel.setText(result.data.product_model);
-            tvManufacturer.setText(result.data.company_name);
-            tvDeviceHardwareVersion.setText(result.data.hardware_version);
-            tvDeviceSoftwareVersion.setText(result.data.software_version);
-            tvDeviceFirmwareVersion.setText(result.data.firmware_version);
-            tvDeviceMac.setText(result.data.device_mac.toUpperCase());
+            Type infoType = new TypeToken<SystemInfo>() {
+            }.getType();
+            SystemInfo systemInfo = new Gson().fromJson(msgCommon.data, infoType);
+            tvProductModel.setText(systemInfo.product_number);
+            tvManufacturer.setText(systemInfo.company_name);
+            tvDeviceHardwareVersion.setText(systemInfo.hardware_version);
+            tvDeviceFirmwareVersion.setText(systemInfo.firmware_version);
+            tvDeviceMac.setText(systemInfo.mac.toUpperCase());
+            tvDeviceImei.setText(systemInfo.imei.toUpperCase());
+            tvDeviceIccid.setText(systemInfo.iccid.toUpperCase());
         }
     }
 
@@ -130,10 +138,10 @@ public class DeviceInfoActivity extends BaseActivity {
         } else {
             appTopic = appMqttConfig.topicPublish;
         }
-        MsgDeviceInfo deviceInfo = new MsgDeviceInfo();
-        deviceInfo.device_id = mMokoDevice.deviceId;
-        deviceInfo.mac = mMokoDevice.mac;
-        String message = MQTTMessageAssembler.assembleReadDeviceInfo(deviceInfo);
+        DeviceParams deviceParams = new DeviceParams();
+        deviceParams.device_id = mMokoDevice.deviceId;
+        deviceParams.mac = mMokoDevice.mac;
+        String message = MQTTMessageAssembler.assembleReadDeviceInfo(deviceParams);
         try {
             MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.READ_MSG_ID_DEVICE_INFO, appMqttConfig.qos);
         } catch (MqttException e) {

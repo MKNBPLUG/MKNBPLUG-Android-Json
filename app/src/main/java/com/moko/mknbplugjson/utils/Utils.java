@@ -17,6 +17,8 @@ import com.moko.mknbplugjson.BaseApplication;
 
 import java.io.File;
 import java.io.IOException;
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.util.ArrayList;
 
 public class Utils {
@@ -167,5 +169,13 @@ public class Utils {
             return true;
         }
         return false;
+    }
+
+    public static DecimalFormat getDecimalFormat(String pattern) {
+        DecimalFormat decimalFormat = new DecimalFormat(pattern);
+        DecimalFormatSymbols dfs = new DecimalFormatSymbols();
+        dfs.setDecimalSeparator('.');
+        decimalFormat.setDecimalFormatSymbols(dfs);
+        return decimalFormat;
     }
 }

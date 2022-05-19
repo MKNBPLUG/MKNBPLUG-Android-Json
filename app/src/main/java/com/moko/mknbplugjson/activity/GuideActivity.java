@@ -16,9 +16,10 @@ import android.widget.ImageView;
 
 import com.moko.mknbplugjson.AppConstants;
 import com.moko.mknbplugjson.R;
+import com.moko.mknbplugjson.R2;
 import com.moko.mknbplugjson.base.BaseActivity;
 import com.moko.mknbplugjson.utils.Utils;
-import com.moko.support.event.MQTTConnectionCompleteEvent;
+import com.moko.support.json.event.MQTTConnectionCompleteEvent;
 
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
@@ -29,7 +30,7 @@ import butterknife.ButterKnife;
 
 public class GuideActivity extends BaseActivity {
 
-    @BindView(R.id.iv_logo)
+    @BindView(R2.id.iv_logo)
     ImageView ivLogo;
 
     @Override

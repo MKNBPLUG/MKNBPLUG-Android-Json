@@ -3,7 +3,7 @@ package com.moko.mknbplugjson.adapter;
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.chad.library.adapter.base.BaseViewHolder;
 import com.moko.mknbplugjson.R;
-import com.moko.support.entity.DeviceInfo;
+import com.moko.support.json.entity.DeviceInfo;
 
 public class DeviceInfoAdapter extends BaseQuickAdapter<DeviceInfo, BaseViewHolder> {
     public DeviceInfoAdapter() {

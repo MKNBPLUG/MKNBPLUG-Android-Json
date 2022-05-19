@@ -15,6 +15,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.moko.mknbplugjson.R;
+import com.moko.mknbplugjson.R2;
 import com.moko.mknbplugjson.base.BaseActivity;
 import com.moko.mknbplugjson.dialog.BottomDialog;
 import com.moko.mknbplugjson.utils.FileUtils;
@@ -35,23 +36,23 @@ public class SSLFragment extends Fragment {
     public static final int REQUEST_CODE_SELECT_CLIENT_CERT = 0x12;
 
     private static final String TAG = SSLFragment.class.getSimpleName();
-    @BindView(R.id.cb_ssl)
+    @BindView(R2.id.cb_ssl)
     CheckBox cbSsl;
-    @BindView(R.id.tv_certification)
+    @BindView(R2.id.tv_certification)
     TextView tvCertification;
-    @BindView(R.id.tv_ca_file)
+    @BindView(R2.id.tv_ca_file)
     TextView tvCaFile;
-    @BindView(R.id.ll_ca)
+    @BindView(R2.id.ll_ca)
     LinearLayout llCa;
-    @BindView(R.id.tv_client_key_file)
+    @BindView(R2.id.tv_client_key_file)
     TextView tvClientKeyFile;
-    @BindView(R.id.ll_client_key)
+    @BindView(R2.id.ll_client_key)
     LinearLayout llClientKey;
-    @BindView(R.id.tv_client_cert_file)
+    @BindView(R2.id.tv_client_cert_file)
     TextView tvClientCertFile;
-    @BindView(R.id.ll_client_cert)
+    @BindView(R2.id.ll_client_cert)
     LinearLayout llClientCert;
-    @BindView(R.id.cl_certificate)
+    @BindView(R2.id.cl_certificate)
     ConstraintLayout clCertificate;
 
 
@@ -95,19 +96,12 @@ public class SSLFragment extends Fragment {
                 if (!isChecked) {
                     connectMode = 0;
                 } else {
-                    if (selected == 0) {
-                        connectMode = 1;
-                    } else if (selected == 1) {
-                        connectMode = 2;
-                    } else if (selected == 2) {
-                        connectMode = 3;
-                    }
+                    connectMode = selected + 1;
                 }
                 clCertificate.setVisibility(isChecked ? View.VISIBLE : View.GONE);
             }
         });
         values = new ArrayList<>();
-        values.add("CA signed server certificate");
         values.add("CA certificate file");
         values.add("Self signed certificates");
         if (connectMode > 0) {
@@ -117,11 +111,7 @@ public class SSLFragment extends Fragment {
             tvClientCertFile.setText(clientCertPath);
             tvCertification.setText(values.get(selected));
         }
-        if (selected == 0) {
-            llCa.setVisibility(View.GONE);
-            llClientKey.setVisibility(View.GONE);
-            llClientCert.setVisibility(View.GONE);
-        } else if (selected == 1) {
+        if (selected == 1) {
             llCa.setVisibility(View.VISIBLE);
             llClientKey.setVisibility(View.GONE);
             llClientCert.setVisibility(View.GONE);
@@ -174,21 +164,15 @@ public class SSLFragment extends Fragment {
             selected = value;
             tvCertification.setText(values.get(selected));
             if (selected == 0) {
-                connectMode = 1;
-                llCa.setVisibility(View.GONE);
-                llClientKey.setVisibility(View.GONE);
-                llClientCert.setVisibility(View.GONE);
-            } else if (selected == 1) {
-                connectMode = 2;
                 llCa.setVisibility(View.VISIBLE);
                 llClientKey.setVisibility(View.GONE);
                 llClientCert.setVisibility(View.GONE);
-            } else if (selected == 2) {
-                connectMode = 3;
+            } else if (selected == 1) {
                 llCa.setVisibility(View.VISIBLE);
                 llClientKey.setVisibility(View.VISIBLE);
                 llClientCert.setVisibility(View.VISIBLE);
             }
+            connectMode = selected + 1;
         });
         dialog.show(activity.getSupportFragmentManager());
     }
@@ -261,12 +245,12 @@ public class SSLFragment extends Fragment {
         final String caFile = tvCaFile.getText().toString();
         final String clientKeyFile = tvClientKeyFile.getText().toString();
         final String clientCertFile = tvClientCertFile.getText().toString();
-        if (connectMode == 2) {
+        if (connectMode == 1) {
             if (TextUtils.isEmpty(caFile)) {
                 ToastUtils.showToast(activity, getString(R.string.mqtt_verify_ca));
                 return false;
             }
-        } else if (connectMode == 3) {
+        } else if (connectMode == 2) {
             if (TextUtils.isEmpty(caFile)) {
                 ToastUtils.showToast(activity, getString(R.string.mqtt_verify_ca));
                 return false;

@@ -8,6 +8,7 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import com.moko.mknbplugjson.R;
+import com.moko.mknbplugjson.R2;
 
 import androidx.annotation.StringRes;
 import butterknife.BindView;
@@ -16,17 +17,17 @@ import butterknife.OnClick;
 
 public class AlertMessageDialog extends MokoBaseDialog {
     public static final String TAG = AlertMessageDialog.class.getSimpleName();
-    @BindView(R.id.tv_alert_title)
+    @BindView(R2.id.tv_alert_title)
     TextView tvAlertTitle;
-    @BindView(R.id.ll_alert_title)
+    @BindView(R2.id.ll_alert_title)
     LinearLayout llAlertTitle;
-    @BindView(R.id.tv_alert_message)
+    @BindView(R2.id.tv_alert_message)
     TextView tvAlertMessage;
-    @BindView(R.id.tv_alert_cancel)
+    @BindView(R2.id.tv_alert_cancel)
     TextView tvAlertCancel;
-    @BindView(R.id.tv_alert_confirm)
+    @BindView(R2.id.tv_alert_confirm)
     TextView tvAlertConfirm;
-    @BindView(R.id.view_divider)
+    @BindView(R2.id.view_divider)
     View viewDivider;
 
     private String cancel;

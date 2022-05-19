@@ -14,11 +14,11 @@
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:clickable="true"
-            android:onClick="setAppMQTTConfig"
+            android:onClick="onBack"
             android:paddingLeft="12dp"
             android:paddingRight="12dp"
             android:scaleType="fitCenter"
-            android:src="@drawable/settings" />
+            android:src="@drawable/back" />
 
         <TextView
             android:id="@+id/tv_title"
@@ -30,15 +30,15 @@
             android:textSize="17sp" />
 
         <ImageView
-            android:id="@+id/iv_about"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_alignParentRight="true"
             android:clickable="true"
-            android:onClick="about"
+            android:onClick="setAppMQTTConfig"
             android:paddingLeft="12dp"
             android:paddingRight="12dp"
-            android:src="@drawable/about" />
+            android:scaleType="fitCenter"
+            android:src="@drawable/settings" />
 
         <View
             style="@style/divider_line"
@@ -70,8 +70,8 @@
                 android:layout_centerHorizontal="true"
                 android:layout_marginTop="50dp"
                 android:text="@string/main_welcome"
-                android:textColor="@color/grey_808080"
-                android:textSize="15sp" />
+                android:textColor="@color/blue_0188cc"
+                android:textSize="18sp" />
 
             <ImageView
                 android:layout_width="wrap_content"
@@ -79,6 +79,8 @@
                 android:layout_centerInParent="true"
                 android:layout_marginTop="30dp"
                 android:src="@drawable/empty_device" />
+
+
         </RelativeLayout>
     </RelativeLayout>
 

@@ -9,6 +9,7 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 
 import com.moko.mknbplugjson.R;
+import com.moko.mknbplugjson.R2;
 import com.moko.mknbplugjson.base.BaseActivity;
 
 import androidx.fragment.app.Fragment;
@@ -18,9 +19,9 @@ import butterknife.ButterKnife;
 public class UserDeviceFragment extends Fragment {
     private final String FILTER_ASCII = "[ -~]*";
     private static final String TAG = UserDeviceFragment.class.getSimpleName();
-    @BindView(R.id.et_mqtt_username)
+    @BindView(R2.id.et_mqtt_username)
     EditText etMqttUsername;
-    @BindView(R.id.et_mqtt_password)
+    @BindView(R2.id.et_mqtt_password)
     EditText etMqttPassword;
 
 
@@ -56,8 +57,8 @@ public class UserDeviceFragment extends Fragment {
 
             return null;
         };
-        etMqttUsername.setFilters(new InputFilter[]{new InputFilter.LengthFilter(256), filter});
-        etMqttPassword.setFilters(new InputFilter[]{new InputFilter.LengthFilter(256), filter});
+        etMqttUsername.setFilters(new InputFilter[]{new InputFilter.LengthFilter(128), filter});
+        etMqttPassword.setFilters(new InputFilter[]{new InputFilter.LengthFilter(128), filter});
         etMqttUsername.setText(username);
         etMqttPassword.setText(password);
         return view;

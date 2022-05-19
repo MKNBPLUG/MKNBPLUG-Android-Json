@@ -32,6 +32,7 @@ public class AppConstants {
     public static final String EXTRA_KEY_FROM_ACTIVITY = "EXTRA_KEY_FROM_ACTIVITY";
     public static final String EXTRA_KEY_DEVICE_ID = "EXTRA_KEY_UNIQUE_ID";
     public static final String EXTRA_KEY_DEVICE= "EXTRA_KEY_DEVICE";
+    public static final String EXTRA_KEY_DEVICE_TYPE= "EXTRA_KEY_DEVICE_TYPE";
     public static final String EXTRA_DELETE_DEVICE_ID = "EXTRA_DELETE_DEVICE_ID";
     public static final String EXTRA_KEY_SCAN_SWITCH = "EXTRA_KEY_SCAN_SWITCH";
     public static final String EXTRA_KEY_SCAN_INTERVAL = "EXTRA_KEY_SCAN_INTERVAL";
@@ -40,6 +41,7 @@ public class AppConstants {
     public static final String EXTRA_KEY_MQTT_CONFIG_APP = "EXTRA_KEY_MQTT_CONFIG_APP";
     public static final String EXTRA_KEY_SELECTED_DEVICE_MAC = "EXTRA_KEY_SELECTED_DEVICE_MAC";
     public static final String EXTRA_KEY_SELECTED_DEVICE_NAME = "EXTRA_KEY_SELECTED_DEVICE_NAME";
+    public static final String EXTRA_KEY_SELECTED_DEVICE_MODE = "EXTRA_KEY_SELECTED_DEVICE_MODE";
     public static final String EXTRA_KEY_SELECTED_DEVICE_TYPE = "EXTRA_KEY_SELECTED_DEVICE_TYPE";
     // request_code
     public static final int REQUEST_CODE_TEMP_TARGET = 100;
@@ -59,6 +61,8 @@ public class AppConstants {
     public static final int REQUEST_CODE_MQTT_CONFIG_APP = 127;
     public static final int REQUEST_CODE_FILTER_CONDITION = 128;
     public static final int REQUEST_CODE_FILTER_RAW_DATA = 129;
+    public static final int REQUEST_CODE_OPEN_APP_SETTINGS_FILE = 130;
+    public static final int REQUEST_CODE_OPEN_DEVICE_SETTINGS_FILE = 131;
 
     public static final int PERMISSION_REQUEST_CODE = 1;
     // result_code

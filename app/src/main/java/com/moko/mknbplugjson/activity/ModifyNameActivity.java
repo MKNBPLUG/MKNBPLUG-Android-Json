@@ -12,11 +12,12 @@ import android.widget.EditText;
 
 import com.moko.mknbplugjson.AppConstants;
 import com.moko.mknbplugjson.R;
+import com.moko.mknbplugjson.R2;
 import com.moko.mknbplugjson.base.BaseActivity;
 import com.moko.mknbplugjson.db.DBTools;
 import com.moko.mknbplugjson.entity.MokoDevice;
 import com.moko.mknbplugjson.utils.ToastUtils;
-import com.moko.support.event.MQTTConnectionCompleteEvent;
+import com.moko.support.json.event.MQTTConnectionCompleteEvent;
 
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
@@ -29,7 +30,7 @@ public class ModifyNameActivity extends BaseActivity {
     private final String FILTER_ASCII = "[ -~]*";
     public static String TAG = ModifyNameActivity.class.getSimpleName();
 
-    @BindView(R.id.et_nick_name)
+    @BindView(R2.id.et_nick_name)
     EditText etNickName;
     private MokoDevice device;
     private InputFilter filter;
@@ -47,7 +48,7 @@ public class ModifyNameActivity extends BaseActivity {
 
             return null;
         };
-        etNickName.setText(device.nickName);
+        etNickName.setText(device.name);
         etNickName.setSelection(etNickName.getText().toString().length());
         etNickName.setFilters(new InputFilter[]{filter, new InputFilter.LengthFilter(20)});
         etNickName.postDelayed(new Runnable() {
@@ -66,7 +67,7 @@ public class ModifyNameActivity extends BaseActivity {
             ToastUtils.showToast(this, R.string.modify_device_name_empty);
             return;
         }
-        device.nickName = nickName;
+        device.name = nickName;
         DBTools.getInstance(this).updateDevice(device);
         // 跳转首页，刷新数据
         Intent intent = new Intent(this, MainActivity.class);

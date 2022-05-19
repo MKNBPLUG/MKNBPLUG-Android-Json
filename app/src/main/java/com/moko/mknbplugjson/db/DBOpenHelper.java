@@ -10,7 +10,7 @@ import com.elvishew.xlog.XLog;
 public class DBOpenHelper extends SQLiteOpenHelper {
     private static final String DB_NAME = "MKNBPLUGJSON";
     // 数据库版本号
-    private static final int DB_VERSION = 2;
+    private static final int DB_VERSION = 1;
 
     private Context mContext;
 
@@ -33,10 +33,6 @@ public class DBOpenHelper extends SQLiteOpenHelper {
         if (newVersion > oldVersion) {
             XLog.i("数据库升级");
             XLog.i("旧版本:" + oldVersion + ";新版本:" + newVersion);
-            if (oldVersion < 2) {
-                XLog.i("添加设备类型");
-                db.execSQL("ALTER TABLE " + DBConstants.TABLE_NAME_DEVICE + " ADD COLUMN " + DBConstants.DEVICE_FIELD_DEVICE_TYPE + " INTEGER");
-            }
         }
     }
 
@@ -60,14 +56,14 @@ public class DBOpenHelper extends SQLiteOpenHelper {
             + DBConstants.DEVICE_FIELD_NAME + " TEXT,"
             // MAC
             + DBConstants.DEVICE_FIELD_MAC + " TEXT,"
-            // 昵称
-            + DBConstants.DEVICE_FIELD_NICK_NAME + " TEXT,"
             // mqtt信息
             + DBConstants.DEVICE_FIELD_MQTT_INFO + " TEXT,"
             // 发布主题
             + DBConstants.DEVICE_FIELD_TOPIC_PUBLISH + " TEXT,"
             // 订阅主题
             + DBConstants.DEVICE_FIELD_TOPIC_SUBSCRIBE + " TEXT,"
+            // 工作状态
+            + DBConstants.DEVICE_FIELD_DEVICE_MODE + " INTEGER,"
             // 设备类型
             + DBConstants.DEVICE_FIELD_DEVICE_TYPE + " INTEGER,"
             // 唯一标识

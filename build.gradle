@@ -5,6 +5,7 @@ buildscript {
     }
     dependencies {
         classpath 'com.android.tools.build:gradle:3.6.4'
+        classpath 'com.jakewharton:butterknife-gradle-plugin:10.2.3'
     }
 }
 allprojects {
@@ -13,4 +14,8 @@ allprojects {
         google()
         maven { url "https://jitpack.io" }
     }
+}
+
+task clean(type: Delete) {
+    delete rootProject.buildDir
 }

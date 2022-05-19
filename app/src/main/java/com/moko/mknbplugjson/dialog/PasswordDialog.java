@@ -13,6 +13,7 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.moko.mknbplugjson.R;
+import com.moko.mknbplugjson.R2;
 import com.moko.mknbplugjson.utils.ToastUtils;
 
 import butterknife.BindView;
@@ -22,9 +23,9 @@ import butterknife.OnClick;
 public class PasswordDialog extends MokoBaseDialog {
     public static final String TAG = PasswordDialog.class.getSimpleName();
 
-    @BindView(R.id.et_password)
+    @BindView(R2.id.et_password)
     EditText etPassword;
-    @BindView(R.id.tv_password_ensure)
+    @BindView(R2.id.tv_password_ensure)
     TextView tvPasswordEnsure;
     private final String FILTER_ASCII = "[ -~]*";
 

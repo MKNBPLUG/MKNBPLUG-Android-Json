@@ -16,10 +16,19 @@ public class MQTTConfig implements Serializable {
     public String caPath;
     public String clientKeyPath;
     public String clientCertPath;
+    public boolean lwtEnable;
+    public boolean lwtRetain;
+    public int lwtQos = 1;
+    public String lwtTopic;
+    public String lwtPayload;
     public String topicSubscribe;
     public String topicPublish;
     public String deviceId = "";
     public String ntpUrl;
     public int timeZone;
-    public int channelDomain;
+    public String apn;
+    public String apnUsername;
+    public String apnPassword;
+    public int networkPriority = 0;
+    public boolean debugModeEnable;
 }

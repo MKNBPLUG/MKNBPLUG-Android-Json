@@ -4,6 +4,7 @@ import android.text.TextUtils;
 import android.view.View;
 
 import com.moko.mknbplugjson.R;
+import com.moko.mknbplugjson.R2;
 import com.moko.mknbplugjson.view.WheelView;
 
 import java.util.ArrayList;
@@ -15,7 +16,7 @@ import butterknife.OnClick;
 public class BottomDialog extends MokoBaseDialog {
 
 
-    @BindView(R.id.wv_bottom)
+    @BindView(R2.id.wv_bottom)
     WheelView wvBottom;
     private ArrayList<String> mDatas;
     private int mIndex;

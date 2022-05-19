@@ -5,7 +5,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.ParcelUuid;
-import android.view.KeyEvent;
+import android.text.TextUtils;
+import android.util.SparseArray;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -20,18 +21,18 @@ import com.moko.ble.lib.task.OrderTask;
 import com.moko.ble.lib.task.OrderTaskResponse;
 import com.moko.mknbplugjson.AppConstants;
 import com.moko.mknbplugjson.R;
+import com.moko.mknbplugjson.R2;
 import com.moko.mknbplugjson.adapter.DeviceInfoAdapter;
 import com.moko.mknbplugjson.base.BaseActivity;
 import com.moko.mknbplugjson.dialog.PasswordDialog;
 import com.moko.mknbplugjson.utils.SPUtiles;
 import com.moko.mknbplugjson.utils.ToastUtils;
-import com.moko.support.MokoBleScanner;
-import com.moko.support.MokoSupport;
-import com.moko.support.OrderTaskAssembler;
-import com.moko.support.callback.MokoScanDeviceCallback;
-import com.moko.support.entity.DeviceInfo;
-import com.moko.support.entity.OrderCHAR;
-import com.moko.support.entity.OrderServices;
+import com.moko.support.json.MokoBleScanner;
+import com.moko.support.json.MokoSupport;
+import com.moko.support.json.OrderTaskAssembler;
+import com.moko.support.json.callback.MokoScanDeviceCallback;
+import com.moko.support.json.entity.DeviceInfo;
+import com.moko.support.json.entity.OrderCHAR;
 
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
@@ -39,6 +40,7 @@ import org.greenrobot.eventbus.ThreadMode;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -47,7 +49,6 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import butterknife.BindView;
 import butterknife.ButterKnife;
-import butterknife.OnClick;
 import no.nordicsemi.android.support.v18.scanner.ScanRecord;
 import no.nordicsemi.android.support.v18.scanner.ScanResult;
 
@@ -55,9 +56,9 @@ import no.nordicsemi.android.support.v18.scanner.ScanResult;
 public class DeviceScannerActivity extends BaseActivity implements MokoScanDeviceCallback, BaseQuickAdapter.OnItemClickListener {
 
 
-    @BindView(R.id.iv_refresh)
+    @BindView(R2.id.iv_refresh)
     ImageView ivRefresh;
-    @BindView(R.id.rv_devices)
+    @BindView(R2.id.rv_devices)
     RecyclerView rvDevices;
     private Animation animation = null;
     private DeviceInfoAdapter mAdapter;
@@ -70,6 +71,7 @@ public class DeviceScannerActivity extends BaseActivity implements MokoScanDevic
     private String mSavedPassword;
     private String mSelectedName;
     private String mSelectedMac;
+    private int mSelectedDeviceMode;
     private int mSelectedDeviceType;
 
     @Override
@@ -115,11 +117,31 @@ public class DeviceScannerActivity extends BaseActivity implements MokoScanDevic
     public void onScanDevice(DeviceInfo deviceInfo) {
         ScanResult scanResult = deviceInfo.scanResult;
         ScanRecord scanRecord = scanResult.getScanRecord();
+        SparseArray<byte[]> manufacturer = scanRecord.getManufacturerSpecificData();
+        if (manufacturer == null || manufacturer.size() == 0)
+            return;
+        byte[] manufacturerSpecificDataByte = scanRecord.getManufacturerSpecificData(manufacturer.keyAt(0));
+        assert manufacturerSpecificDataByte != null;
+        if (manufacturerSpecificDataByte.length != 13) return;
         Map<ParcelUuid, byte[]> map = scanRecord.getServiceData();
-        if (map == null || map.isEmpty()) return;
-        byte[] data = map.get(new ParcelUuid(OrderServices.SERVICE_ADV.getUuid()));
-        if (data == null || data.length != 1) return;
-        deviceInfo.deviceType = data[0] & 0xFF;
+        if (map == null || map.isEmpty())
+            return;
+        int deviceType = -1;
+        Iterator iterator = map.keySet().iterator();
+        while (iterator.hasNext()) {
+            ParcelUuid parcelUuid = (ParcelUuid) iterator.next();
+            if (parcelUuid.toString().startsWith("0000aa07")) {
+                byte[] bytes = map.get(parcelUuid);
+                if (bytes != null) {
+                    deviceType = bytes[0] & 0xFF;
+                    break;
+                }
+            }
+        }
+        if (deviceType == -1)
+            return;
+        deviceInfo.deviceMode = manufacturerSpecificDataByte[12] & 0xFF;
+        deviceInfo.deviceType = deviceType;
         mDeviceMap.put(deviceInfo.mac, deviceInfo);
     }
 
@@ -149,22 +171,6 @@ public class DeviceScannerActivity extends BaseActivity implements MokoScanDevic
         }
     }
 
-    @OnClick({R.id.iv_refresh})
-    public void onViewClicked(View view) {
-        switch (view.getId()) {
-            case R.id.iv_refresh:
-                if (isWindowLocked())
-                    return;
-                if (animation == null) {
-                    startScan();
-                } else {
-                    mHandler.removeMessages(0);
-                    mokoBleScanner.stopScanDevice();
-                }
-                break;
-        }
-    }
-
     private void startScan() {
         if (!MokoSupport.getInstance().isBluetoothOpen()) {
             // 蓝牙未打开，开启蓝牙
@@ -183,12 +189,8 @@ public class DeviceScannerActivity extends BaseActivity implements MokoScanDevic
     }
 
     @Override
-    public boolean onKeyDown(int keyCode, KeyEvent event) {
-        if (keyCode == KeyEvent.KEYCODE_BACK) {
-            back();
-            return false;
-        }
-        return super.onKeyDown(keyCode, event);
+    public void onBackPressed() {
+        back();
     }
 
     private void back() {
@@ -207,35 +209,41 @@ public class DeviceScannerActivity extends BaseActivity implements MokoScanDevic
                 mHandler.removeMessages(0);
                 mokoBleScanner.stopScanDevice();
             }
-            // show password
-            final PasswordDialog dialog = new PasswordDialog();
-            dialog.setPassword(mSavedPassword);
-            dialog.setOnPasswordClicked(new PasswordDialog.PasswordClickListener() {
-                @Override
-                public void onEnsureClicked(String password) {
-                    if (!MokoSupport.getInstance().isBluetoothOpen()) {
-                        MokoSupport.getInstance().enableBluetooth();
-                        return;
+            if (deviceInfo.deviceMode == 1) {
+                // show password
+                final PasswordDialog dialog = new PasswordDialog();
+                dialog.setPassword(mSavedPassword);
+                dialog.setOnPasswordClicked(new PasswordDialog.PasswordClickListener() {
+                    @Override
+                    public void onEnsureClicked(String password) {
+                        if (!MokoSupport.getInstance().isBluetoothOpen()) {
+                            MokoSupport.getInstance().enableBluetooth();
+                            return;
+                        }
+                        XLog.i(password);
+                        mPassword = password;
+                        mSelectedName = deviceInfo.name;
+                        mSelectedMac = deviceInfo.mac;
+                        mSelectedDeviceMode = deviceInfo.deviceMode;
+                        mSelectedDeviceType = deviceInfo.deviceType;
+                        if (animation != null) {
+                            mHandler.removeMessages(0);
+                            mokoBleScanner.stopScanDevice();
+                        }
+                        showLoadingProgressDialog();
+                        ivRefresh.postDelayed(() -> MokoSupport.getInstance().connDevice(deviceInfo.mac), 500);
                     }
-                    XLog.i(password);
-                    mPassword = password;
-                    mSelectedName = deviceInfo.name;
-                    mSelectedMac = deviceInfo.mac;
-                    mSelectedDeviceType = deviceInfo.deviceType;
-                    if (animation != null) {
-                        mHandler.removeMessages(0);
-                        mokoBleScanner.stopScanDevice();
+
+                    @Override
+                    public void onDismiss() {
+
                     }
-                    showLoadingProgressDialog();
-                    ivRefresh.postDelayed(() -> MokoSupport.getInstance().connDevice(deviceInfo.mac), 500);
-                }
-
-                @Override
-                public void onDismiss() {
-
-                }
-            });
-            dialog.show(getSupportFragmentManager());
+                });
+                dialog.show(getSupportFragmentManager());
+            } else if (deviceInfo.deviceMode == 2) {
+                showLoadingProgressDialog();
+                ivRefresh.postDelayed(() -> MokoSupport.getInstance().connDevice(deviceInfo.mac), 500);
+            }
         }
     }
 
@@ -261,6 +269,9 @@ public class DeviceScannerActivity extends BaseActivity implements MokoScanDevic
         }
         if (MokoConstants.ACTION_DISCOVER_SUCCESS.equals(action)) {
             dismissLoadingProgressDialog();
+            if (TextUtils.isEmpty(mPassword)) {
+                // TODO: 2022/5/12 进入Debug模式
+            }
             showLoadingMessageDialog("Verifying..");
             mHandler.postDelayed(() -> {
                 // open password notify and set passwrord
@@ -308,9 +319,10 @@ public class DeviceScannerActivity extends BaseActivity implements MokoScanDevic
                                 XLog.i("Success");
 
                                 // 跳转配置页面
-                                Intent intent = new Intent(this, SetDeviceMQTTActivity.class);
+                                Intent intent = new Intent(this, ChooseFunctionActivity.class);
                                 intent.putExtra(AppConstants.EXTRA_KEY_SELECTED_DEVICE_MAC, mSelectedMac);
                                 intent.putExtra(AppConstants.EXTRA_KEY_SELECTED_DEVICE_NAME, mSelectedName);
+                                intent.putExtra(AppConstants.EXTRA_KEY_SELECTED_DEVICE_MODE, mSelectedDeviceMode);
                                 intent.putExtra(AppConstants.EXTRA_KEY_SELECTED_DEVICE_TYPE, mSelectedDeviceType);
                                 startActivity(intent);
                             }
@@ -322,6 +334,17 @@ public class DeviceScannerActivity extends BaseActivity implements MokoScanDevic
                         }
                     }
             }
+        }
+    }
+
+    public void onRefresh(View view) {
+        if (isWindowLocked())
+            return;
+        if (animation == null) {
+            startScan();
+        } else {
+            mHandler.removeMessages(0);
+            mokoBleScanner.stopScanDevice();
         }
     }
 }

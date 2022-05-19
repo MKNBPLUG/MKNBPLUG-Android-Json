@@ -346,7 +346,7 @@ The return data is a JSON String,refer to the protocol documentation(communicati
 	
 #### 2.2.8 SSL(CA certificate file)
 	
-	mqttConfig.connectMode = 2;
+	mqttConfig.connectMode = 1;
 	...
 	connOpts.setSocketFactory(getSingleSocketFactory(mqttConfig.caPath));
 	...
@@ -354,17 +354,11 @@ The return data is a JSON String,refer to the protocol documentation(communicati
 	
 #### 2.2.9 SSL(Self signed certificates)
 	
-	mqttConfig.connectMode = 3;
+	mqttConfig.connectMode = 2;
 	...
 	connOpts.setSocketFactory(getSocketFactory(mqttConfig.caPath, mqttConfig.clientKeyPath, mqttConfig.clientCertPath));
 	...
 	MokoSupport.getInstance().connectMqtt(connOpts);
-	
-#### 2.2.10 SSL(CA signed server certificate)
-
-	mqttConfig.connectMode = 1;
-	...
-	connOpts.setSocketFactory(getAllTMSocketFactory());
 
 ## 3.Save Log to SD Card
 

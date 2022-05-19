@@ -12,6 +12,7 @@ import android.widget.RadioButton;
 import android.widget.RadioGroup;
 
 import com.moko.mknbplugjson.R;
+import com.moko.mknbplugjson.R2;
 import com.moko.mknbplugjson.base.BaseActivity;
 import com.moko.mknbplugjson.utils.ToastUtils;
 
@@ -22,17 +23,17 @@ import butterknife.ButterKnife;
 public class GeneralDeviceFragment extends Fragment {
 
     private static final String TAG = GeneralDeviceFragment.class.getSimpleName();
-    @BindView(R.id.cb_clean_session)
+    @BindView(R2.id.cb_clean_session)
     CheckBox cbCleanSession;
-    @BindView(R.id.rb_qos_1)
+    @BindView(R2.id.rb_qos_1)
     RadioButton rbQos1;
-    @BindView(R.id.rb_qos_2)
+    @BindView(R2.id.rb_qos_2)
     RadioButton rbQos2;
-    @BindView(R.id.rb_qos_3)
+    @BindView(R2.id.rb_qos_3)
     RadioButton rbQos3;
-    @BindView(R.id.rg_qos)
+    @BindView(R2.id.rg_qos)
     RadioGroup rgQos;
-    @BindView(R.id.et_keep_alive)
+    @BindView(R2.id.et_keep_alive)
     EditText etKeepAlive;
 
     private BaseActivity activity;
