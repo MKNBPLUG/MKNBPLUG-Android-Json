@@ -8,7 +8,6 @@ import android.os.Bundle;
 import android.os.SystemClock;
 
 import com.elvishew.xlog.XLog;
-import com.moko.mknbplugjson.activity.GuideActivity;
 import com.moko.mknbplugjson.activity.MainActivity;
 import com.moko.mknbplugjson.dialog.LoadingDialog;
 import com.moko.mknbplugjson.dialog.LoadingMessageDialog;

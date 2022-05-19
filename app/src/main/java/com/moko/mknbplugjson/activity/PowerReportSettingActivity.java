@@ -25,7 +25,6 @@ import com.moko.support.json.entity.MQTTConfig;
 import com.moko.support.json.entity.MsgCommon;
 import com.moko.support.json.entity.OverloadOccur;
 import com.moko.support.json.entity.PowerReportSetting;
-import com.moko.support.json.entity.ReportInterval;
 import com.moko.support.json.event.DeviceOnlineEvent;
 import com.moko.support.json.event.MQTTMessageArrivedEvent;
 

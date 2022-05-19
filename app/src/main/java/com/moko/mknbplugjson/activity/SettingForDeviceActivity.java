@@ -21,7 +21,6 @@ import com.moko.support.json.MQTTConstants;
 import com.moko.support.json.MQTTMessageAssembler;
 import com.moko.support.json.MQTTSupport;
 import com.moko.support.json.entity.DeviceParams;
-import com.moko.support.json.entity.DeviceStatus;
 import com.moko.support.json.entity.LWTSettings;
 import com.moko.support.json.entity.MQTTSettings;
 import com.moko.support.json.entity.MsgCommon;

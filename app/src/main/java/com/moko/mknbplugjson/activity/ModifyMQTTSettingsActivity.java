@@ -39,9 +39,9 @@ import com.moko.support.json.entity.DeviceParams;
 import com.moko.support.json.entity.DeviceStatus;
 import com.moko.support.json.entity.LWTSettings;
 import com.moko.support.json.entity.MQTTSettings;
-import com.moko.support.json.entity.ReadyResult;
 import com.moko.support.json.entity.MsgCommon;
 import com.moko.support.json.entity.NetworkSettings;
+import com.moko.support.json.entity.ReadyResult;
 import com.moko.support.json.event.DeviceOnlineEvent;
 import com.moko.support.json.event.MQTTMessageArrivedEvent;
 

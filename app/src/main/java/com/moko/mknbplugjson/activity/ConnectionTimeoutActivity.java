@@ -19,6 +19,7 @@ import com.moko.mknbplugjson.entity.MokoDevice;
 import com.moko.mknbplugjson.utils.SPUtiles;
 import com.moko.mknbplugjson.utils.ToastUtils;
 import com.moko.support.json.MQTTConstants;
+import com.moko.support.json.MQTTMessageAssembler;
 import com.moko.support.json.MQTTSupport;
 import com.moko.support.json.entity.ConnectionTimeout;
 import com.moko.support.json.entity.DeviceParams;
@@ -26,7 +27,6 @@ import com.moko.support.json.entity.MsgCommon;
 import com.moko.support.json.entity.OverloadOccur;
 import com.moko.support.json.event.DeviceOnlineEvent;
 import com.moko.support.json.event.MQTTMessageArrivedEvent;
-import com.moko.support.json.MQTTMessageAssembler;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
 import org.greenrobot.eventbus.Subscribe;
