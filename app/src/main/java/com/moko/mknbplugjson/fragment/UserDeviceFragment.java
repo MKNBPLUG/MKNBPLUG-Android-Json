@@ -84,10 +84,16 @@ public class UserDeviceFragment extends Fragment {
 
     public void setUserName(String username) {
         this.username = username;
+        if (etMqttUsername == null)
+            return;
+        etMqttUsername.setText(username);
     }
 
     public void setPassword(String password) {
         this.password = password;
+        if (etMqttPassword == null)
+            return;
+        etMqttPassword.setText(password);
     }
 
     public String getUsername() {

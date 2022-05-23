@@ -43,6 +43,7 @@ public class AppConstants {
     public static final String EXTRA_KEY_SELECTED_DEVICE_NAME = "EXTRA_KEY_SELECTED_DEVICE_NAME";
     public static final String EXTRA_KEY_SELECTED_DEVICE_MODE = "EXTRA_KEY_SELECTED_DEVICE_MODE";
     public static final String EXTRA_KEY_SELECTED_DEVICE_TYPE = "EXTRA_KEY_SELECTED_DEVICE_TYPE";
+    public static final String EXTRA_KEY_DEVICE_MAC = "EXTRA_KEY_DEVICE_MAC";
     // request_code
     public static final int REQUEST_CODE_TEMP_TARGET = 100;
     public static final int REQUEST_CODE_TIMER = 101;
@@ -63,6 +64,7 @@ public class AppConstants {
     public static final int REQUEST_CODE_FILTER_RAW_DATA = 129;
     public static final int REQUEST_CODE_OPEN_APP_SETTINGS_FILE = 130;
     public static final int REQUEST_CODE_OPEN_DEVICE_SETTINGS_FILE = 131;
+    public static final int REQUEST_CODE_LOG = 132;
 
     public static final int PERMISSION_REQUEST_CODE = 1;
     // result_code

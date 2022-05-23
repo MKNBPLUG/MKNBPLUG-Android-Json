@@ -28,6 +28,8 @@ public class MokoSupport extends MokoBleLib {
 
     private Context mContext;
 
+    private MokoBleConfig mBleConfig;
+
     private MokoSupport() {
         //no instance
     }
@@ -50,8 +52,8 @@ public class MokoSupport extends MokoBleLib {
 
     @Override
     public MokoBleManager getMokoBleManager() {
-        MokoBleConfig mokoSupportBleManager = new MokoBleConfig(mContext, this);
-        return mokoSupportBleManager;
+        mBleConfig = new MokoBleConfig(mContext, this);
+        return mBleConfig;
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -128,6 +130,9 @@ public class MokoSupport extends MokoBleLib {
         if (responseUUID.equals(OrderCHAR.CHAR_DISCONNECTED_NOTIFY.getUuid())) {
             orderCHAR = OrderCHAR.CHAR_DISCONNECTED_NOTIFY;
         }
+        if (responseUUID.equals(OrderCHAR.CHAR_DEBUG_LOG.getUuid())) {
+            orderCHAR = OrderCHAR.CHAR_DEBUG_LOG;
+        }
         if (orderCHAR == null)
             return false;
         XLog.i(orderCHAR.name());
@@ -139,5 +144,15 @@ public class MokoSupport extends MokoBleLib {
         event.setResponse(response);
         EventBus.getDefault().post(event);
         return true;
+    }
+
+    public void enableDebugLogNotify() {
+        if (mBleConfig != null)
+            mBleConfig.enableDebugLogNotify();
+    }
+
+    public void disableDebugLogNotify() {
+        if (mBleConfig != null)
+            mBleConfig.disableDebugLogNotify();
     }
 }

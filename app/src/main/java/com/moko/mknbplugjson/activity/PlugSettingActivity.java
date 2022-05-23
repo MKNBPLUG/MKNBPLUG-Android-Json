@@ -19,6 +19,8 @@ import com.elvishew.xlog.XLog;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
+import com.moko.ble.lib.MokoConstants;
+import com.moko.ble.lib.event.ConnectStatusEvent;
 import com.moko.mknbplugjson.AppConstants;
 import com.moko.mknbplugjson.R;
 import com.moko.mknbplugjson.R2;
@@ -33,6 +35,7 @@ import com.moko.mknbplugjson.utils.ToastUtils;
 import com.moko.support.json.MQTTConstants;
 import com.moko.support.json.MQTTMessageAssembler;
 import com.moko.support.json.MQTTSupport;
+import com.moko.support.json.MokoSupport;
 import com.moko.support.json.entity.ButtonControlEnable;
 import com.moko.support.json.entity.DeviceParams;
 import com.moko.support.json.entity.MsgCommon;
@@ -49,6 +52,7 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.lang.reflect.Type;
 
+import androidx.annotation.Nullable;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
@@ -84,7 +88,7 @@ public class PlugSettingActivity extends BaseActivity {
             mMokoDevice = (MokoDevice) getIntent().getSerializableExtra(AppConstants.EXTRA_KEY_DEVICE);
         }
         assert mMokoDevice != null;
-        rlDebugMode.setVisibility(mMokoDevice.deviceMode == 1 ? View.VISIBLE : View.GONE);
+        rlDebugMode.setVisibility(mMokoDevice.deviceMode == 2 ? View.VISIBLE : View.GONE);
         String mqttConfigAppStr = SPUtiles.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
         appMqttConfig = new Gson().fromJson(mqttConfigAppStr, MQTTConfig.class);
         mHandler = new Handler(Looper.getMainLooper());
@@ -324,11 +328,13 @@ public class PlugSettingActivity extends BaseActivity {
                 return;
             }
             showLoadingProgressDialog();
-            // 取消订阅
-            try {
-                MQTTSupport.getInstance().unSubscribe(mMokoDevice.topicPublish);
-            } catch (MqttException e) {
-                e.printStackTrace();
+            if (TextUtils.isEmpty(appMqttConfig.topicSubscribe)) {
+                // 取消订阅
+                try {
+                    MQTTSupport.getInstance().unSubscribe(mMokoDevice.topicPublish);
+                } catch (MqttException e) {
+                    e.printStackTrace();
+                }
             }
             XLog.i(String.format("删除设备:%s", mMokoDevice.name));
             DBTools.getInstance(this).deleteDevice(mMokoDevice);
@@ -556,12 +562,54 @@ public class PlugSettingActivity extends BaseActivity {
     public void onDebugModeClick(View view) {
         if (isWindowLocked())
             return;
-        if (!MQTTSupport.getInstance().isConnected()) {
-            ToastUtils.showToast(this, R.string.network_error);
-            return;
+        // 进入Debug模式
+        showLoadingProgressDialog();
+        rlDebugMode.postDelayed(() -> MokoSupport.getInstance().connDevice(mMokoDevice.mac), 500);
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onConnectStatusEvent(ConnectStatusEvent event) {
+        String action = event.getAction();
+        if (MokoConstants.ACTION_DISCONNECTED.equals(action)) {
+            dismissLoadingProgressDialog();
+            ToastUtils.showToast(this, "Connection Failed, please try again");
         }
-        Intent i = new Intent(this, DeviceInfoActivity.class);
-        i.putExtra(AppConstants.EXTRA_KEY_DEVICE, mMokoDevice);
-        startActivity(i);
+        if (MokoConstants.ACTION_DISCOVER_SUCCESS.equals(action)) {
+            dismissLoadingProgressDialog();
+            // 进入Debug模式
+            Intent intent = new Intent(this, LogDataActivity.class);
+            intent.putExtra(AppConstants.EXTRA_KEY_DEVICE_MAC, mMokoDevice.mac);
+            startActivityForResult(intent, AppConstants.REQUEST_CODE_LOG);
+        }
+    }
+
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == AppConstants.REQUEST_CODE_LOG) {
+            if (resultCode == RESULT_OK) {
+                showLoadingProgressDialog();
+                if (TextUtils.isEmpty(appMqttConfig.topicSubscribe)) {
+                    // 取消订阅
+                    try {
+                        MQTTSupport.getInstance().unSubscribe(mMokoDevice.topicPublish);
+                    } catch (MqttException e) {
+                        e.printStackTrace();
+                    }
+                }
+                XLog.i(String.format("删除设备:%s", mMokoDevice.name));
+                DBTools.getInstance(this).deleteDevice(mMokoDevice);
+                EventBus.getDefault().post(new DeviceDeletedEvent(mMokoDevice.id));
+                ivButtonControl.postDelayed(() -> {
+                    dismissLoadingProgressDialog();
+                    // 跳转首页，刷新数据
+                    Intent intent = new Intent(this, MainActivity.class);
+                    intent.putExtra(AppConstants.EXTRA_KEY_FROM_ACTIVITY, TAG);
+                    intent.putExtra(AppConstants.EXTRA_KEY_DEVICE_ID, mMokoDevice.deviceId);
+                    startActivity(intent);
+                }, 500);
+            }
+        }
     }
 }

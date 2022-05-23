@@ -30,9 +30,6 @@ import butterknife.ButterKnife;
 
 public class GuideActivity extends BaseActivity {
 
-    @BindView(R2.id.iv_logo)
-    ImageView ivLogo;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -69,13 +66,22 @@ public class GuideActivity extends BaseActivity {
                 }
             }
         }
-        ivLogo.postDelayed(new Runnable() {
-            @Override
+        new Thread() {
             public void run() {
-                startActivity(new Intent(GuideActivity.this, MainActivity.class));
-                GuideActivity.this.finish();
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        startActivity(new Intent(GuideActivity.this, MainActivity.class));
+                        GuideActivity.this.finish();
+                    }
+                });
             }
-        }, 2000);
+        }.start();
     }
 
     @Override

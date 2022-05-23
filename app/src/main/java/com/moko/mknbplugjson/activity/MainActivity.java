@@ -122,9 +122,9 @@ public class MainActivity extends BaseActivity implements BaseQuickAdapter.OnIte
             rlEmpty.setVisibility(View.GONE);
         }
         mHandler = new Handler(Looper.getMainLooper());
-        String appMqttConfigStr = SPUtiles.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
-        if (!TextUtils.isEmpty(appMqttConfigStr)) {
-            appMqttConfig = new Gson().fromJson(appMqttConfigStr, MQTTConfig.class);
+        MQTTAppConfigStr = SPUtiles.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
+        if (!TextUtils.isEmpty(MQTTAppConfigStr)) {
+            appMqttConfig = new Gson().fromJson(MQTTAppConfigStr, MQTTConfig.class);
             tvTitle.setText(getString(R.string.mqtt_connecting));
         }
         StringBuffer buffer = new StringBuffer();
@@ -560,8 +560,8 @@ public class MainActivity extends BaseActivity implements BaseQuickAdapter.OnIte
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == AppConstants.REQUEST_CODE_MQTT_CONFIG_APP && resultCode == RESULT_OK) {
-            String appMqttConfigStr = data.getStringExtra(AppConstants.EXTRA_KEY_MQTT_CONFIG_APP);
-            appMqttConfig = new Gson().fromJson(appMqttConfigStr, MQTTConfig.class);
+            MQTTAppConfigStr = data.getStringExtra(AppConstants.EXTRA_KEY_MQTT_CONFIG_APP);
+            appMqttConfig = new Gson().fromJson(MQTTAppConfigStr, MQTTConfig.class);
             tvTitle.setText(getString(R.string.app_name));
             // 订阅所有设备的Topic
             subscribeAllDevices();

@@ -95,14 +95,29 @@ public class GeneralDeviceFragment extends Fragment {
 
     public void setCleanSession(boolean cleanSession) {
         this.cleanSession = cleanSession;
+        if (cbCleanSession == null)
+            return;
+        cbCleanSession.setChecked(cleanSession);
     }
 
     public void setQos(int qos) {
         this.qos = qos;
+        if (rgQos == null)
+            return;
+        if (qos == 0) {
+            rbQos1.setChecked(true);
+        } else if (qos == 1) {
+            rbQos2.setChecked(true);
+        } else if (qos == 2) {
+            rbQos3.setChecked(true);
+        }
     }
 
     public void setKeepAlive(int keepAlive) {
         this.keepAlive = keepAlive;
+        if (etKeepAlive == null)
+            return;
+        etKeepAlive.setText(String.valueOf(keepAlive));
     }
 
     public boolean isValid() {

@@ -2,6 +2,7 @@ package com.moko.support.json;
 
 import com.moko.ble.lib.task.OrderTask;
 import com.moko.support.json.entity.ParamsKeyEnum;
+import com.moko.support.json.task.DebugTask;
 import com.moko.support.json.task.ParamsTask;
 import com.moko.support.json.task.SetPasswordTask;
 
@@ -244,6 +245,12 @@ public class OrderTaskAssembler {
     public static OrderTask setClientKey(File file) throws Exception {
         ParamsTask task = new ParamsTask();
         task.setFile(ParamsKeyEnum.KEY_MQTT_CLIENT_KEY, file);
+        return task;
+    }
+
+    public static OrderTask exitDebugMode() {
+        DebugTask task = new DebugTask();
+        task.exitDebugMode();
         return task;
     }
 }

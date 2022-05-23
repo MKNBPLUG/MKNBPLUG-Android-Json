@@ -42,8 +42,6 @@ public class SSLFragment extends Fragment {
     TextView tvCertification;
     @BindView(R2.id.tv_ca_file)
     TextView tvCaFile;
-    @BindView(R2.id.ll_ca)
-    LinearLayout llCa;
     @BindView(R2.id.tv_client_key_file)
     TextView tvClientKeyFile;
     @BindView(R2.id.ll_client_key)
@@ -111,12 +109,10 @@ public class SSLFragment extends Fragment {
             tvClientCertFile.setText(clientCertPath);
             tvCertification.setText(values.get(selected));
         }
-        if (selected == 1) {
-            llCa.setVisibility(View.VISIBLE);
+        if (selected == 0) {
             llClientKey.setVisibility(View.GONE);
             llClientCert.setVisibility(View.GONE);
-        } else if (selected == 2) {
-            llCa.setVisibility(View.VISIBLE);
+        } else if (selected == 1) {
             llClientKey.setVisibility(View.VISIBLE);
             llClientCert.setVisibility(View.VISIBLE);
         }
@@ -143,18 +139,35 @@ public class SSLFragment extends Fragment {
 
     public void setConnectMode(int connectMode) {
         this.connectMode = connectMode;
+        if (clCertificate == null || cbSsl == null || tvCertification == null)
+            return;
+        clCertificate.setVisibility(connectMode > 0 ? View.VISIBLE : View.GONE);
+        cbSsl.setChecked(connectMode > 0);
+        if (connectMode > 0) {
+            selected = connectMode - 1;
+            tvCertification.setText(values.get(selected));
+        }
     }
 
     public void setCAPath(String caPath) {
         this.caPath = caPath;
+        if (tvCaFile == null)
+            return;
+        tvCaFile.setText(caPath);
     }
 
     public void setClientKeyPath(String clientKeyPath) {
         this.clientKeyPath = clientKeyPath;
+        if (tvClientKeyFile == null)
+            return;
+        tvClientKeyFile.setText(clientKeyPath);
     }
 
     public void setClientCertPath(String clientCertPath) {
         this.clientCertPath = clientCertPath;
+        if (tvClientCertFile == null)
+            return;
+        tvClientCertFile.setText(clientCertPath);
     }
 
     public void selectCertificate() {
@@ -164,11 +177,9 @@ public class SSLFragment extends Fragment {
             selected = value;
             tvCertification.setText(values.get(selected));
             if (selected == 0) {
-                llCa.setVisibility(View.VISIBLE);
                 llClientKey.setVisibility(View.GONE);
                 llClientCert.setVisibility(View.GONE);
             } else if (selected == 1) {
-                llCa.setVisibility(View.VISIBLE);
                 llClientKey.setVisibility(View.VISIBLE);
                 llClientCert.setVisibility(View.VISIBLE);
             }

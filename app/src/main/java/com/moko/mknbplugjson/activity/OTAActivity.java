@@ -16,6 +16,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.moko.mknbplugjson.AppConstants;
 import com.moko.mknbplugjson.R;
+import com.moko.mknbplugjson.R2;
 import com.moko.mknbplugjson.base.BaseActivity;
 import com.moko.mknbplugjson.dialog.BottomDialog;
 import com.moko.mknbplugjson.entity.MQTTConfig;

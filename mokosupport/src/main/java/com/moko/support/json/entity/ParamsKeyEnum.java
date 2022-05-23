@@ -37,6 +37,8 @@ public enum ParamsKeyEnum implements Serializable {
 
     KEY_DEVICE_NAME(0x4E),
     KEY_DEVICE_MAC(0x4F),
+
+    KEY_DEBUG_EXIT(0x61),
     ;
 
     private int paramsKey;

@@ -74,19 +74,16 @@ public class ChooseFunctionActivity extends BaseActivity {
     @Subscribe(threadMode = ThreadMode.POSTING, priority = 100)
     public void onConnectStatusEvent(ConnectStatusEvent event) {
         final String action = event.getAction();
-        if (isUpdate)
+        if (isUpdate) {
             EventBus.getDefault().cancelEventDelivery(event);
-        runOnUiThread(() -> {
-            if (MokoConstants.ACTION_DISCONNECTED.equals(action)) {
-                if (MokoSupport.getInstance().isBluetoothOpen()) {
-                    if (isUpdate) {
-                        return;
-                    }
-                    dismissLoadingProgressDialog();
-                    finish();
-                }
-            }
-        });
+            return;
+        }
+        if (MokoConstants.ACTION_DISCONNECTED.equals(action)) {
+            runOnUiThread(() -> {
+                dismissLoadingProgressDialog();
+                finish();
+            });
+        }
     }
 
 

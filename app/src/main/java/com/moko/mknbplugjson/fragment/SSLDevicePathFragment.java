@@ -32,8 +32,6 @@ public class SSLDevicePathFragment extends Fragment {
     CheckBox cbSsl;
     @BindView(R2.id.tv_certification)
     TextView tvCertification;
-    @BindView(R2.id.ll_ca)
-    LinearLayout llCa;
     @BindView(R2.id.ll_client_key)
     LinearLayout llClientKey;
     @BindView(R2.id.ll_client_cert)
@@ -44,8 +42,6 @@ public class SSLDevicePathFragment extends Fragment {
     EditText etMqttHost;
     @BindView(R2.id.et_mqtt_port)
     EditText etMqttPort;
-    @BindView(R2.id.cl_cert_server)
-    ConstraintLayout clCertServer;
     @BindView(R2.id.et_ca_path)
     EditText etCaPath;
     @BindView(R2.id.et_client_key_path)
@@ -102,21 +98,12 @@ public class SSLDevicePathFragment extends Fragment {
             selected = connectMode - 1;
             tvCertification.setText(values.get(selected));
         }
-        if (selected == 0) {
-            llCa.setVisibility(View.GONE);
+       if (selected == 0) {
             llClientKey.setVisibility(View.GONE);
             llClientCert.setVisibility(View.GONE);
-            clCertServer.setVisibility(View.GONE);
         } else if (selected == 1) {
-            llCa.setVisibility(View.VISIBLE);
-            llClientKey.setVisibility(View.GONE);
-            llClientCert.setVisibility(View.GONE);
-            clCertServer.setVisibility(View.VISIBLE);
-        } else if (selected == 2) {
-            llCa.setVisibility(View.VISIBLE);
             llClientKey.setVisibility(View.VISIBLE);
             llClientCert.setVisibility(View.VISIBLE);
-            clCertServer.setVisibility(View.VISIBLE);
         }
         return view;
     }
@@ -147,15 +134,11 @@ public class SSLDevicePathFragment extends Fragment {
             selected = value;
             tvCertification.setText(values.get(selected));
             if (selected == 0) {
-                llCa.setVisibility(View.VISIBLE);
                 llClientKey.setVisibility(View.GONE);
                 llClientCert.setVisibility(View.GONE);
-                clCertServer.setVisibility(View.VISIBLE);
             } else if (selected == 1) {
-                llCa.setVisibility(View.VISIBLE);
                 llClientKey.setVisibility(View.VISIBLE);
                 llClientCert.setVisibility(View.VISIBLE);
-                clCertServer.setVisibility(View.VISIBLE);
             }
             connectMode = selected + 1;
         });

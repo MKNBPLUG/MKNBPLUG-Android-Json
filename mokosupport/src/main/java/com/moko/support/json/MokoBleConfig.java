@@ -25,6 +25,8 @@ final class MokoBleConfig extends MokoBleManager {
     private BluetoothGattCharacteristic passwordCharacteristic;
     private BluetoothGattCharacteristic disconnectedCharacteristic;
     private BluetoothGattCharacteristic paramsCharacteristic;
+    private BluetoothGattCharacteristic debugExitCharacteristic;
+    private BluetoothGattCharacteristic debugLogCharacteristic;
 
     public MokoBleConfig(@NonNull Context context, MokoResponseCallback callback) {
         super(context);
@@ -38,8 +40,11 @@ final class MokoBleConfig extends MokoBleManager {
             passwordCharacteristic = service.getCharacteristic(OrderCHAR.CHAR_PASSWORD.getUuid());
             disconnectedCharacteristic = service.getCharacteristic(OrderCHAR.CHAR_DISCONNECTED_NOTIFY.getUuid());
             paramsCharacteristic = service.getCharacteristic(OrderCHAR.CHAR_PARAMS.getUuid());
+            debugExitCharacteristic = service.getCharacteristic(OrderCHAR.CHAR_DEBUG_EXIT.getUuid());
+            debugLogCharacteristic = service.getCharacteristic(OrderCHAR.CHAR_DEBUG_LOG.getUuid());
             enablePasswordNotify();
             enableDisconnectedNotify();
+            enableDebugNotify();
             enableParamNotify();
             return true;
         }
@@ -137,5 +142,33 @@ final class MokoBleConfig extends MokoBleManager {
 
     public void disableParamNotify() {
         disableNotifications(paramsCharacteristic).enqueue();
+    }
+
+    public void enableDebugNotify() {
+        setIndicationCallback(debugExitCharacteristic).with((device, data) -> {
+            final byte[] value = data.getValue();
+            XLog.e("onDataReceived");
+            XLog.e("device to app : " + MokoUtils.bytesToHexString(value));
+            mMokoResponseCallback.onCharacteristicChanged(debugExitCharacteristic, value);
+        });
+        enableNotifications(debugExitCharacteristic).enqueue();
+    }
+
+    public void disableDebugNotify() {
+        disableNotifications(debugExitCharacteristic).enqueue();
+    }
+
+    public void enableDebugLogNotify() {
+        setIndicationCallback(debugLogCharacteristic).with((device, data) -> {
+            final byte[] value = data.getValue();
+            XLog.e("onDataReceived");
+            XLog.e("device to app : " + MokoUtils.bytesToHexString(value));
+            mMokoResponseCallback.onCharacteristicChanged(debugLogCharacteristic, value);
+        });
+        enableNotifications(debugLogCharacteristic).enqueue();
+    }
+
+    public void disableDebugLogNotify() {
+        disableNotifications(debugLogCharacteristic).enqueue();
     }
 }

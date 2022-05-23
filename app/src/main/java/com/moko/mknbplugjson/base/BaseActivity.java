@@ -49,13 +49,15 @@ public class BaseActivity extends FragmentActivity {
 
     public boolean isWindowLocked() {
         long current = SystemClock.elapsedRealtime();
-        if (current - mLastOnClickTime > 500) {
+        if (current - mLastOnClickTime > voidDuration) {
             mLastOnClickTime = current;
             return false;
         } else {
             return true;
         }
     }
+
+    public int voidDuration = 500;
 
     private LoadingDialog mLoadingDialog;
 

@@ -112,6 +112,8 @@ public class LWTFragment extends Fragment {
     }
 
     public boolean isValid() {
+        if (!cbLwt.isChecked())
+            return true;
         final String topicStr = etLwtTopic.getText().toString();
         if (TextUtils.isEmpty(topicStr)) {
             ToastUtils.showToast(getActivity(), "LWT Topic Error");
@@ -129,6 +131,13 @@ public class LWTFragment extends Fragment {
 
     public void setQos(int qos) {
         this.qos = qos;
+        if (qos == 0) {
+            rbQos1.setChecked(true);
+        } else if (qos == 1) {
+            rbQos2.setChecked(true);
+        } else if (qos == 2) {
+            rbQos3.setChecked(true);
+        }
     }
 
     public int getQos() {
@@ -142,35 +151,46 @@ public class LWTFragment extends Fragment {
     }
 
     public boolean getLwtEnable() {
-        return lwtEnable;
+        return cbLwt.isChecked();
     }
 
     public void setLwtEnable(boolean lwtEnable) {
         this.lwtEnable = lwtEnable;
+        if (cbLwt == null)
+            return;
+        cbLwt.setChecked(lwtEnable);
     }
 
     public boolean getLwtRetain() {
-        return lwtRetain;
+        return cbLwtRetain.isChecked();
     }
 
     public void setLwtRetain(boolean lwtRetain) {
         this.lwtRetain = lwtRetain;
+        if (cbLwtRetain == null)
+            return;
+        cbLwtRetain.setChecked(lwtRetain);
     }
 
     public void setTopic(String topic) {
-        if (!TextUtils.isEmpty(topic))
-            this.topic = topic;
+        this.topic = topic;
+        if (etLwtTopic == null)
+            return;
+        etLwtTopic.setText(topic);
     }
 
     public String getTopic() {
-        return topic;
+        return etLwtTopic.getText().toString();
     }
 
     public void setPayload(String payload) {
         this.payload = payload;
+        if (etLwtPayload == null)
+            return;
+        etLwtPayload.setText(payload);
     }
 
     public String getPayload() {
-        return payload;
+        return etLwtPayload.getText().toString();
     }
 }

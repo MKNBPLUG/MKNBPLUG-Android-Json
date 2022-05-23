@@ -45,6 +45,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+import androidx.annotation.Nullable;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 import butterknife.BindView;
@@ -130,7 +131,7 @@ public class DeviceScannerActivity extends BaseActivity implements MokoScanDevic
         Iterator iterator = map.keySet().iterator();
         while (iterator.hasNext()) {
             ParcelUuid parcelUuid = (ParcelUuid) iterator.next();
-            if (parcelUuid.toString().startsWith("0000aa07")) {
+            if (parcelUuid.toString().startsWith("0000aa08")) {
                 byte[] bytes = map.get(parcelUuid);
                 if (bytes != null) {
                     deviceType = bytes[0] & 0xFF;
@@ -270,7 +271,10 @@ public class DeviceScannerActivity extends BaseActivity implements MokoScanDevic
         if (MokoConstants.ACTION_DISCOVER_SUCCESS.equals(action)) {
             dismissLoadingProgressDialog();
             if (TextUtils.isEmpty(mPassword)) {
-                // TODO: 2022/5/12 进入Debug模式
+                // 进入Debug模式
+                Intent intent = new Intent(this, LogDataActivity.class);
+                intent.putExtra(AppConstants.EXTRA_KEY_DEVICE_MAC, mSelectedMac);
+                startActivityForResult(intent, AppConstants.REQUEST_CODE_LOG);
             }
             showLoadingMessageDialog("Verifying..");
             mHandler.postDelayed(() -> {
@@ -345,6 +349,16 @@ public class DeviceScannerActivity extends BaseActivity implements MokoScanDevic
         } else {
             mHandler.removeMessages(0);
             mokoBleScanner.stopScanDevice();
+        }
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == AppConstants.REQUEST_CODE_LOG) {
+            if (animation == null) {
+                startScan();
+            }
         }
     }
 }

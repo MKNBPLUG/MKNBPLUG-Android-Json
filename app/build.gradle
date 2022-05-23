@@ -17,6 +17,7 @@ android {
         targetSdkVersion 30
         versionCode 1
         versionName "1.0.0"
+        multiDexEnabled true
     }
 
     buildTypes {
@@ -102,16 +103,20 @@ dependencies {
     implementation 'com.github.lzyzsd:circleprogress:1.2.1'
     implementation 'androidx.recyclerview:recyclerview:1.0.0'
     implementation 'com.github.CymChad:BaseRecyclerViewAdapterHelper:2.9.30'
-    implementation "androidx.viewpager2:viewpager2:1.0.0"
+    implementation 'androidx.viewpager2:viewpager2:1.0.0'
     implementation 'com.github.GrenderG:Toasty:1.4.1'
     implementation 'cn.carbswang.android:NumberPickerView:1.1.1'
     if (!isLibrary.toBoolean()) {
         implementation project(path: ':mokosupport')
-        implementation files('libs/jxl.jar')
+//        implementation files('libs/jxl.jar')
+        implementation files('libs/poi-3.12-android-a.jar')
+        implementation files('libs/poi-ooxml-schemas-3.12-20150511-a.jar')
     } else {
         implementation files('libs/mokoSupport.jar')
         provided files('libs/mokoBleLib.jar')
-        provided files('libs/jxl.jar')
+//        provided files('libs/jxl.jar')
+        provided files('libs/poi-3.12-android-a.jar')
+        provided files('libs/poi-ooxml-schemas-3.12-20150511-a.jar')
         implementation 'com.google.code.gson:gson:2.8.5'
         implementation 'no.nordicsemi.android.support.v18:scanner:1.4.3'
         implementation 'no.nordicsemi.android:dfu:0.6.2'
