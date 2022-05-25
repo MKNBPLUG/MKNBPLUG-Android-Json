@@ -8,7 +8,7 @@ public class MQTTSettings {
     public String password;
     public String client_id;
     public int clean_session = 1;
-    public int keep_alive = 60;
+    public int keepalive = 60;
     public int qos = 0;
     public String subscribe_topic;
     public String publish_topic;

@@ -1,7 +1,9 @@
 package com.moko.mknbplugjson.activity;
 
 
+import android.content.Intent;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
@@ -9,6 +11,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
+import com.elvishew.xlog.XLog;
+import com.google.gson.Gson;
 import com.moko.ble.lib.MokoConstants;
 import com.moko.ble.lib.event.ConnectStatusEvent;
 import com.moko.ble.lib.event.OrderTaskResponseEvent;
@@ -19,13 +23,20 @@ import com.moko.mknbplugjson.R;
 import com.moko.mknbplugjson.R2;
 import com.moko.mknbplugjson.adapter.LogDataListAdapter;
 import com.moko.mknbplugjson.base.BaseActivity;
+import com.moko.mknbplugjson.db.DBTools;
 import com.moko.mknbplugjson.dialog.AlertMessageDialog;
 import com.moko.mknbplugjson.entity.LogData;
+import com.moko.mknbplugjson.entity.MQTTConfig;
+import com.moko.mknbplugjson.entity.MokoDevice;
+import com.moko.mknbplugjson.utils.SPUtiles;
 import com.moko.mknbplugjson.utils.Utils;
+import com.moko.support.json.MQTTSupport;
 import com.moko.support.json.MokoSupport;
 import com.moko.support.json.OrderTaskAssembler;
 import com.moko.support.json.entity.OrderCHAR;
+import com.moko.support.json.event.DeviceDeletedEvent;
 
+import org.eclipse.paho.client.mqttv3.MqttException;
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
@@ -71,6 +82,8 @@ public class LogDataActivity extends BaseActivity implements BaseQuickAdapter.On
     private boolean isDisconnected;
     private boolean isBack;
     private boolean isExitFinish;
+    private MokoDevice mMokoDevice;
+    private MQTTConfig appMqttConfig;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -78,7 +91,7 @@ public class LogDataActivity extends BaseActivity implements BaseQuickAdapter.On
         setContentView(R.layout.activity_log_data);
         ButterKnife.bind(this);
         mDeviceMac = getIntent().getStringExtra(AppConstants.EXTRA_KEY_DEVICE_MAC).replaceAll(":", "");
-        logDirPath = MainActivity.PATH_LOGCAT + File.separator + mDeviceMac;
+        logDirPath = JSONMainActivity.PATH_LOGCAT + File.separator + mDeviceMac;
         LogDatas = new ArrayList<>();
         adapter = new LogDataListAdapter();
         adapter.openLoadAnimation();
@@ -86,7 +99,6 @@ public class LogDataActivity extends BaseActivity implements BaseQuickAdapter.On
         adapter.setOnItemClickListener(this);
         rvLogData.setLayoutManager(new LinearLayoutManager(this));
         rvLogData.setAdapter(adapter);
-        EventBus.getDefault().register(this);
         File file = new File(logDirPath);
         if (file.exists()) {
             File[] logFiles = file.listFiles();
@@ -118,6 +130,9 @@ public class LogDataActivity extends BaseActivity implements BaseQuickAdapter.On
         // 点击无效间隔改为1秒
         voidDuration = 1000;
         storeString = new StringBuilder();
+        mMokoDevice = DBTools.getInstance(this).selectDeviceByMac(mDeviceMac);
+        String mqttConfigAppStr = SPUtiles.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
+        appMqttConfig = new Gson().fromJson(mqttConfigAppStr, MQTTConfig.class);
     }
 
     @Subscribe(threadMode = ThreadMode.POSTING, priority = 100)
@@ -126,6 +141,7 @@ public class LogDataActivity extends BaseActivity implements BaseQuickAdapter.On
         EventBus.getDefault().cancelEventDelivery(event);
         runOnUiThread(() -> {
             if (MokoConstants.ACTION_DISCONNECTED.equals(action)) {
+                dismissLoadingProgressDialog();
                 isDisconnected = true;
                 // 中途断开，要先保存数据
                 tvSyncSwitch.setEnabled(false);
@@ -153,6 +169,28 @@ public class LogDataActivity extends BaseActivity implements BaseQuickAdapter.On
                 switch (orderCHAR) {
                     case CHAR_DEBUG_EXIT:
                         isExitFinish = true;
+                        if (mMokoDevice == null)
+                            return;
+                        dismissLoadingProgressDialog();
+                        if (TextUtils.isEmpty(appMqttConfig.topicSubscribe)) {
+                            // 取消订阅
+                            try {
+                                MQTTSupport.getInstance().unSubscribe(mMokoDevice.topicPublish);
+                            } catch (MqttException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        XLog.i(String.format("删除设备:%s", mMokoDevice.name));
+                        DBTools.getInstance(this).deleteDevice(mMokoDevice);
+                        EventBus.getDefault().post(new DeviceDeletedEvent(mMokoDevice.id));
+                        tvSyncSwitch.postDelayed(() -> {
+                            dismissLoadingProgressDialog();
+                            // 跳转首页，刷新数据
+                            Intent intent = new Intent(this, JSONMainActivity.class);
+                            intent.putExtra(AppConstants.EXTRA_KEY_FROM_ACTIVITY, TAG);
+                            intent.putExtra(AppConstants.EXTRA_KEY_DEVICE_ID, mMokoDevice.deviceId);
+                            startActivity(intent);
+                        }, 500);
                         break;
                 }
             }
@@ -162,6 +200,8 @@ public class LogDataActivity extends BaseActivity implements BaseQuickAdapter.On
                 int responseType = response.responseType;
                 byte[] value = response.responseValue;
                 switch (orderCHAR) {
+                    case CHAR_DISCONNECTED_NOTIFY:
+                        break;
                     case CHAR_DEBUG_LOG:
                         String log = new String(value);
                         storeString.append(log);
@@ -266,14 +306,6 @@ public class LogDataActivity extends BaseActivity implements BaseQuickAdapter.On
             Utils.sendEmail(LogDataActivity.this, address, content, title, "Choose Email Client", files);
         }
     }
-
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        EventBus.getDefault().unregister(this);
-    }
-
     private void backHome() {
         if (isSync) {
             MokoSupport.getInstance().disableDebugLogNotify();
@@ -357,6 +389,7 @@ public class LogDataActivity extends BaseActivity implements BaseQuickAdapter.On
     public void onExitDebugMode(View view) {
         if (isWindowLocked())
             return;
+        showLoadingProgressDialog();
         MokoSupport.getInstance().sendOrder(OrderTaskAssembler.exitDebugMode());
     }
 }

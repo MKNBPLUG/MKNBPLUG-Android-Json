@@ -85,30 +85,23 @@ public class PasswordDialog extends MokoBaseDialog {
         }, 200);
     }
 
-    @OnClick({R.id.tv_password_cancel, R.id.tv_password_ensure})
-    public void onClick(View view) {
-        switch (view.getId()) {
-            case R.id.tv_password_cancel:
-                dismiss();
-                if (passwordClickListener != null) {
-                    passwordClickListener.onDismiss();
-                }
-                break;
-            case R.id.tv_password_ensure:
-                dismiss();
-                String password = etPassword.getText().toString();
-                if (TextUtils.isEmpty(password)) {
-                    ToastUtils.showToast(getContext(), getContext().getString(R.string.password_null));
-                    return;
-                }
-//                if (password.length() != 8) {
-//                    ToastUtils.showToast(getContext(), getContext().getString(R.string.main_password_length));
-//                    return;
-//                }
-                if (passwordClickListener != null)
-                    passwordClickListener.onEnsureClicked(etPassword.getText().toString());
-                break;
+    @OnClick(R2.id.tv_password_cancel)
+    public void onCancel(View view) {
+        dismiss();
+        if (passwordClickListener != null) {
+            passwordClickListener.onDismiss();
         }
+    }
+
+    @OnClick(R2.id.tv_password_ensure)
+    public void onEnsure(View view) {
+        dismiss();
+        if (TextUtils.isEmpty(etPassword.getText().toString())) {
+            ToastUtils.showToast(getContext(), getContext().getString(R.string.password_null));
+            return;
+        }
+        if (passwordClickListener != null)
+            passwordClickListener.onEnsureClicked(etPassword.getText().toString());
     }
 
     @Override

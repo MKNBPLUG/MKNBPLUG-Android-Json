@@ -59,7 +59,7 @@ public class ProtectionSwitchActivity extends BaseActivity {
         getDeviceType();
     }
 
-    public void back(View view) {
+    public void onBack(View view) {
         finish();
     }
 
@@ -151,7 +151,7 @@ public class ProtectionSwitchActivity extends BaseActivity {
             ToastUtils.showToast(this, R.string.network_error);
             return;
         }
-        Intent i = new Intent(this, OverVoltageProtectionActivity.class);
+        Intent i = new Intent(this, UnderVoltageProtectionActivity.class);
         i.putExtra(AppConstants.EXTRA_KEY_DEVICE, mMokoDevice);
         i.putExtra(AppConstants.EXTRA_KEY_DEVICE_TYPE, mDeviceType);
         startActivity(i);

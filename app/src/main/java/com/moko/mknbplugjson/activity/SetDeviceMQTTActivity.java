@@ -134,7 +134,6 @@ public class SetDeviceMQTTActivity extends BaseActivity implements RadioGroup.On
     private String mSelectedDeviceName;
     private String mSelectedDeviceMac;
     private int mSelectedDeviceType;
-    private int mSelectedDeviceMode;
     private boolean savedParamsError;
     private CustomDialog mqttConnDialog;
     private DonutProgress donutProgress;
@@ -155,7 +154,6 @@ public class SetDeviceMQTTActivity extends BaseActivity implements RadioGroup.On
         mqttAppConfig = new Gson().fromJson(MQTTConfigStr, MQTTConfig.class);
         mSelectedDeviceName = getIntent().getStringExtra(AppConstants.EXTRA_KEY_SELECTED_DEVICE_NAME);
         mSelectedDeviceMac = getIntent().getStringExtra(AppConstants.EXTRA_KEY_SELECTED_DEVICE_MAC);
-        mSelectedDeviceMode = getIntent().getIntExtra(AppConstants.EXTRA_KEY_SELECTED_DEVICE_MODE, 0);
         mSelectedDeviceType = getIntent().getIntExtra(AppConstants.EXTRA_KEY_SELECTED_DEVICE_TYPE, 0);
         if (TextUtils.isEmpty(MQTTConfigStr)) {
             mqttDeviceConfig = new MQTTConfig();
@@ -171,7 +169,7 @@ public class SetDeviceMQTTActivity extends BaseActivity implements RadioGroup.On
             mqttDeviceConfig.caPath = "";
             mqttDeviceConfig.clientKeyPath = "";
             mqttDeviceConfig.clientCertPath = "";
-            mqttDeviceConfig.lwtTopic = "";
+            mqttDeviceConfig.lwtTopic = "{device_name}/{device_id}/app_to_device";
             mqttDeviceConfig.lwtPayload = "Offline";
             mqttDeviceConfig.apn = "";
             mqttDeviceConfig.apnUsername = "";
@@ -250,7 +248,7 @@ public class SetDeviceMQTTActivity extends BaseActivity implements RadioGroup.On
         mNetworkPriority.add("eMTC");
         initData();
         mHandler = new Handler(Looper.getMainLooper());
-        expertFilePath = MainActivity.PATH_LOGCAT + File.separator + "export" + File.separator + "Settings for Device.xlsx";
+        expertFilePath = JSONMainActivity.PATH_LOGCAT + File.separator + "export" + File.separator + "Settings for Device.xlsx";
     }
 
     @Subscribe(threadMode = ThreadMode.POSTING, priority = 200)
@@ -409,7 +407,7 @@ public class SetDeviceMQTTActivity extends BaseActivity implements RadioGroup.On
                         mokoDevice.topicSubscribe = mqttDeviceConfig.topicSubscribe;
                         mokoDevice.topicPublish = mqttDeviceConfig.topicPublish;
                         mokoDevice.deviceId = mqttDeviceConfig.deviceId;
-                        mokoDevice.deviceMode = mSelectedDeviceMode;
+                        mokoDevice.deviceMode = cbDebugMode.isChecked() ? 2 : 1;
                         mokoDevice.deviceType = mSelectedDeviceType;
                         DBTools.getInstance(SetDeviceMQTTActivity.this).insertDevice(mokoDevice);
                     } else {
@@ -419,7 +417,7 @@ public class SetDeviceMQTTActivity extends BaseActivity implements RadioGroup.On
                         mokoDevice.topicSubscribe = mqttDeviceConfig.topicSubscribe;
                         mokoDevice.topicPublish = mqttDeviceConfig.topicPublish;
                         mokoDevice.deviceId = mqttDeviceConfig.deviceId;
-                        mokoDevice.deviceMode = mSelectedDeviceMode;
+                        mokoDevice.deviceMode = cbDebugMode.isChecked() ? 2 : 1;
                         mokoDevice.deviceType = mSelectedDeviceType;
                         DBTools.getInstance(SetDeviceMQTTActivity.this).updateDevice(mokoDevice);
                     }
@@ -479,7 +477,7 @@ public class SetDeviceMQTTActivity extends BaseActivity implements RadioGroup.On
         cbDebugMode.setChecked(mqttDeviceConfig.debugModeEnable);
     }
 
-    public void back(View view) {
+    public void onBack(View view) {
         back();
     }
 
@@ -513,6 +511,9 @@ public class SetDeviceMQTTActivity extends BaseActivity implements RadioGroup.On
         }
         if ("{device_name}/{device_id}/device_to_app".equals(mqttDeviceConfig.topicPublish)) {
             mqttDeviceConfig.topicPublish = String.format("%s/%s/device_to_app", mSelectedDeviceName, mqttDeviceConfig.deviceId);
+        }
+        if ("{device_name}/{device_id}/app_to_device".equals(mqttDeviceConfig.lwtTopic)) {
+            mqttDeviceConfig.lwtTopic = String.format("%s/%s/app_to_device", mSelectedDeviceName, mqttDeviceConfig.deviceId);
         }
         setMQTTDeviceConfig();
     }
@@ -729,6 +730,7 @@ public class SetDeviceMQTTActivity extends BaseActivity implements RadioGroup.On
                 isSettingSuccess = false;
                 dismissConnMqttDialog();
                 ToastUtils.showToast(SetDeviceMQTTActivity.this, getString(R.string.mqtt_connecting_timeout));
+                setResult(RESULT_OK);
                 finish();
             }
         }, 90 * 1000);
@@ -801,16 +803,16 @@ public class SetDeviceMQTTActivity extends BaseActivity implements RadioGroup.On
                 row4.createCell(0).setCellValue("Subscribe Topic");
                 if (!TextUtils.isEmpty(mqttDeviceConfig.topicSubscribe))
                     row4.createCell(1).setCellValue(String.format("value:%s", mqttDeviceConfig.topicSubscribe));
-                else
-                    row4.createCell(1).setCellValue("");
+//                else
+//                    row4.createCell(1).setCellValue("");
                 row4.createCell(2).setCellValue("0-128 characters");
 
                 XSSFRow row5 = sheet.createRow(5);
                 row5.createCell(0).setCellValue("Publish Topic");
                 if (!TextUtils.isEmpty(mqttDeviceConfig.topicPublish))
                     row5.createCell(1).setCellValue(String.format("value:%s", mqttDeviceConfig.topicPublish));
-                else
-                    row5.createCell(1).setCellValue("");
+//                else
+//                    row5.createCell(1).setCellValue("");
                 row5.createCell(2).setCellValue("0-128 characters");
 
                 XSSFRow row6 = sheet.createRow(6);
@@ -832,16 +834,16 @@ public class SetDeviceMQTTActivity extends BaseActivity implements RadioGroup.On
                 row9.createCell(0).setCellValue("MQTT Username");
                 if (!TextUtils.isEmpty(mqttDeviceConfig.username))
                     row9.createCell(1).setCellValue(String.format("value:%s", mqttDeviceConfig.username));
-                else
-                    row9.createCell(1).setCellValue("");
+//                else
+//                    row9.createCell(1).setCellValue("");
                 row9.createCell(2).setCellValue("0-128 characters");
 
                 XSSFRow row10 = sheet.createRow(10);
                 row10.createCell(0).setCellValue("MQTT Password");
                 if (!TextUtils.isEmpty(mqttDeviceConfig.password))
                     row10.createCell(1).setCellValue(String.format("value:%s", mqttDeviceConfig.password));
-                else
-                    row10.createCell(1).setCellValue("");
+//                else
+//                    row10.createCell(1).setCellValue("");
                 row10.createCell(2).setCellValue("0-128 characters");
 
                 XSSFRow row11 = sheet.createRow(11);
@@ -877,16 +879,16 @@ public class SetDeviceMQTTActivity extends BaseActivity implements RadioGroup.On
                 row16.createCell(0).setCellValue("LWT Topic");
                 if (!TextUtils.isEmpty(mqttDeviceConfig.lwtTopic))
                     row16.createCell(1).setCellValue(String.format("value:%s", mqttDeviceConfig.lwtTopic));
-                else
-                    row16.createCell(1).setCellValue("");
+//                else
+//                    row16.createCell(1).setCellValue("");
                 row16.createCell(2).setCellValue("1-128 characters (When LWT is enabled) ");
 
                 XSSFRow row17 = sheet.createRow(17);
                 row17.createCell(0).setCellValue("LWT Payload");
                 if (!TextUtils.isEmpty(mqttDeviceConfig.lwtPayload))
                     row17.createCell(1).setCellValue(String.format("value:%s", mqttDeviceConfig.lwtPayload));
-                else
-                    row17.createCell(1).setCellValue("");
+//                else
+//                    row17.createCell(1).setCellValue("");
                 row17.createCell(2).setCellValue("1-128 characters (When LWT is enabled) ");
 
                 XSSFRow row18 = sheet.createRow(18);
@@ -898,8 +900,8 @@ public class SetDeviceMQTTActivity extends BaseActivity implements RadioGroup.On
                 row19.createCell(0).setCellValue("NTP URL");
                 if (!TextUtils.isEmpty(mqttDeviceConfig.ntpUrl))
                     row19.createCell(1).setCellValue(String.format("value:%s", mqttDeviceConfig.ntpUrl));
-                else
-                    row19.createCell(1).setCellValue("");
+//                else
+//                    row19.createCell(1).setCellValue("");
                 row19.createCell(2).setCellValue("0-64 characters");
 
                 XSSFRow row20 = sheet.createRow(20);
@@ -911,24 +913,24 @@ public class SetDeviceMQTTActivity extends BaseActivity implements RadioGroup.On
                 row21.createCell(0).setCellValue("APN");
                 if (!TextUtils.isEmpty(mqttDeviceConfig.apn))
                     row21.createCell(1).setCellValue(String.format("value:%s", mqttDeviceConfig.apn));
-                else
-                    row21.createCell(1).setCellValue("");
+//                else
+//                    row21.createCell(1).setCellValue("");
                 row21.createCell(2).setCellValue("0-100 characters");
 
                 XSSFRow row22 = sheet.createRow(22);
                 row22.createCell(0).setCellValue("APN Username");
                 if (!TextUtils.isEmpty(mqttDeviceConfig.apnUsername))
                     row22.createCell(1).setCellValue(String.format("value:%s", mqttDeviceConfig.apnUsername));
-                else
-                    row22.createCell(1).setCellValue("");
+//                else
+//                    row22.createCell(1).setCellValue("");
                 row22.createCell(2).setCellValue("0-127 characters");
 
                 XSSFRow row23 = sheet.createRow(23);
                 row23.createCell(0).setCellValue("APN Password");
                 if (!TextUtils.isEmpty(mqttDeviceConfig.apnPassword))
                     row23.createCell(1).setCellValue(String.format("value:%s", mqttDeviceConfig.apnPassword));
-                else
-                    row23.createCell(1).setCellValue("");
+//                else
+//                    row23.createCell(1).setCellValue("");
                 row23.createCell(2).setCellValue("0-127 characters");
 
                 XSSFRow row24 = sheet.createRow(24);

@@ -5,5 +5,5 @@ public class MsgCommon<T> {
     public DeviceParams device_info;
     public T data;
     public int result_code;
-    public int result_msg;
+    public String result_msg;
 }

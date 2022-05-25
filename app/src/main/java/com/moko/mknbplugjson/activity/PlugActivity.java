@@ -100,19 +100,20 @@ public class PlugActivity extends BaseActivity {
         getSwitchInfo();
     }
 
+    String mOverStatus;
+
     private void showOverDialog() {
         if (mIsOver)
             return;
-        String status = "";
         if (mMokoDevice.isOverload)
-            status = "overload";
+            mOverStatus = "overload";
         if (mMokoDevice.isOverVoltage)
-            status = "overvoltage";
+            mOverStatus = "overvoltage";
         if (mMokoDevice.isOverCurrent)
-            status = "overcurrent";
+            mOverStatus = "overcurrent";
         if (mMokoDevice.isUnderVoltage)
-            status = "undervoltage";
-        String message = String.format("Detect the socket %s, please confirm whether to exit the %s status?", status);
+            mOverStatus = "undervoltage";
+        String message = String.format("Detect the socket %s, please confirm whether to exit the %s status?", mOverStatus, mOverStatus);
         AlertMessageDialog dialog = new AlertMessageDialog();
         dialog.setTitle("Warning");
         dialog.setMessage(message);
@@ -129,7 +130,7 @@ public class PlugActivity extends BaseActivity {
     private void showClearOverStatusDialog() {
         AlertMessageDialog dialog = new AlertMessageDialog();
         dialog.setTitle("Warning");
-        dialog.setMessage("If YES, the socket will exit %s status, and please make sure it is within the protection threshold. If NO, you need manually reboot it to exit this status.");
+        dialog.setMessage(String.format("If YES, the socket will exit %s status, and please make sure it is within the protection threshold. If NO, you need manually reboot it to exit this status.", mOverStatus));
         dialog.setOnAlertCancelListener(() -> {
             finish();
         });
@@ -213,7 +214,8 @@ public class PlugActivity extends BaseActivity {
             return;
         }
         mMokoDevice.isOnline = true;
-        if (msgCommon.msg_id == MQTTConstants.NOTIFY_MSG_ID_SWITCH_STATE) {
+        if (msgCommon.msg_id == MQTTConstants.NOTIFY_MSG_ID_SWITCH_STATE
+                || msgCommon.msg_id == MQTTConstants.READ_MSG_ID_SWITCH_INFO) {
             if (mHandler.hasMessages(0)) {
                 dismissLoadingProgressDialog();
                 mHandler.removeMessages(0);
@@ -234,12 +236,9 @@ public class PlugActivity extends BaseActivity {
                     || mMokoDevice.isOverCurrent) {
                 showOverDialog();
             }
+            return;
         }
         if (msgCommon.msg_id == MQTTConstants.NOTIFY_MSG_ID_COUNTDOWN_INFO) {
-            if (mHandler.hasMessages(0)) {
-                dismissLoadingProgressDialog();
-                mHandler.removeMessages(0);
-            }
             Type infoType = new TypeToken<CountdownInfo>() {
             }.getType();
             CountdownInfo timerInfo = new Gson().fromJson(msgCommon.data, infoType);
@@ -252,9 +251,10 @@ public class PlugActivity extends BaseActivity {
                 int minute = (countdown % 3600) / 60;
                 int second = (countdown % 3600) % 60;
                 tvTimerState.setVisibility(View.VISIBLE);
-                String timer = String.format("Device will turn %s after %02d:%02d:%02d", switch_state, hour, minute, second);
+                String timer = String.format("Device will turn %s after %02d:%02d:%02d", switch_state == 1 ? "on" : "off", hour, minute, second);
                 tvTimerState.setText(timer);
             }
+            return;
         }
         if (msgCommon.msg_id == MQTTConstants.NOTIFY_MSG_ID_OVERLOAD_OCCUR) {
             Type infoType = new TypeToken<OverloadOccur>() {
@@ -267,6 +267,7 @@ public class PlugActivity extends BaseActivity {
             } else {
                 mIsOver = false;
             }
+            return;
         }
         if (msgCommon.msg_id == MQTTConstants.NOTIFY_MSG_ID_OVER_VOLTAGE_OCCUR) {
             Type infoType = new TypeToken<OverloadOccur>() {
@@ -279,6 +280,7 @@ public class PlugActivity extends BaseActivity {
             } else {
                 mIsOver = false;
             }
+            return;
         }
         if (msgCommon.msg_id == MQTTConstants.NOTIFY_MSG_ID_UNDER_VOLTAGE_OCCUR) {
             Type infoType = new TypeToken<OverloadOccur>() {
@@ -291,6 +293,7 @@ public class PlugActivity extends BaseActivity {
             } else {
                 mIsOver = false;
             }
+            return;
         }
         if (msgCommon.msg_id == MQTTConstants.NOTIFY_MSG_ID_OVER_CURRENT_OCCUR) {
             Type infoType = new TypeToken<OverloadOccur>() {
@@ -303,12 +306,14 @@ public class PlugActivity extends BaseActivity {
             } else {
                 mIsOver = false;
             }
+            return;
         }
         if (msgCommon.msg_id == MQTTConstants.NOTIFY_MSG_ID_LOAD_STATUS_NOTIFY) {
             Type infoType = new TypeToken<LoadInsertion>() {
             }.getType();
             LoadInsertion loadInsertion = new Gson().fromJson(msgCommon.data, infoType);
             ToastUtils.showToast(PlugActivity.this, loadInsertion.load == 1 ? "Load starts work！" : "Load stops work！");
+            return;
         }
         if (msgCommon.msg_id == MQTTConstants.CONFIG_MSG_ID_CLEAR_OVERLOAD_PROTECTION
                 || msgCommon.msg_id == MQTTConstants.CONFIG_MSG_ID_CLEAR_OVER_VOLTAGE_PROTECTION
@@ -322,7 +327,20 @@ public class PlugActivity extends BaseActivity {
                 ToastUtils.showToast(this, "Set up failed");
                 return;
             }
+            mIsOver = false;
             ToastUtils.showToast(this, "Set up succeed");
+            return;
+        }
+        if (msgCommon.msg_id == MQTTConstants.CONFIG_MSG_ID_SWITCH_STATE
+                || msgCommon.msg_id == MQTTConstants.CONFIG_MSG_ID_COUNTDOWN) {
+            if (mHandler.hasMessages(0)) {
+                dismissLoadingProgressDialog();
+                mHandler.removeMessages(0);
+            }
+            if (msgCommon.result_code != 0) {
+                ToastUtils.showToast(this, "Set up failed");
+            }
+            return;
         }
     }
 
@@ -377,7 +395,7 @@ public class PlugActivity extends BaseActivity {
         tvTimerState.setTextColor(ContextCompat.getColor(this, mMokoDevice.on_off ? R.color.blue_0188cc : R.color.grey_808080));
     }
 
-    public void back(View view) {
+    public void onBack(View view) {
         finish();
     }
 
@@ -504,7 +522,7 @@ public class PlugActivity extends BaseActivity {
             appTopic = appMqttConfig.topicPublish;
         }
         SwitchInfo switchInfo = new SwitchInfo();
-        switchInfo.switch_state = mMokoDevice.on_off ? 1 : 0;
+        switchInfo.switch_state = mMokoDevice.on_off ? 0 : 1;
         DeviceParams deviceParams = new DeviceParams();
         deviceParams.device_id = mMokoDevice.deviceId;
         deviceParams.mac = mMokoDevice.mac;

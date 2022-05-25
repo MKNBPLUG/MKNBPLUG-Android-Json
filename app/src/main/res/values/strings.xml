@@ -55,7 +55,7 @@
 
     <string name="more_modify_name_tips">Device name can\'t be blank</string>
 
-    <string name="device_info_title">Device information</string>
+    <string name="device_info_title">Device Information</string>
     <string name="device_info_manufacturer">Manufacturer</string>
     <string name="device_info_date">Date of Manufacture</string>
     <string name="device_info_product_model">Product Model</string>

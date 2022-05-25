@@ -39,12 +39,12 @@ public class BottomDialog extends MokoBaseDialog {
         return 0.7f;
     }
 
-    @OnClick(R.id.tv_cancel)
+    @OnClick(R2.id.tv_cancel)
     public void onCancel(View view) {
         dismiss();
     }
 
-    @OnClick(R.id.tv_confirm)
+    @OnClick(R2.id.tv_confirm)
     public void onConfirm(View view) {
         if (TextUtils.isEmpty(wvBottom.getSelectedText())) {
             return;

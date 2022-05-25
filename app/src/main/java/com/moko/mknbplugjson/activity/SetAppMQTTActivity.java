@@ -130,7 +130,7 @@ public class SetAppMQTTActivity extends BaseActivity implements RadioGroup.OnChe
         });
         vpMqtt.setOffscreenPageLimit(3);
         rgMqtt.setOnCheckedChangeListener(this);
-        expertFilePath = MainActivity.PATH_LOGCAT + File.separator + "export" + File.separator + "Settings for APP.xlsx";
+        expertFilePath = JSONMainActivity.PATH_LOGCAT + File.separator + "export" + File.separator + "Settings for APP.xlsx";
     }
 
 
@@ -181,7 +181,7 @@ public class SetAppMQTTActivity extends BaseActivity implements RadioGroup.OnChe
         sslFragment.setClientCertPath(mqttConfig.clientCertPath);
     }
 
-    public void back(View view) {
+    public void onBack(View view) {
         back();
     }
 
@@ -352,16 +352,16 @@ public class SetAppMQTTActivity extends BaseActivity implements RadioGroup.OnChe
                 row4.createCell(0).setCellValue("Subscribe Topic");
                 if (!TextUtils.isEmpty(mqttConfig.topicSubscribe))
                     row4.createCell(1).setCellValue(String.format("value:%s", mqttConfig.topicSubscribe));
-                else
-                    row4.createCell(1).setCellValue("");
+//                else
+//                    row4.createCell(1).setCellValue("");
                 row4.createCell(2).setCellValue("0-128 characters");
 
                 XSSFRow row5 = sheet.createRow(5);
                 row5.createCell(0).setCellValue("Publish Topic");
                 if (!TextUtils.isEmpty(mqttConfig.topicPublish))
                     row5.createCell(1).setCellValue(String.format("value:%s", mqttConfig.topicPublish));
-                else
-                    row5.createCell(1).setCellValue("");
+//                else
+//                    row5.createCell(1).setCellValue("");
                 row5.createCell(2).setCellValue("0-128 characters");
 
                 XSSFRow row6 = sheet.createRow(6);
@@ -383,16 +383,16 @@ public class SetAppMQTTActivity extends BaseActivity implements RadioGroup.OnChe
                 row9.createCell(0).setCellValue("MQTT Username");
                 if (!TextUtils.isEmpty(mqttConfig.username))
                     row9.createCell(1).setCellValue(String.format("value:%s", mqttConfig.username));
-                else
-                    row9.createCell(1).setCellValue("");
+//                else
+//                    row9.createCell(1).setCellValue("");
                 row9.createCell(2).setCellValue("0-128 characters");
 
                 XSSFRow row10 = sheet.createRow(10);
                 row10.createCell(0).setCellValue("MQTT Password");
                 if (!TextUtils.isEmpty(mqttConfig.password))
                     row10.createCell(1).setCellValue(String.format("value:%s", mqttConfig.password));
-                else
-                    row10.createCell(1).setCellValue("");
+//                else
+//                    row10.createCell(1).setCellValue("");
                 row10.createCell(2).setCellValue("0-128 characters");
 
                 XSSFRow row11 = sheet.createRow(11);

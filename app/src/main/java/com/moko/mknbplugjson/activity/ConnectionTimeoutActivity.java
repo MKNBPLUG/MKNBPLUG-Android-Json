@@ -129,7 +129,7 @@ public class ConnectionTimeoutActivity extends BaseActivity {
         }
     }
 
-    public void back(View view) {
+    public void onBack(View view) {
         finish();
     }
 

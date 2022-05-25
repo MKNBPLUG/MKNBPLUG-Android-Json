@@ -38,7 +38,6 @@ import no.nordicsemi.android.dfu.DfuServiceListenerHelper;
 public class ChooseFunctionActivity extends BaseActivity {
     public static final int REQUEST_CODE_SELECT_FIRMWARE = 0x10;
 
-    private int mSelectedDeviceMode;
     private int mSelectedDeviceType;
     private String mSelectedDeviceName;
     private String mSelectedDeviceMac;
@@ -50,7 +49,6 @@ public class ChooseFunctionActivity extends BaseActivity {
         ButterKnife.bind(this);
         mSelectedDeviceName = getIntent().getStringExtra(AppConstants.EXTRA_KEY_SELECTED_DEVICE_NAME);
         mSelectedDeviceMac = getIntent().getStringExtra(AppConstants.EXTRA_KEY_SELECTED_DEVICE_MAC);
-        mSelectedDeviceMode = getIntent().getIntExtra(AppConstants.EXTRA_KEY_SELECTED_DEVICE_MODE, 0);
         mSelectedDeviceType = getIntent().getIntExtra(AppConstants.EXTRA_KEY_SELECTED_DEVICE_TYPE, 0);
     }
 
@@ -64,7 +62,7 @@ public class ChooseFunctionActivity extends BaseActivity {
     }
 
 
-    public void back(View view) {
+    public void onBack(View view) {
         if (isWindowLocked())
             return;
         back();
@@ -94,9 +92,8 @@ public class ChooseFunctionActivity extends BaseActivity {
         Intent intent = new Intent(this, SetDeviceMQTTActivity.class);
         intent.putExtra(AppConstants.EXTRA_KEY_SELECTED_DEVICE_MAC, mSelectedDeviceMac);
         intent.putExtra(AppConstants.EXTRA_KEY_SELECTED_DEVICE_NAME, mSelectedDeviceName);
-        intent.putExtra(AppConstants.EXTRA_KEY_SELECTED_DEVICE_MODE, mSelectedDeviceMode);
         intent.putExtra(AppConstants.EXTRA_KEY_SELECTED_DEVICE_TYPE, mSelectedDeviceType);
-        startActivity(intent);
+        startActivityForResult(intent, AppConstants.REQUEST_CODE_DEVICE_MQTT_SETTINGS);
     }
 
     public void onDFU(View view) {
@@ -130,6 +127,12 @@ public class ChooseFunctionActivity extends BaseActivity {
                 } else {
                     ToastUtils.showToast(this, "file is not exists!");
                 }
+            }
+        }
+        if (requestCode == AppConstants.REQUEST_CODE_DEVICE_MQTT_SETTINGS) {
+            if (resultCode == RESULT_OK) {
+                setResult(RESULT_OK);
+                finish();
             }
         }
     }

@@ -104,7 +104,7 @@ public class ElectricityActivity extends BaseActivity {
             int current = powerInfo.current;
             float power = powerInfo.power * 0.1f;
             float power_factor = powerInfo.power_factor * 0.01f;
-            float frequency = powerInfo.power_factor * 0.01f;
+            float frequency = powerInfo.frequency * 0.01f;
             tvCurrent.setText(String.valueOf(current));
             tvVoltage.setText(Utils.getDecimalFormat("0.#").format(voltage));
             tvPower.setText(Utils.getDecimalFormat("0.#").format(power));
@@ -134,7 +134,7 @@ public class ElectricityActivity extends BaseActivity {
             finish();
     }
 
-    public void back(View view) {
+    public void onBack(View view) {
         finish();
     }
 

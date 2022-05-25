@@ -13,7 +13,7 @@ import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Environment;
 
-import com.moko.mknbplugjson.BaseApplication;
+import com.moko.mknbplugjson.activity.JSONMainActivity;
 
 import java.io.File;
 import java.io.IOException;
@@ -28,7 +28,7 @@ public class Utils {
         String devicePath;
         if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
             // 优先保存到SD卡中
-            devicePath = BaseApplication.PATH_LOGCAT + File.separator + fileName;
+            devicePath = JSONMainActivity.PATH_LOGCAT + File.separator + fileName;
         } else {
             // 如果SD卡不存在，就保存到本应用的目录下
             devicePath = context.getFilesDir().getAbsolutePath() + File.separator + "MKNBPLUGJSON" + File.separator + fileName;

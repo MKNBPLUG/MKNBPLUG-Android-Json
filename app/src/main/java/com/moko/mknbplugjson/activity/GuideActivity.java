@@ -12,11 +12,9 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Process;
 import android.provider.Settings;
-import android.widget.ImageView;
 
 import com.moko.mknbplugjson.AppConstants;
 import com.moko.mknbplugjson.R;
-import com.moko.mknbplugjson.R2;
 import com.moko.mknbplugjson.base.BaseActivity;
 import com.moko.mknbplugjson.utils.Utils;
 import com.moko.support.json.event.MQTTConnectionCompleteEvent;
@@ -25,7 +23,6 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import androidx.core.app.ActivityCompat;
-import butterknife.BindView;
 import butterknife.ButterKnife;
 
 public class GuideActivity extends BaseActivity {
@@ -76,7 +73,7 @@ public class GuideActivity extends BaseActivity {
                 runOnUiThread(new Runnable() {
                     @Override
                     public void run() {
-                        startActivity(new Intent(GuideActivity.this, MainActivity.class));
+                        startActivity(new Intent(GuideActivity.this, JSONMainActivity.class));
                         GuideActivity.this.finish();
                     }
                 });

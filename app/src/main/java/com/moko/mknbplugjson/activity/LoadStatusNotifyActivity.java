@@ -135,7 +135,7 @@ public class LoadStatusNotifyActivity extends BaseActivity {
     }
 
 
-    public void back(View view) {
+    public void onBack(View view) {
         finish();
     }
 

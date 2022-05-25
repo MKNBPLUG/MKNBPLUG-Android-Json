@@ -16,7 +16,7 @@
         <ImageView
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
-            android:onClick="back"
+            android:onClick="onBack"
             android:paddingLeft="12dp"
             android:paddingRight="12dp"
             android:scaleType="fitCenter"
@@ -27,7 +27,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerInParent="true"
-            android:text="Settings for Device"
+            android:text="Modify Network and MQTT"
             android:textColor="@color/white_ffffff"
             android:textSize="17sp" />
 

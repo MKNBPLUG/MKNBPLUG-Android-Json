@@ -112,8 +112,6 @@ public class LWTFragment extends Fragment {
     }
 
     public boolean isValid() {
-        if (!cbLwt.isChecked())
-            return true;
         final String topicStr = etLwtTopic.getText().toString();
         if (TextUtils.isEmpty(topicStr)) {
             ToastUtils.showToast(getActivity(), "LWT Topic Error");
@@ -131,6 +129,8 @@ public class LWTFragment extends Fragment {
 
     public void setQos(int qos) {
         this.qos = qos;
+        if (rgQos == null)
+            return;
         if (qos == 0) {
             rbQos1.setChecked(true);
         } else if (qos == 1) {

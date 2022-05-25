@@ -57,6 +57,7 @@ public class SystemTimeActivity extends BaseActivity {
 
     private ArrayList<String> mTimeZones;
     private int mSelectedTimeZone;
+    private String mShowTime;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -79,9 +80,9 @@ public class SystemTimeActivity extends BaseActivity {
         mHandler = new Handler(Looper.getMainLooper());
         mSyncTimeHandler = new Handler(Looper.getMainLooper());
         Calendar calendar = Calendar.getInstance();
-        String showTime = MokoUtils.calendar2strDate(calendar, AppConstants.PATTERN_YYYY_MM_DD_HH_MM);
+        mShowTime = MokoUtils.calendar2strDate(calendar, AppConstants.PATTERN_YYYY_MM_DD_HH_MM);
         mSelectedTimeZone = 40;
-        tvDeviceTime.setText(String.format("Device time:%s %s", showTime, mTimeZones.get(mSelectedTimeZone)));
+        tvDeviceTime.setText(String.format("Device time:%s %s", mShowTime, mTimeZones.get(mSelectedTimeZone)));
         showLoadingProgressDialog();
         mHandler.postDelayed(() -> {
             dismissLoadingProgressDialog();
@@ -122,6 +123,7 @@ public class SystemTimeActivity extends BaseActivity {
             TimeZone timeZone = new Gson().fromJson(msgCommon.data, infoType);
             mSelectedTimeZone = timeZone.time_zone + 24;
             tvTimeZone.setText(mTimeZones.get(mSelectedTimeZone));
+            tvDeviceTime.setText(String.format("Device time:%s %s", mShowTime, mTimeZones.get(mSelectedTimeZone)));
         }
         if (msgCommon.msg_id == MQTTConstants.READ_MSG_ID_SYSTEM_TIME) {
             if (mHandler.hasMessages(0)) {
@@ -135,9 +137,9 @@ public class SystemTimeActivity extends BaseActivity {
             SystemTime systemTime = new Gson().fromJson(msgCommon.data, infoType);
             int time = systemTime.time;
             Calendar calendar = Calendar.getInstance();
-            calendar.setTimeInMillis(time * 1000);
-            String showTime = MokoUtils.calendar2strDate(calendar, AppConstants.PATTERN_YYYY_MM_DD_HH_MM);
-            tvDeviceTime.setText(String.format("Device time:%s %s", showTime, mTimeZones.get(mSelectedTimeZone)));
+            calendar.setTimeInMillis(time * 1000L);
+            mShowTime = MokoUtils.calendar2strDate(calendar, AppConstants.PATTERN_YYYY_MM_DD_HH_MM);
+            tvDeviceTime.setText(String.format("Device time:%s %s", mShowTime, mTimeZones.get(mSelectedTimeZone)));
             if (mSyncTimeHandler.hasMessages(0))
                 mSyncTimeHandler.removeMessages(0);
             mSyncTimeHandler.postDelayed(() -> {
@@ -179,7 +181,7 @@ public class SystemTimeActivity extends BaseActivity {
             finish();
     }
 
-    public void back(View view) {
+    public void onBack(View view) {
         finish();
     }
 
@@ -253,9 +255,8 @@ public class SystemTimeActivity extends BaseActivity {
         Calendar calendar = Calendar.getInstance();
         SystemTime systemTime = new SystemTime();
         systemTime.time = (int) (calendar.getTimeInMillis() / 1000);
-        String showTime = MokoUtils.calendar2strDate(calendar, AppConstants.PATTERN_YYYY_MM_DD_HH_MM);
-        mSelectedTimeZone = 40;
-        tvDeviceTime.setText(String.format("Device time:%s %s", showTime, mTimeZones.get(mSelectedTimeZone)));
+        mShowTime = MokoUtils.calendar2strDate(calendar, AppConstants.PATTERN_YYYY_MM_DD_HH_MM);
+        tvDeviceTime.setText(String.format("Device time:%s %s", mShowTime, mTimeZones.get(mSelectedTimeZone)));
         String message = MQTTMessageAssembler.assembleWriteSystemTime(deviceParams, systemTime);
         try {
             MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.CONFIG_MSG_ID_SYSTEM_TIME, appMqttConfig.qos);
@@ -276,6 +277,7 @@ public class SystemTimeActivity extends BaseActivity {
             }
             mSelectedTimeZone = value;
             tvTimeZone.setText(mTimeZones.get(mSelectedTimeZone));
+            tvDeviceTime.setText(String.format("Device time:%s %s", mShowTime, mTimeZones.get(mSelectedTimeZone)));
             mHandler.postDelayed(() -> {
                 dismissLoadingProgressDialog();
                 ToastUtils.showToast(this, "Set up failed");

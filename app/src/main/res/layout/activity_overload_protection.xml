@@ -20,7 +20,7 @@
             android:drawableLeft="@drawable/back"
             android:drawablePadding="6dp"
             android:gravity="center_vertical"
-            android:onClick="back"
+            android:onClick="onBack"
             android:paddingLeft="16dp"
             android:text=""
             android:textColor="@color/white_ffffff"

@@ -41,7 +41,6 @@ public class AppConstants {
     public static final String EXTRA_KEY_MQTT_CONFIG_APP = "EXTRA_KEY_MQTT_CONFIG_APP";
     public static final String EXTRA_KEY_SELECTED_DEVICE_MAC = "EXTRA_KEY_SELECTED_DEVICE_MAC";
     public static final String EXTRA_KEY_SELECTED_DEVICE_NAME = "EXTRA_KEY_SELECTED_DEVICE_NAME";
-    public static final String EXTRA_KEY_SELECTED_DEVICE_MODE = "EXTRA_KEY_SELECTED_DEVICE_MODE";
     public static final String EXTRA_KEY_SELECTED_DEVICE_TYPE = "EXTRA_KEY_SELECTED_DEVICE_TYPE";
     public static final String EXTRA_KEY_DEVICE_MAC = "EXTRA_KEY_DEVICE_MAC";
     // request_code
@@ -65,6 +64,7 @@ public class AppConstants {
     public static final int REQUEST_CODE_OPEN_APP_SETTINGS_FILE = 130;
     public static final int REQUEST_CODE_OPEN_DEVICE_SETTINGS_FILE = 131;
     public static final int REQUEST_CODE_LOG = 132;
+    public static final int REQUEST_CODE_DEVICE_MQTT_SETTINGS= 133;
 
     public static final int PERMISSION_REQUEST_CODE = 1;
     // result_code

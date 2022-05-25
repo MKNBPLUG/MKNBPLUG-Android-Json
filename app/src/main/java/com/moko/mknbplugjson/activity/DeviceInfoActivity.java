@@ -93,7 +93,7 @@ public class DeviceInfoActivity extends BaseActivity {
             return;
         }
         mMokoDevice.isOnline = true;
-        if (msgCommon.msg_id == MQTTConstants.READ_MSG_ID_DEVICE_STATUS) {
+        if (msgCommon.msg_id == MQTTConstants.READ_MSG_ID_DEVICE_INFO) {
             if (mHandler.hasMessages(0)) {
                 dismissLoadingProgressDialog();
                 mHandler.removeMessages(0);
@@ -126,7 +126,7 @@ public class DeviceInfoActivity extends BaseActivity {
         }
     }
 
-    public void back(View view) {
+    public void onBack(View view) {
         finish();
     }
 

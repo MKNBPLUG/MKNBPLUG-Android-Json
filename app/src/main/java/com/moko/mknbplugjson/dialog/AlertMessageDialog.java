@@ -175,14 +175,14 @@ public class AlertMessageDialog extends MokoBaseDialog {
         cancelGone = true;
     }
 
-    @OnClick(R.id.tv_alert_cancel)
+    @OnClick(R2.id.tv_alert_cancel)
     public void onCancel(View view) {
         dismiss();
         if (onAlertCancelListener != null)
             onAlertCancelListener.onClick();
     }
 
-    @OnClick(R.id.tv_alert_confirm)
+    @OnClick(R2.id.tv_alert_confirm)
     public void onConfirm(View view) {
         dismiss();
         if (onAlertConfirmListener != null)

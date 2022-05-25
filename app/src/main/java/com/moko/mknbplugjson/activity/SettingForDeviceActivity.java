@@ -119,7 +119,7 @@ public class SettingForDeviceActivity extends BaseActivity {
             return;
         }
         mMokoDevice.isOnline = true;
-        if (msgCommon.msg_id == MQTTConstants.READ_MSG_ID_DEVICE_STATUS) {
+        if (msgCommon.msg_id == MQTTConstants.READ_MSG_ID_DEVICE_SETTINGS) {
             if (mHandler.hasMessages(0)) {
                 dismissLoadingProgressDialog();
                 mHandler.removeMessages(0);
@@ -137,7 +137,7 @@ public class SettingForDeviceActivity extends BaseActivity {
             tvClientId.setText(mqttSettings.client_id);
             tvCleanSession.setText(mqttSettings.clean_session == 0 ? "NO" : "YES");
             tvQos.setText(String.valueOf(mqttSettings.qos));
-            tvKeepAlive.setText(String.valueOf(mqttSettings.keep_alive));
+            tvKeepAlive.setText(String.valueOf(mqttSettings.keepalive));
             tvDeviceId.setText(mMokoDevice.deviceId);
 
             if (mqttSettings.encryption_type == 0) {
@@ -179,7 +179,7 @@ public class SettingForDeviceActivity extends BaseActivity {
         }
     }
 
-    public void back(View view) {
+    public void onBack(View view) {
         finish();
     }
 

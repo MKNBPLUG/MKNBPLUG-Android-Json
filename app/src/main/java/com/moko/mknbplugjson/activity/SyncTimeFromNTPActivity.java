@@ -144,7 +144,7 @@ public class SyncTimeFromNTPActivity extends BaseActivity {
     }
 
 
-    public void back(View view) {
+    public void onBack(View view) {
         finish();
     }
 
@@ -191,9 +191,8 @@ public class SyncTimeFromNTPActivity extends BaseActivity {
     }
 
     private boolean isValid() {
-        String ntpUrlStr = etNtpUrl.getText().toString();
         String syncIntervalStr = etSyncInterval.getText().toString();
-        if (TextUtils.isEmpty(ntpUrlStr) || TextUtils.isEmpty(syncIntervalStr)) {
+        if (TextUtils.isEmpty(syncIntervalStr)) {
             return false;
         }
         int syncInterval = Integer.parseInt(syncIntervalStr);

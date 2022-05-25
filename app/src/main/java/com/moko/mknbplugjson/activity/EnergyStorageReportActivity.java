@@ -135,7 +135,7 @@ public class EnergyStorageReportActivity extends BaseActivity {
             finish();
     }
 
-    public void back(View view) {
+    public void onBack(View view) {
         finish();
     }
 
@@ -158,7 +158,7 @@ public class EnergyStorageReportActivity extends BaseActivity {
         }
     }
 
-    private void setEnergyStorageReport(int storageInterval, int reportInterval, int reportThreshold) {
+    private void setEnergyStorageReport(int storageInterval, int storageThreshold, int reportInterval) {
         String appTopic;
         if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
             appTopic = mMokoDevice.topicSubscribe;
@@ -170,8 +170,8 @@ public class EnergyStorageReportActivity extends BaseActivity {
         deviceParams.mac = mMokoDevice.mac;
         EnergyStorageReport energyStorageReport = new EnergyStorageReport();
         energyStorageReport.storage_interval = storageInterval;
+        energyStorageReport.storage_threshold = storageThreshold;
         energyStorageReport.report_interval = reportInterval;
-        energyStorageReport.report_interval = reportThreshold;
         String message = MQTTMessageAssembler.assembleWriteEnergyReportParams(deviceParams, energyStorageReport);
         try {
             MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.CONFIG_MSG_ID_ENERGY_REPORT_PARAMS, appMqttConfig.qos);

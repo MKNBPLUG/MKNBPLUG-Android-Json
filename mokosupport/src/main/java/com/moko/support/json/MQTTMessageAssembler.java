@@ -345,7 +345,7 @@ public class MQTTMessageAssembler {
     public static String assembleReadOverloadProtection(DeviceParams deviceParams) {
         MsgCommon msgCommon = new MsgCommon();
         msgCommon.device_info = deviceParams;
-        msgCommon.msg_id = MQTTConstants.CONFIG_MSG_ID_OVER_LOAD_PROTECTION;
+        msgCommon.msg_id = MQTTConstants.READ_MSG_ID_OVER_LOAD_PROTECTION;
         String message = new Gson().toJson(msgCommon);
         XLog.e("app_to_device--->" + message);
         return message;

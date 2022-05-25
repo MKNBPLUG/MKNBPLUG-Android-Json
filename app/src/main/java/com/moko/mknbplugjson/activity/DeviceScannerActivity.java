@@ -72,7 +72,6 @@ public class DeviceScannerActivity extends BaseActivity implements MokoScanDevic
     private String mSavedPassword;
     private String mSelectedName;
     private String mSelectedMac;
-    private int mSelectedDeviceMode;
     private int mSelectedDeviceType;
 
     @Override
@@ -210,6 +209,10 @@ public class DeviceScannerActivity extends BaseActivity implements MokoScanDevic
                 mHandler.removeMessages(0);
                 mokoBleScanner.stopScanDevice();
             }
+            mPassword = "";
+            mSelectedName = deviceInfo.name;
+            mSelectedMac = deviceInfo.mac;
+            mSelectedDeviceType = deviceInfo.deviceType;
             if (deviceInfo.deviceMode == 1) {
                 // show password
                 final PasswordDialog dialog = new PasswordDialog();
@@ -223,10 +226,6 @@ public class DeviceScannerActivity extends BaseActivity implements MokoScanDevic
                         }
                         XLog.i(password);
                         mPassword = password;
-                        mSelectedName = deviceInfo.name;
-                        mSelectedMac = deviceInfo.mac;
-                        mSelectedDeviceMode = deviceInfo.deviceMode;
-                        mSelectedDeviceType = deviceInfo.deviceType;
                         if (animation != null) {
                             mHandler.removeMessages(0);
                             mokoBleScanner.stopScanDevice();
@@ -248,7 +247,7 @@ public class DeviceScannerActivity extends BaseActivity implements MokoScanDevic
         }
     }
 
-    public void back(View view) {
+    public void onBack(View view) {
         back();
     }
 
@@ -275,6 +274,7 @@ public class DeviceScannerActivity extends BaseActivity implements MokoScanDevic
                 Intent intent = new Intent(this, LogDataActivity.class);
                 intent.putExtra(AppConstants.EXTRA_KEY_DEVICE_MAC, mSelectedMac);
                 startActivityForResult(intent, AppConstants.REQUEST_CODE_LOG);
+                return;
             }
             showLoadingMessageDialog("Verifying..");
             mHandler.postDelayed(() -> {
@@ -326,9 +326,8 @@ public class DeviceScannerActivity extends BaseActivity implements MokoScanDevic
                                 Intent intent = new Intent(this, ChooseFunctionActivity.class);
                                 intent.putExtra(AppConstants.EXTRA_KEY_SELECTED_DEVICE_MAC, mSelectedMac);
                                 intent.putExtra(AppConstants.EXTRA_KEY_SELECTED_DEVICE_NAME, mSelectedName);
-                                intent.putExtra(AppConstants.EXTRA_KEY_SELECTED_DEVICE_MODE, mSelectedDeviceMode);
                                 intent.putExtra(AppConstants.EXTRA_KEY_SELECTED_DEVICE_TYPE, mSelectedDeviceType);
-                                startActivity(intent);
+                                startActivityForResult(intent, AppConstants.REQUEST_CODE_DEVICE_MQTT_SETTINGS);
                             }
                             if (0 == result) {
                                 isPasswordError = true;
@@ -356,6 +355,13 @@ public class DeviceScannerActivity extends BaseActivity implements MokoScanDevic
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == AppConstants.REQUEST_CODE_LOG) {
+            if (animation == null) {
+                startScan();
+            }
+        }
+        if (requestCode == AppConstants.REQUEST_CODE_DEVICE_MQTT_SETTINGS) {
+            if (resultCode != RESULT_OK)
+                return;
             if (animation == null) {
                 startScan();
             }

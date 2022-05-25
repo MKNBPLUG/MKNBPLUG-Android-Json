@@ -173,7 +173,7 @@ public class IndicatorStatusActivity extends BaseActivity implements NumberPicke
             finish();
     }
 
-    public void back(View view) {
+    public void onBack(View view) {
         finish();
     }
 
@@ -290,14 +290,14 @@ public class IndicatorStatusActivity extends BaseActivity implements NumberPicke
         deviceParams.mac = mMokoDevice.mac;
         IndicatorStatus indicatorStatus = new IndicatorStatus();
         indicatorStatus.led_state = npvColorSettings.getValue();
-        if (indicatorStatus.led_state < 2) {
+//        if (indicatorStatus.led_state < 2) {
             indicatorStatus.blue = blueValue;
             indicatorStatus.green = greenValue;
             indicatorStatus.yellow = yellowValue;
             indicatorStatus.orange = orangeValue;
             indicatorStatus.red = redValue;
             indicatorStatus.purple = purpleValue;
-        }
+//        }
         String appTopic;
         if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
             appTopic = mMokoDevice.topicSubscribe;

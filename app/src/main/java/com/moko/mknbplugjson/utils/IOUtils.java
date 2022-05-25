@@ -13,7 +13,7 @@ import android.os.ParcelFileDescriptor;
 import android.provider.MediaStore;
 
 import com.elvishew.xlog.XLog;
-import com.moko.mknbplugjson.BaseApplication;
+import com.moko.mknbplugjson.activity.JSONMainActivity;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -47,7 +47,7 @@ public class IOUtils {
         boolean exist = isSdCardExist();
         String sdpath = "";
         if (exist) {
-            sdpath = BaseApplication.PATH_LOGCAT;
+            sdpath = JSONMainActivity.PATH_LOGCAT;
         }
         return sdpath;
 
@@ -63,7 +63,7 @@ public class IOUtils {
         String filepath = "";
         File file;
         // 优先保存到SD卡中
-        file = new File(BaseApplication.PATH_LOGCAT, CRASH_FILE);
+        file = new File(JSONMainActivity.PATH_LOGCAT, CRASH_FILE);
         try {
             if (file.exists()) {
                 filepath = file.getAbsolutePath();
@@ -84,7 +84,7 @@ public class IOUtils {
      */
     public static String getFilePath(String fileName) {
         String filepath = "";
-        File file = new File(BaseApplication.PATH_LOGCAT, fileName);
+        File file = new File(JSONMainActivity.PATH_LOGCAT, fileName);
         try {
             if (file.exists()) {
                 filepath = file.getAbsolutePath();

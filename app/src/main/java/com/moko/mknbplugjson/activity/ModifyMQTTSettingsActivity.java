@@ -188,8 +188,10 @@ public class ModifyMQTTSettingsActivity extends BaseActivity implements RadioGro
     private void initData() {
         generalFragment.setCleanSession(mMQTTSettings.clean_session == 1);
         generalFragment.setQos(mMQTTSettings.qos);
-        generalFragment.setKeepAlive(mMQTTSettings.keep_alive);
+        generalFragment.setKeepAlive(mMQTTSettings.keepalive);
         lwtFragment.setQos(mLWTSettings.lwt_qos);
+        lwtFragment.setTopic(mLWTSettings.lwt_topic);
+        lwtFragment.setPayload(mLWTSettings.lwt_message);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -315,10 +317,7 @@ public class ModifyMQTTSettingsActivity extends BaseActivity implements RadioGro
                 dismissLoadingProgressDialog();
                 mHandler.removeMessages(0);
             }
-            Type infoType = new TypeToken<ReadyResult>() {
-            }.getType();
-            ReadyResult readyResult = new Gson().fromJson(msgCommon.data, infoType);
-            if (readyResult.result != 0) {
+            if (msgCommon.result_code != 0) {
                 ToastUtils.showToast(this, "Setup failed, please try it again!");
                 return;
             }
@@ -330,7 +329,7 @@ public class ModifyMQTTSettingsActivity extends BaseActivity implements RadioGro
             mMokoDevice.mqttInfo = new Gson().toJson(mqttConfig, MQTTConfig.class);
             DBTools.getInstance(this).updateDevice(mMokoDevice);
             // 跳转首页，刷新数据
-            Intent intent = new Intent(this, MainActivity.class);
+            Intent intent = new Intent(this, JSONMainActivity.class);
             intent.putExtra(AppConstants.EXTRA_KEY_FROM_ACTIVITY, TAG);
             intent.putExtra(AppConstants.EXTRA_KEY_DEVICE_ID, mMokoDevice.deviceId);
             startActivity(intent);
@@ -347,10 +346,6 @@ public class ModifyMQTTSettingsActivity extends BaseActivity implements RadioGro
         if (!online) {
             finish();
         }
-    }
-
-    public void back(View view) {
-        finish();
     }
 
     public void onBack(View view) {
@@ -402,7 +397,7 @@ public class ModifyMQTTSettingsActivity extends BaseActivity implements RadioGro
 
         mMQTTSettings.clean_session = generalFragment.isCleanSession() ? 1 : 0;
         mMQTTSettings.qos = generalFragment.getQos();
-        mMQTTSettings.keep_alive = generalFragment.getKeepAlive();
+        mMQTTSettings.keepalive = generalFragment.getKeepAlive();
         mMQTTSettings.username = userFragment.getUsername();
         mMQTTSettings.password = userFragment.getPassword();
         mMQTTSettings.encryption_type = sslFragment.getConnectMode();
@@ -421,18 +416,17 @@ public class ModifyMQTTSettingsActivity extends BaseActivity implements RadioGro
         mLWTSettings.lwt_enable = lwtFragment.getLwtEnable() ? 1 : 0;
         mLWTSettings.lwt_retain = lwtFragment.getLwtRetain() ? 1 : 0;
         mLWTSettings.lwt_qos = lwtFragment.getQos();
-        mLWTSettings.lwt_topic = lwtFragment.getTopic();
+        String lwtTopic = lwtFragment.getTopic();
+        if ("{device_name}/{device_id}/app_to_device".equals(lwtTopic)) {
+            lwtTopic = String.format("%s/%s/app_to_device", mMokoDevice.name, mMokoDevice.deviceId);
+        }
+        mLWTSettings.lwt_topic = lwtTopic;
         mLWTSettings.lwt_message = lwtFragment.getPayload();
         mAPNSettings.apn = apn;
         mAPNSettings.apn_username = apnUsername;
         mAPNSettings.apn_password = apnPassword;
         mNetworkSettings.network_priority = mSelectedNetworkPriority;
 
-        showLoadingProgressDialog();
-        mHandler.postDelayed(() -> {
-            dismissLoadingProgressDialog();
-            ToastUtils.showToast(this, "Set up failed");
-        }, 30 * 1000);
         DeviceParams deviceParams = new DeviceParams();
         deviceParams.device_id = mMokoDevice.deviceId;
         deviceParams.mac = mMokoDevice.mac;

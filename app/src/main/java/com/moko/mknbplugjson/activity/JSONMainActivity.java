@@ -67,7 +67,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 
-public class MainActivity extends BaseActivity implements BaseQuickAdapter.OnItemChildClickListener,
+public class JSONMainActivity extends BaseActivity implements BaseQuickAdapter.OnItemChildClickListener,
         BaseQuickAdapter.OnItemClickListener,
         BaseQuickAdapter.OnItemLongClickListener {
 
@@ -88,7 +88,7 @@ public class MainActivity extends BaseActivity implements BaseQuickAdapter.OnIte
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.activity_main_json);
         ButterKnife.bind(this);
 
         // 初始化Xlog
@@ -112,6 +112,7 @@ public class MainActivity extends BaseActivity implements BaseQuickAdapter.OnIte
         adapter.replaceData(devices);
         adapter.setOnItemClickListener(this);
         adapter.setOnItemLongClickListener(this);
+        adapter.setOnItemChildClickListener(this);
         rvDeviceList.setLayoutManager(new LinearLayoutManager(this));
         rvDeviceList.setAdapter(adapter);
         if (devices.isEmpty()) {
@@ -391,7 +392,8 @@ public class MainActivity extends BaseActivity implements BaseQuickAdapter.OnIte
             appTopic = appMqttConfig.topicPublish;
         }
         SwitchInfo switchInfo = new SwitchInfo();
-        switchInfo.switch_state = device.on_off ? 1 : 0;
+        // 设置与当前开关相反的状态
+        switchInfo.switch_state = device.on_off ? 0 : 1;
         DeviceParams deviceParams = new DeviceParams();
         deviceParams.device_id = device.deviceId;
         deviceParams.mac = device.mac;
@@ -412,7 +414,7 @@ public class MainActivity extends BaseActivity implements BaseQuickAdapter.OnIte
             ToastUtils.showToast(this, R.string.network_error);
             return;
         }
-        Intent i = new Intent(MainActivity.this, PlugActivity.class);
+        Intent i = new Intent(JSONMainActivity.this, PlugActivity.class);
         i.putExtra(AppConstants.EXTRA_KEY_DEVICE, mokoDevice);
         startActivity(i);
     }
@@ -427,10 +429,10 @@ public class MainActivity extends BaseActivity implements BaseQuickAdapter.OnIte
         dialog.setMessage("Please confirm again whether to \n remove the device,the device \n will be deleted from the device list.");
         dialog.setOnAlertConfirmListener(() -> {
             if (!MQTTSupport.getInstance().isConnected()) {
-                ToastUtils.showToast(MainActivity.this, R.string.network_error);
+                ToastUtils.showToast(JSONMainActivity.this, R.string.network_error);
                 return;
             }
-            showLoadingProgressDialog();
+//            showLoadingProgressDialog();
             // 取消订阅
             try {
                 MQTTSupport.getInstance().unSubscribe(mokoDevice.topicPublish);
@@ -438,7 +440,7 @@ public class MainActivity extends BaseActivity implements BaseQuickAdapter.OnIte
                 e.printStackTrace();
             }
             XLog.i(String.format("删除设备:%s", mokoDevice.name));
-            DBTools.getInstance(MainActivity.this).deleteDevice(mokoDevice);
+            DBTools.getInstance(JSONMainActivity.this).deleteDevice(mokoDevice);
             EventBus.getDefault().post(new DeviceDeletedEvent(mokoDevice.id));
         });
         dialog.show(getSupportFragmentManager());
@@ -507,7 +509,8 @@ public class MainActivity extends BaseActivity implements BaseQuickAdapter.OnIte
                     device.isOverload = switchInfo.overload_state == 1;
                     device.isOverCurrent = switchInfo.overcurrent_state == 1;
                     device.isOverVoltage = switchInfo.overvoltage_state == 1;
-                    device.isUnderVoltage= switchInfo.undervoltage_state == 1;
+                    device.isUnderVoltage = switchInfo.undervoltage_state == 1;
+                    break;
                 }
 //                if (msgCommon.msg_id == MQTTConstants.NOTIFY_MSG_ID_OVERLOAD_OCCUR) {
 //                    Type infoType = new TypeToken<OverloadInfo>() {
@@ -521,24 +524,28 @@ public class MainActivity extends BaseActivity implements BaseQuickAdapter.OnIte
                     }.getType();
                     OverloadOccur overloadOccur = new Gson().fromJson(msgCommon.data, infoType);
                     device.isOverload = overloadOccur.state == 1;
+                    break;
                 }
                 if (msgCommon.msg_id == MQTTConstants.NOTIFY_MSG_ID_OVER_VOLTAGE_OCCUR) {
                     Type infoType = new TypeToken<OverloadOccur>() {
                     }.getType();
                     OverloadOccur overloadOccur = new Gson().fromJson(msgCommon.data, infoType);
                     device.isOverVoltage = overloadOccur.state == 1;
+                    break;
                 }
                 if (msgCommon.msg_id == MQTTConstants.NOTIFY_MSG_ID_OVER_CURRENT_OCCUR) {
                     Type infoType = new TypeToken<OverloadOccur>() {
                     }.getType();
                     OverloadOccur overloadOccur = new Gson().fromJson(msgCommon.data, infoType);
                     device.isOverCurrent = overloadOccur.state == 1;
+                    break;
                 }
                 if (msgCommon.msg_id == MQTTConstants.NOTIFY_MSG_ID_UNDER_VOLTAGE_OCCUR) {
                     Type infoType = new TypeToken<OverloadOccur>() {
                     }.getType();
                     OverloadOccur overloadOccur = new Gson().fromJson(msgCommon.data, infoType);
                     device.isUnderVoltage = overloadOccur.state == 1;
+                    break;
                 }
                 if (msgCommon.msg_id == MQTTConstants.CONFIG_MSG_ID_SWITCH_STATE) {
                     if (mHandler.hasMessages(0)) {
@@ -547,13 +554,13 @@ public class MainActivity extends BaseActivity implements BaseQuickAdapter.OnIte
                     }
                     if (msgCommon.result_code != 0) {
                         ToastUtils.showToast(this, "Set up failed");
-                        return;
                     }
+                    break;
                 }
-                adapter.replaceData(devices);
                 break;
             }
         }
+        adapter.replaceData(devices);
     }
 
     @Override
@@ -604,7 +611,7 @@ public class MainActivity extends BaseActivity implements BaseQuickAdapter.OnIte
         } else {
             AlertMessageDialog dialog = new AlertMessageDialog();
             dialog.setMessage(R.string.main_exit_tips);
-            dialog.setOnAlertConfirmListener(() -> MainActivity.this.finish());
+            dialog.setOnAlertConfirmListener(() -> JSONMainActivity.this.finish());
             dialog.show(getSupportFragmentManager());
         }
     }

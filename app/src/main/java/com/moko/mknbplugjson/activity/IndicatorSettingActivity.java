@@ -91,7 +91,6 @@ public class IndicatorSettingActivity extends BaseActivity {
         getServerConnectedStatus();
         getPowerStatus();
         getPowerProtectStatus();
-        getPowerProtectStatus();
         getDeviceType();
     }
 
@@ -226,7 +225,7 @@ public class IndicatorSettingActivity extends BaseActivity {
             finish();
     }
 
-    public void back(View view) {
+    public void onBack(View view) {
         finish();
     }
 

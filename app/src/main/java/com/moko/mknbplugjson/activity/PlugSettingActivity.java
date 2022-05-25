@@ -141,6 +141,7 @@ public class PlugSettingActivity extends BaseActivity {
                 ToastUtils.showToast(this, "Set up failed");
                 return;
             }
+            ivButtonControl.setImageResource(mButtonControlEnable ? R.drawable.checkbox_open : R.drawable.checkbox_close);
             ToastUtils.showToast(this, "Set up succeed");
         }
         if (msgCommon.msg_id == MQTTConstants.CONFIG_MSG_ID_RESET) {
@@ -167,7 +168,7 @@ public class PlugSettingActivity extends BaseActivity {
             ivButtonControl.postDelayed(() -> {
                 dismissLoadingProgressDialog();
                 // 跳转首页，刷新数据
-                Intent intent = new Intent(this, MainActivity.class);
+                Intent intent = new Intent(this, JSONMainActivity.class);
                 intent.putExtra(AppConstants.EXTRA_KEY_FROM_ACTIVITY, TAG);
                 intent.putExtra(AppConstants.EXTRA_KEY_DEVICE_ID, mMokoDevice.deviceId);
                 startActivity(intent);
@@ -206,7 +207,7 @@ public class PlugSettingActivity extends BaseActivity {
         }
     }
 
-    public void back(View view) {
+    public void onBack(View view) {
         finish();
     }
 
@@ -342,7 +343,7 @@ public class PlugSettingActivity extends BaseActivity {
             mHandler.postDelayed(() -> {
                 dismissLoadingProgressDialog();
                 // 跳转首页，刷新数据
-                Intent intent = new Intent(this, MainActivity.class);
+                Intent intent = new Intent(this, JSONMainActivity.class);
                 intent.putExtra(AppConstants.EXTRA_KEY_FROM_ACTIVITY, TAG);
                 intent.putExtra(AppConstants.EXTRA_KEY_DEVICE_ID, mMokoDevice.deviceId);
                 startActivity(intent);
@@ -562,9 +563,15 @@ public class PlugSettingActivity extends BaseActivity {
     public void onDebugModeClick(View view) {
         if (isWindowLocked())
             return;
+        StringBuffer macSB = new StringBuffer(mMokoDevice.mac);
+        macSB.insert(2, ":");
+        macSB.insert(5, ":");
+        macSB.insert(8, ":");
+        macSB.insert(11, ":");
+        macSB.insert(14, ":");
         // 进入Debug模式
         showLoadingProgressDialog();
-        rlDebugMode.postDelayed(() -> MokoSupport.getInstance().connDevice(mMokoDevice.mac), 500);
+        rlDebugMode.postDelayed(() -> MokoSupport.getInstance().connDevice(macSB.toString()), 500);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -604,7 +611,7 @@ public class PlugSettingActivity extends BaseActivity {
                 ivButtonControl.postDelayed(() -> {
                     dismissLoadingProgressDialog();
                     // 跳转首页，刷新数据
-                    Intent intent = new Intent(this, MainActivity.class);
+                    Intent intent = new Intent(this, JSONMainActivity.class);
                     intent.putExtra(AppConstants.EXTRA_KEY_FROM_ACTIVITY, TAG);
                     intent.putExtra(AppConstants.EXTRA_KEY_DEVICE_ID, mMokoDevice.deviceId);
                     startActivity(intent);

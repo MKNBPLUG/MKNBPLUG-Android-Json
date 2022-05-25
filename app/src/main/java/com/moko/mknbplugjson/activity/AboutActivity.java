@@ -43,7 +43,7 @@ public class AboutActivity extends BaseActivity {
         startActivity(intent);
     }
 
-    public void back(View view) {
+    public void onBack(View view) {
         finish();
     }
 

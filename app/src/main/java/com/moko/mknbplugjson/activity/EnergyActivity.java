@@ -169,7 +169,7 @@ public class EnergyActivity extends BaseActivity implements RadioGroup.OnChecked
             int year = Integer.parseInt(energyHistoryDaily.timestamp.substring(0, 4));
             int month = Integer.parseInt(energyHistoryDaily.timestamp.substring(5, 7));
             int day = Integer.parseInt(energyHistoryDaily.timestamp.substring(8, 10));
-            int hour = Integer.parseInt(energyHistoryDaily.timestamp.substring(13, 13));
+            int hour = Integer.parseInt(energyHistoryDaily.timestamp.substring(11, 13));
             int count = energyHistoryDaily.num;
             Calendar calendar = Calendar.getInstance();
             calendar.set(Calendar.YEAR, year);
@@ -246,7 +246,7 @@ public class EnergyActivity extends BaseActivity implements RadioGroup.OnChecked
     }
 
 
-    public void back(View view) {
+    public void onBack(View view) {
         finish();
     }
 
@@ -314,17 +314,32 @@ public class EnergyActivity extends BaseActivity implements RadioGroup.OnChecked
             clEnergy.setVisibility(View.VISIBLE);
             tvUnit.setText("Hour");
             tvEnergyDesc.setText("Today energy:");
+            showLoadingProgressDialog();
+            mHandler.postDelayed(() -> {
+                dismissLoadingProgressDialog();
+                finish();
+            }, 30 * 1000);
             getEnergyHourly();
         } else if (checkedId == R.id.rb_daily) {
             // 切换月
             clEnergy.setVisibility(View.VISIBLE);
             tvUnit.setText("Date");
             tvEnergyDesc.setText("Last 30 days energy:");
+            showLoadingProgressDialog();
+            mHandler.postDelayed(() -> {
+                dismissLoadingProgressDialog();
+                finish();
+            }, 30 * 1000);
             getEnergyDaily();
         } else if (checkedId == R.id.rb_totally) {
             // 切换总电能
             tvEnergyDesc.setText("Historical total energy:");
             clEnergy.setVisibility(View.GONE);
+            showLoadingProgressDialog();
+            mHandler.postDelayed(() -> {
+                dismissLoadingProgressDialog();
+                finish();
+            }, 30 * 1000);
             getEnergyTotal();
         }
     }

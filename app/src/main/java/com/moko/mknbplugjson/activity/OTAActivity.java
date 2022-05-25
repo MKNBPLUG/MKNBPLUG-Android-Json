@@ -208,7 +208,7 @@ public class OTAActivity extends BaseActivity {
         }
     }
 
-    public void back(View view) {
+    public void onBack(View view) {
         finish();
     }
 

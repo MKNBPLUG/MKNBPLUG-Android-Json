@@ -8,7 +8,7 @@ import android.os.Bundle;
 import android.os.SystemClock;
 
 import com.elvishew.xlog.XLog;
-import com.moko.mknbplugjson.activity.MainActivity;
+import com.moko.mknbplugjson.activity.JSONMainActivity;
 import com.moko.mknbplugjson.dialog.LoadingDialog;
 import com.moko.mknbplugjson.dialog.LoadingMessageDialog;
 
@@ -23,7 +23,7 @@ public class BaseActivity extends FragmentActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (savedInstanceState != null) {
-            Intent intent = new Intent(this, MainActivity.class);
+            Intent intent = new Intent(this, JSONMainActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);
             return;

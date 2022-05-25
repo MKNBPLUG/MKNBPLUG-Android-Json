@@ -132,7 +132,7 @@ public class PeriodicalReportActivity extends BaseActivity {
             finish();
     }
 
-    public void back(View view) {
+    public void onBack(View view) {
         finish();
     }
 
