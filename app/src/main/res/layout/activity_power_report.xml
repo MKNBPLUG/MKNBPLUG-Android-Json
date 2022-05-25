@@ -67,7 +67,7 @@
             android:id="@+id/et_power_report_interval"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:hint="0~86400"
+            android:hint="0/10~86400"
             android:inputType="number"
             android:maxLength="5"
             android:text=""

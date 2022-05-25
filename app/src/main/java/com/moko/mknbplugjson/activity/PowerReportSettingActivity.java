@@ -206,7 +206,7 @@ public class PowerReportSettingActivity extends BaseActivity {
             return false;
         }
         int powerReportInterval = Integer.parseInt(powerReportIntervalStr);
-        if (powerReportInterval > 86400)
+        if ((powerReportInterval != 0 && powerReportInterval < 10) || powerReportInterval > 86400)
             return false;
         int powerChangeThreshold = Integer.parseInt(powerChangeThresholdStr);
         if (powerChangeThreshold > 100)

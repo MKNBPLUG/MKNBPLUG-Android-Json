@@ -206,10 +206,10 @@ public class PeriodicalReportActivity extends BaseActivity {
             return false;
         }
         int switchInterval = Integer.parseInt(switchIntervalStr);
-        if (switchInterval > 86400)
+        if ((switchInterval != 0 && switchInterval < 10) || switchInterval > 86400)
             return false;
         int countdownInterval = Integer.parseInt(countdownIntervalStr);
-        if (countdownInterval > 86400)
+        if ((countdownInterval != 0 && countdownInterval < 10) || countdownInterval > 86400)
             return false;
         return true;
     }

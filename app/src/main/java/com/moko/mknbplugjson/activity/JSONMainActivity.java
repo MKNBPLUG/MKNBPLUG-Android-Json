@@ -287,7 +287,7 @@ public class JSONMainActivity extends BaseActivity implements BaseQuickAdapter.O
                                 adapter.replaceData(devices);
                             });
                             message.what = device.id;
-                            mHandler.sendMessageDelayed(message, 62 * 1000);
+                            mHandler.sendMessageDelayed(message, 90 * 1000);
                             break;
                         }
                     }
@@ -498,7 +498,7 @@ public class JSONMainActivity extends BaseActivity implements BaseQuickAdapter.O
                     EventBus.getDefault().post(new DeviceOnlineEvent(device.deviceId, false));
                 });
                 offline.what = device.id;
-                mHandler.sendMessageDelayed(offline, 62 * 1000);
+                mHandler.sendMessageDelayed(offline, 90 * 1000);
                 if (msgCommon.msg_id == MQTTConstants.NOTIFY_MSG_ID_SWITCH_STATE) {
                     Type infoType = new TypeToken<SwitchInfo>() {
                     }.getType();
