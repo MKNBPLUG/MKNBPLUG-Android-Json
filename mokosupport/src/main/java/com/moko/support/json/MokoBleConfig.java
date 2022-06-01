@@ -53,6 +53,8 @@ final class MokoBleConfig extends MokoBleManager {
 
     @Override
     public void write(BluetoothGattCharacteristic characteristic, byte[] value) {
+        if (value.length > 0 && (value[0] & 0xFF) == 0xEE)
+            mMokoResponseCallback.onCharacteristicWrite(characteristic, value);
     }
 
     @Override

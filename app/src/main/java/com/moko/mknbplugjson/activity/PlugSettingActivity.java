@@ -28,7 +28,6 @@ import com.moko.mknbplugjson.base.BaseActivity;
 import com.moko.mknbplugjson.db.DBTools;
 import com.moko.mknbplugjson.dialog.AlertMessageDialog;
 import com.moko.mknbplugjson.dialog.CustomDialog;
-import com.moko.mknbplugjson.entity.MQTTConfig;
 import com.moko.mknbplugjson.entity.MokoDevice;
 import com.moko.mknbplugjson.utils.SPUtiles;
 import com.moko.mknbplugjson.utils.ToastUtils;
@@ -38,6 +37,7 @@ import com.moko.support.json.MQTTSupport;
 import com.moko.support.json.MokoSupport;
 import com.moko.support.json.entity.ButtonControlEnable;
 import com.moko.support.json.entity.DeviceParams;
+import com.moko.support.json.entity.MQTTConfig;
 import com.moko.support.json.entity.MsgCommon;
 import com.moko.support.json.entity.OverloadOccur;
 import com.moko.support.json.event.DeviceDeletedEvent;
@@ -63,6 +63,10 @@ public class PlugSettingActivity extends BaseActivity {
     ImageView ivButtonControl;
     @BindView(R2.id.rl_debug_mode)
     RelativeLayout rlDebugMode;
+    @BindView(R2.id.rl_modify_network)
+    RelativeLayout rlModifyNetwork;
+    @BindView(R2.id.rl_ota)
+    RelativeLayout rlOta;
 
 
     private MokoDevice mMokoDevice;
@@ -89,6 +93,8 @@ public class PlugSettingActivity extends BaseActivity {
         }
         assert mMokoDevice != null;
         rlDebugMode.setVisibility(mMokoDevice.deviceMode == 2 ? View.VISIBLE : View.GONE);
+        rlModifyNetwork.setVisibility(mMokoDevice.deviceMode == 2 ? View.GONE : View.VISIBLE);
+        rlOta.setVisibility(mMokoDevice.deviceMode == 2 ? View.GONE : View.VISIBLE);
         String mqttConfigAppStr = SPUtiles.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
         appMqttConfig = new Gson().fromJson(mqttConfigAppStr, MQTTConfig.class);
         mHandler = new Handler(Looper.getMainLooper());
@@ -503,14 +509,6 @@ public class PlugSettingActivity extends BaseActivity {
             ToastUtils.showToast(this, R.string.network_error);
             return;
         }
-        if (mMokoDevice.deviceMode == 2) {
-            AlertMessageDialog dialog = new AlertMessageDialog();
-            dialog.setMessage("Device is in debug mode, \n this function is unavailable!");
-            dialog.setCancelGone();
-            dialog.setConfirm("OK");
-            dialog.show(getSupportFragmentManager());
-            return;
-        }
         Intent i = new Intent(this, ModifyMQTTSettingsActivity.class);
         i.putExtra(AppConstants.EXTRA_KEY_DEVICE, mMokoDevice);
         startActivity(i);
@@ -521,14 +519,6 @@ public class PlugSettingActivity extends BaseActivity {
             return;
         if (!MQTTSupport.getInstance().isConnected()) {
             ToastUtils.showToast(this, R.string.network_error);
-            return;
-        }
-        if (mMokoDevice.deviceMode == 2) {
-            AlertMessageDialog dialog = new AlertMessageDialog();
-            dialog.setMessage("Device is in debug mode, \n OTA is unavailable!");
-            dialog.setCancelGone();
-            dialog.setConfirm("OK");
-            dialog.show(getSupportFragmentManager());
             return;
         }
         Intent i = new Intent(this, OTAActivity.class);

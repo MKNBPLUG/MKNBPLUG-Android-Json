@@ -25,7 +25,6 @@ import com.moko.mknbplugjson.adapter.DeviceAdapter;
 import com.moko.mknbplugjson.base.BaseActivity;
 import com.moko.mknbplugjson.db.DBTools;
 import com.moko.mknbplugjson.dialog.AlertMessageDialog;
-import com.moko.mknbplugjson.entity.MQTTConfig;
 import com.moko.mknbplugjson.entity.MokoDevice;
 import com.moko.mknbplugjson.utils.SPUtiles;
 import com.moko.mknbplugjson.utils.ToastUtils;
@@ -35,6 +34,7 @@ import com.moko.support.json.MQTTMessageAssembler;
 import com.moko.support.json.MQTTSupport;
 import com.moko.support.json.MokoSupport;
 import com.moko.support.json.entity.DeviceParams;
+import com.moko.support.json.entity.MQTTConfig;
 import com.moko.support.json.entity.MsgCommon;
 import com.moko.support.json.entity.OverloadOccur;
 import com.moko.support.json.entity.SwitchInfo;
@@ -360,10 +360,6 @@ public class JSONMainActivity extends BaseActivity implements BaseQuickAdapter.O
             ToastUtils.showToast(this, R.string.network_error);
             return;
         }
-        if (!device.isOnline) {
-            ToastUtils.showToast(this, R.string.device_offline);
-            return;
-        }
         if (device.isOverload) {
             ToastUtils.showToast(this, "Socket is overload, please check it!");
             return;
@@ -391,9 +387,10 @@ public class JSONMainActivity extends BaseActivity implements BaseQuickAdapter.O
         } else {
             appTopic = appMqttConfig.topicPublish;
         }
+        device.on_off = !device.on_off;
         SwitchInfo switchInfo = new SwitchInfo();
         // 设置与当前开关相反的状态
-        switchInfo.switch_state = device.on_off ? 0 : 1;
+        switchInfo.switch_state = device.on_off ? 1 : 0;
         DeviceParams deviceParams = new DeviceParams();
         deviceParams.device_id = device.deviceId;
         deviceParams.mac = device.mac;
@@ -499,12 +496,13 @@ public class JSONMainActivity extends BaseActivity implements BaseQuickAdapter.O
                 });
                 offline.what = device.id;
                 mHandler.sendMessageDelayed(offline, 90 * 1000);
-                if (msgCommon.msg_id == MQTTConstants.NOTIFY_MSG_ID_SWITCH_STATE) {
+                if (msgCommon.msg_id == MQTTConstants.NOTIFY_MSG_ID_SWITCH_STATE
+                        || msgCommon.msg_id == MQTTConstants.READ_MSG_ID_SWITCH_INFO) {
                     Type infoType = new TypeToken<SwitchInfo>() {
                     }.getType();
                     SwitchInfo switchInfo = new Gson().fromJson(msgCommon.data, infoType);
                     int switch_state = switchInfo.switch_state;
-                    // 启动设备定时离线，62s收不到应答则认为离线
+                    // 启动设备定时离线，90s收不到应答则认为离线
                     device.on_off = switch_state == 1;
                     device.isOverload = switchInfo.overload_state == 1;
                     device.isOverCurrent = switchInfo.overcurrent_state == 1;

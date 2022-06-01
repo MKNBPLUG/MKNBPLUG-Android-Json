@@ -26,13 +26,13 @@ import com.moko.mknbplugjson.base.BaseActivity;
 import com.moko.mknbplugjson.db.DBTools;
 import com.moko.mknbplugjson.dialog.AlertMessageDialog;
 import com.moko.mknbplugjson.entity.LogData;
-import com.moko.mknbplugjson.entity.MQTTConfig;
 import com.moko.mknbplugjson.entity.MokoDevice;
 import com.moko.mknbplugjson.utils.SPUtiles;
 import com.moko.mknbplugjson.utils.Utils;
 import com.moko.support.json.MQTTSupport;
 import com.moko.support.json.MokoSupport;
 import com.moko.support.json.OrderTaskAssembler;
+import com.moko.support.json.entity.MQTTConfig;
 import com.moko.support.json.entity.OrderCHAR;
 import com.moko.support.json.event.DeviceDeletedEvent;
 

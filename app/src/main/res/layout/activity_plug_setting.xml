@@ -305,13 +305,20 @@
                     android:background="@color/grey_d9d9d9" />
             </RelativeLayout>
 
+            <View
+                style="@style/divider_line"
+                android:layout_height="12dp"
+                android:background="@color/transparent" />
+
             <RelativeLayout
+                android:id="@+id/rl_modify_network"
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
                 android:layout_marginTop="12dp"
                 android:background="@color/white_ffffff"
                 android:clickable="true"
-                android:onClick="onModifyNetworkMQTTClick">
+                android:onClick="onModifyNetworkMQTTClick"
+                android:visibility="visible">
 
                 <TextView
                     android:layout_width="match_parent"
@@ -332,11 +339,13 @@
             </RelativeLayout>
 
             <RelativeLayout
+                android:id="@+id/rl_ota"
                 android:layout_width="match_parent"
                 android:layout_height="50dp"
                 android:background="@color/white_ffffff"
                 android:clickable="true"
-                android:onClick="onOTA">
+                android:onClick="onOTA"
+                android:visibility="visible">
 
                 <TextView
                     android:layout_width="match_parent"

@@ -19,7 +19,6 @@ import com.moko.mknbplugjson.R2;
 import com.moko.mknbplugjson.adapter.MQTTFragmentAdapter;
 import com.moko.mknbplugjson.base.BaseActivity;
 import com.moko.mknbplugjson.dialog.AlertMessageDialog;
-import com.moko.mknbplugjson.entity.MQTTConfig;
 import com.moko.mknbplugjson.fragment.GeneralFragment;
 import com.moko.mknbplugjson.fragment.SSLFragment;
 import com.moko.mknbplugjson.fragment.UserFragment;
@@ -28,6 +27,7 @@ import com.moko.mknbplugjson.utils.SPUtiles;
 import com.moko.mknbplugjson.utils.ToastUtils;
 import com.moko.mknbplugjson.utils.Utils;
 import com.moko.support.json.MQTTSupport;
+import com.moko.support.json.entity.MQTTConfig;
 import com.moko.support.json.event.MQTTConnectionCompleteEvent;
 import com.moko.support.json.event.MQTTConnectionFailureEvent;
 

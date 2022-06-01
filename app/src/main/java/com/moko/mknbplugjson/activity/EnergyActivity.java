@@ -179,7 +179,7 @@ public class EnergyActivity extends BaseActivity implements RadioGroup.OnChecked
             String end = MokoUtils.calendar2strDate(calendar, "MM-dd");
             Calendar startCalendar = (Calendar) calendar.clone();
             startCalendar.add(Calendar.DAY_OF_MONTH, -(count - 1));
-            String start = MokoUtils.calendar2strDate(calendar, "MM-dd");
+            String start = MokoUtils.calendar2strDate(startCalendar, "MM-dd");
             tvDuration.setText(String.format("%s to %s", start, end));
             energyInfoList.clear();
             int energyDataSum = 0;

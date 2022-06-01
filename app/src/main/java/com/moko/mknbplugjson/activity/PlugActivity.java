@@ -339,6 +339,9 @@ public class PlugActivity extends BaseActivity {
             }
             if (msgCommon.result_code != 0) {
                 ToastUtils.showToast(this, "Set up failed");
+            } else {
+                if (msgCommon.msg_id == MQTTConstants.CONFIG_MSG_ID_SWITCH_STATE)
+                    getSwitchInfo();
             }
             return;
         }
@@ -521,8 +524,9 @@ public class PlugActivity extends BaseActivity {
         } else {
             appTopic = appMqttConfig.topicPublish;
         }
+        mMokoDevice.on_off = !mMokoDevice.on_off;
         SwitchInfo switchInfo = new SwitchInfo();
-        switchInfo.switch_state = mMokoDevice.on_off ? 0 : 1;
+        switchInfo.switch_state = mMokoDevice.on_off ? 1 : 0;
         DeviceParams deviceParams = new DeviceParams();
         deviceParams.device_id = mMokoDevice.deviceId;
         deviceParams.mac = mMokoDevice.mac;
@@ -535,7 +539,7 @@ public class PlugActivity extends BaseActivity {
     }
 
     private void getSwitchInfo() {
-        XLog.i("读取过载状态");
+        XLog.i("读取开关状态");
         String appTopic;
         if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
             appTopic = mMokoDevice.topicSubscribe;

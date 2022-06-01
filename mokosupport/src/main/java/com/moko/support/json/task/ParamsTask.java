@@ -439,7 +439,7 @@ public class ParamsTask extends OrderTask {
     private int dataLength;
     private int dataOrigin;
     private byte[] dataBytes;
-    private static final int DATA_LENGTH_MAX = 238;
+    private static final int DATA_LENGTH_MAX = 180;
 
     @Override
     public boolean parseValue(byte[] value) {
@@ -447,15 +447,17 @@ public class ParamsTask extends OrderTask {
         if (header == 0xED)
             return true;
         final int cmd = value[2] & 0xFF;
-        final int result = value[4] & 0xFF;
-        if (result == 1) {
+        if (value.length == 5) {
+            final int result = value[4] & 0xFF;
+            if (result == 1)
+                return true;
+        } else {
             remainPack--;
             packetIndex++;
             if (remainPack >= 0) {
                 assembleRemainData(cmd);
                 return false;
             }
-            return true;
         }
         return false;
     }
