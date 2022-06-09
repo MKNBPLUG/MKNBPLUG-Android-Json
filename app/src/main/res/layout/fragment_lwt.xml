@@ -126,7 +126,7 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@id/rg_qos"
-        app:layout_constraintWidth_percent="0.75" />
+        app:layout_constraintWidth_percent="0.65" />
 
     <TextView
         android:layout_width="wrap_content"
@@ -157,6 +157,6 @@
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
         app:layout_constraintTop_toBottomOf="@id/et_lwt_topic"
-        app:layout_constraintWidth_percent="0.75" />
+        app:layout_constraintWidth_percent="0.65" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

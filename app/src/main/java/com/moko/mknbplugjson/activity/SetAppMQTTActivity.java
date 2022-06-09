@@ -335,17 +335,20 @@ public class SetAppMQTTActivity extends BaseActivity implements RadioGroup.OnChe
 
                 XSSFRow row1 = sheet.createRow(1);
                 row1.createCell(0).setCellValue("Host");
-                row1.createCell(1).setCellValue(String.format("value:%s", mqttConfig.host));
+                if (!TextUtils.isEmpty(mqttConfig.host))
+                    row1.createCell(1).setCellValue(String.format("value:%s", mqttConfig.host));
                 row1.createCell(2).setCellValue("1-64 characters");
 
                 XSSFRow row2 = sheet.createRow(2);
                 row2.createCell(0).setCellValue("Port");
-                row2.createCell(1).setCellValue(String.format("value:%s", mqttConfig.port));
+                if (!TextUtils.isEmpty(mqttConfig.port))
+                    row2.createCell(1).setCellValue(String.format("value:%s", mqttConfig.port));
                 row2.createCell(2).setCellValue("Range: 1-65535");
 
                 XSSFRow row3 = sheet.createRow(3);
                 row3.createCell(0).setCellValue("Client id");
-                row3.createCell(1).setCellValue(String.format("value:%s", mqttConfig.clientId));
+                if (!TextUtils.isEmpty(mqttConfig.clientId))
+                    row3.createCell(1).setCellValue(String.format("value:%s", mqttConfig.clientId));
                 row3.createCell(2).setCellValue("1-64 characters");
 
                 XSSFRow row4 = sheet.createRow(4);
@@ -480,9 +483,15 @@ public class SetAppMQTTActivity extends BaseActivity implements RadioGroup.OnChe
                                 });
                                 return;
                             }
-                            mqttConfig.host = sheet.getRow(1).getCell(1).getStringCellValue().replaceAll("value:", "");
-                            mqttConfig.port = sheet.getRow(2).getCell(1).getStringCellValue().replaceAll("value:", "");
-                            mqttConfig.clientId = sheet.getRow(3).getCell(1).getStringCellValue().replaceAll("value:", "");
+                            Cell hostCell = sheet.getRow(1).getCell(1);
+                            if (hostCell != null)
+                                mqttConfig.host = hostCell.getStringCellValue().replaceAll("value:", "");
+                            Cell postCell = sheet.getRow(2).getCell(1);
+                            if (postCell != null)
+                                mqttConfig.port = postCell.getStringCellValue().replaceAll("value:", "");
+                            Cell clientCell = sheet.getRow(3).getCell(1);
+                            if (clientCell != null)
+                                mqttConfig.clientId = clientCell.getStringCellValue().replaceAll("value:", "");
                             Cell topicSubscribeCell = sheet.getRow(4).getCell(1);
                             if (topicSubscribeCell != null) {
                                 mqttConfig.topicSubscribe = topicSubscribeCell.getStringCellValue().replaceAll("value:", "");
@@ -491,9 +500,15 @@ public class SetAppMQTTActivity extends BaseActivity implements RadioGroup.OnChe
                             if (topicPublishCell != null) {
                                 mqttConfig.topicPublish = topicPublishCell.getStringCellValue().replaceAll("value:", "");
                             }
-                            mqttConfig.cleanSession = "1".equals(sheet.getRow(6).getCell(1).getStringCellValue().replaceAll("value:", ""));
-                            mqttConfig.qos = Integer.parseInt(sheet.getRow(7).getCell(1).getStringCellValue().replaceAll("value:", ""));
-                            mqttConfig.keepAlive = Integer.parseInt(sheet.getRow(8).getCell(1).getStringCellValue().replaceAll("value:", ""));
+                            Cell cleanSessionCell = sheet.getRow(6).getCell(1);
+                            if (cleanSessionCell != null)
+                                mqttConfig.cleanSession = "1".equals(cleanSessionCell.getStringCellValue().replaceAll("value:", ""));
+                            Cell qosCell = sheet.getRow(7).getCell(1);
+                            if (qosCell != null)
+                                mqttConfig.qos = Integer.parseInt(qosCell.getStringCellValue().replaceAll("value:", ""));
+                            Cell keepAliveCell = sheet.getRow(8).getCell(1);
+                            if (keepAliveCell != null)
+                            mqttConfig.keepAlive = Integer.parseInt(keepAliveCell.getStringCellValue().replaceAll("value:", ""));
                             Cell usernameCell = sheet.getRow(9).getCell(1);
                             if (usernameCell != null) {
                                 mqttConfig.username = topicPublishCell.getStringCellValue().replaceAll("value:", "");
@@ -502,11 +517,16 @@ public class SetAppMQTTActivity extends BaseActivity implements RadioGroup.OnChe
                             if (passwordCell != null) {
                                 mqttConfig.password = topicPublishCell.getStringCellValue().replaceAll("value:", "");
                             }
-                            // 0/1
-                            mqttConfig.connectMode = Integer.parseInt(sheet.getRow(11).getCell(1).getStringCellValue().replaceAll("value:", ""));
-                            if (mqttConfig.connectMode > 0) {
-                                // 1/2
-                                mqttConfig.connectMode = Integer.parseInt(sheet.getRow(12).getCell(1).getStringCellValue().replaceAll("value:", ""));
+                            Cell connectModeCell = sheet.getRow(11).getCell(1);
+                            if (connectModeCell != null) {
+                                // 0/1
+                                mqttConfig.connectMode = Integer.parseInt(connectModeCell.getStringCellValue().replaceAll("value:", ""));
+                                if (mqttConfig.connectMode > 0) {
+                                    Cell cell = sheet.getRow(12).getCell(1);
+                                    if (cell != null)
+                                    // 1/2
+                                    mqttConfig.connectMode = Integer.parseInt(cell.getStringCellValue().replaceAll("value:", ""));
+                                }
                             }
                             runOnUiThread(() -> {
                                 dismissLoadingProgressDialog();

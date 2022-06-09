@@ -105,22 +105,22 @@
 
     </RelativeLayout>
 
-    <ScrollView
+    <EditText
+        android:id="@+id/et_log_info"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_margin="12dp"
         android:layout_weight="1.0"
-        android:background="@color/white_ffffff">
-
-        <TextView
-            android:id="@+id/tv_log_info"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:padding="10dp"
-            android:text=""
-            android:textColor="@color/black_333333"
-            android:textSize="12sp" />
-    </ScrollView>
+        android:background="@color/white_ffffff"
+        android:cursorVisible="false"
+        android:fadeScrollbars="false"
+        android:focusable="false"
+        android:gravity="top"
+        android:padding="10dp"
+        android:scrollbars="vertical"
+        android:text=""
+        android:textColor="@color/black_333333"
+        android:textSize="12sp" />
 
     <TextView
         android:layout_width="match_parent"

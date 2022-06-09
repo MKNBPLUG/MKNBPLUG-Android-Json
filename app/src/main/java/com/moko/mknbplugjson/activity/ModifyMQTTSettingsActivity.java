@@ -417,8 +417,8 @@ public class ModifyMQTTSettingsActivity extends BaseActivity implements RadioGro
         mLWTSettings.lwt_retain = lwtFragment.getLwtRetain() ? 1 : 0;
         mLWTSettings.lwt_qos = lwtFragment.getQos();
         String lwtTopic = lwtFragment.getTopic();
-        if ("{device_name}/{device_id}/app_to_device".equals(lwtTopic)) {
-            lwtTopic = String.format("%s/%s/app_to_device", mMokoDevice.name, mMokoDevice.deviceId);
+        if ("{device_name}/{device_id}/device_to_app".equals(lwtTopic)) {
+            lwtTopic = String.format("%s/%s/device_to_app", mMokoDevice.name, mMokoDevice.deviceId);
         }
         mLWTSettings.lwt_topic = lwtTopic;
         mLWTSettings.lwt_message = lwtFragment.getPayload();

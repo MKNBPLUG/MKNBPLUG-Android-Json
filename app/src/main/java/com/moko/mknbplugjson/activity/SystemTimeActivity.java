@@ -80,6 +80,8 @@ public class SystemTimeActivity extends BaseActivity {
         mHandler = new Handler(Looper.getMainLooper());
         mSyncTimeHandler = new Handler(Looper.getMainLooper());
         Calendar calendar = Calendar.getInstance();
+        java.util.TimeZone timeZone = java.util.TimeZone.getTimeZone("GMT");
+        calendar.setTimeZone(timeZone);
         mShowTime = MokoUtils.calendar2strDate(calendar, AppConstants.PATTERN_YYYY_MM_DD_HH_MM);
         mSelectedTimeZone = 40;
         tvDeviceTime.setText(String.format("Device time:%s %s", mShowTime, mTimeZones.get(mSelectedTimeZone)));
@@ -144,7 +146,7 @@ public class SystemTimeActivity extends BaseActivity {
                 mSyncTimeHandler.removeMessages(0);
             mSyncTimeHandler.postDelayed(() -> {
                 getSystemTime();
-            }, 30 * 1000);
+            }, 60 * 1000);
         }
         if (msgCommon.msg_id == MQTTConstants.CONFIG_MSG_ID_TIMEZONE
                 || msgCommon.msg_id == MQTTConstants.CONFIG_MSG_ID_SYSTEM_TIME) {
@@ -253,6 +255,8 @@ public class SystemTimeActivity extends BaseActivity {
         deviceParams.device_id = mMokoDevice.deviceId;
         deviceParams.mac = mMokoDevice.mac;
         Calendar calendar = Calendar.getInstance();
+        java.util.TimeZone timeZone = java.util.TimeZone.getTimeZone("GMT");
+        calendar.setTimeZone(timeZone);
         SystemTime systemTime = new SystemTime();
         systemTime.time = (int) (calendar.getTimeInMillis() / 1000);
         mShowTime = MokoUtils.calendar2strDate(calendar, AppConstants.PATTERN_YYYY_MM_DD_HH_MM);

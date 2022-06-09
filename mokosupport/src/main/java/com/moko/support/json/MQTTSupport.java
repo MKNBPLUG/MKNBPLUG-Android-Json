@@ -13,6 +13,7 @@ import com.moko.support.json.event.MQTTConnectionFailureEvent;
 import com.moko.support.json.event.MQTTConnectionLostEvent;
 import com.moko.support.json.event.MQTTMessageArrivedEvent;
 
+import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMDecryptorProvider;
 import org.bouncycastle.openssl.PEMEncryptedKeyPair;
@@ -40,6 +41,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.security.KeyPair;
 import java.security.KeyStore;
+import java.security.PrivateKey;
 import java.security.Security;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -361,14 +363,19 @@ public class MQTTSupport {
             converter = new JcaPEMKeyConverter().setProvider("BC");
         }
 
-        KeyPair key;
+        PrivateKey privateKey;
         if (object instanceof PEMEncryptedKeyPair) {
             XLog.e("Encrypted key - we will use provided password");
-            key = converter.getKeyPair(((PEMEncryptedKeyPair) object)
+            KeyPair keyPair = converter.getKeyPair(((PEMEncryptedKeyPair) object)
                     .decryptKeyPair(decProv));
+            privateKey = keyPair.getPrivate();
+        } else if (object instanceof PrivateKeyInfo) {
+            XLog.e("PrivateKeyInfo");
+            privateKey = converter.getPrivateKey((PrivateKeyInfo) object);
         } else {
             XLog.e("Unencrypted key - no password needed");
-            key = converter.getKeyPair((PEMKeyPair) object);
+            KeyPair keyPair = converter.getKeyPair((PEMKeyPair) object);
+            privateKey = keyPair.getPrivate();
         }
         pemParser.close();
 
@@ -384,7 +391,7 @@ public class MQTTSupport {
         KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
         ks.load(null, null);
         ks.setCertificateEntry("certificate", cert);
-        ks.setKeyEntry("private-key", key.getPrivate(), "".toCharArray(),
+        ks.setKeyEntry("private-key", privateKey, "".toCharArray(),
                 new java.security.cert.Certificate[]{cert});
         KeyManagerFactory kmf =
                 KeyManagerFactory.getInstance(KeyManagerFactory

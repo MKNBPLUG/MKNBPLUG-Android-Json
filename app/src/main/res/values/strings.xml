@@ -28,7 +28,7 @@
     <string name="mqtt_verify_client_id_empty">ClientId error</string>
     <string name="mqtt_verify_device_id_empty">DeivceId error</string>
     <string name="mqtt_verify_host">Host error</string>
-    <string name="mqtt_verify_port">Port range is 0~65535</string>
+    <string name="mqtt_verify_port">Port range is 0-65535</string>
     <string name="mqtt_verify_port_empty">Port error</string>
     <string name="mqtt_verify_file_path">File Path error</string>
     <string name="mqtt_verify_ca">CA error</string>

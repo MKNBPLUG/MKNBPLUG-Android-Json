@@ -7,6 +7,7 @@ import android.text.TextUtils;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -68,8 +69,8 @@ public class LogDataActivity extends BaseActivity implements BaseQuickAdapter.On
     TextView tvEmpty;
     @BindView(R2.id.rv_export_data)
     RecyclerView rvLogData;
-    @BindView(R2.id.tv_log_info)
-    TextView tvLogInfo;
+    @BindView(R2.id.et_log_info)
+    EditText etLogInfo;
     private StringBuilder storeString;
     private ArrayList<LogData> LogDatas;
     private boolean isSync;
@@ -205,7 +206,7 @@ public class LogDataActivity extends BaseActivity implements BaseQuickAdapter.On
                     case CHAR_DEBUG_LOG:
                         String log = new String(value);
                         storeString.append(log);
-                        tvLogInfo.append(log);
+                        etLogInfo.append(log);
                         break;
                 }
             }
@@ -228,7 +229,7 @@ public class LogDataActivity extends BaseActivity implements BaseQuickAdapter.On
         }
         if (animation == null) {
             storeString = new StringBuilder();
-            tvLogInfo.setText("");
+            etLogInfo.setText("");
             tvSyncSwitch.setText("Stop");
             isSync = true;
             animation = AnimationUtils.loadAnimation(this, R.anim.rotate_refresh);

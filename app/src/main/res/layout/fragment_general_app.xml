@@ -102,7 +102,7 @@
         android:layout_marginTop="10dp"
         android:layout_marginRight="10dp"
         android:background="@drawable/shape_radius_edit_bg"
-        android:hint="10~120"
+        android:hint="10-120"
         android:inputType="number"
         android:maxLength="3"
         android:paddingLeft="5dp"
