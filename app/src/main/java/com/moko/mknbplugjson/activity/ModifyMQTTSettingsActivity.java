@@ -28,7 +28,7 @@ import com.moko.mknbplugjson.fragment.GeneralDeviceFragment;
 import com.moko.mknbplugjson.fragment.LWTFragment;
 import com.moko.mknbplugjson.fragment.SSLDevicePathFragment;
 import com.moko.mknbplugjson.fragment.UserDeviceFragment;
-import com.moko.mknbplugjson.utils.SPUtiles;
+import com.moko.mknbplugjson.utils.SPUtils;
 import com.moko.mknbplugjson.utils.ToastUtils;
 import com.moko.support.json.MQTTConstants;
 import com.moko.support.json.MQTTMessageAssembler;
@@ -116,7 +116,7 @@ public class ModifyMQTTSettingsActivity extends BaseActivity implements RadioGro
         setContentView(R.layout.activity_mqtt_device_modify);
         ButterKnife.bind(this);
 
-        String mqttConfigAppStr = SPUtiles.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
+        String mqttConfigAppStr = SPUtils.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
         appMqttConfig = new Gson().fromJson(mqttConfigAppStr, MQTTConfig.class);
         mMQTTSettings = new MQTTSettings();
         mLWTSettings = new LWTSettings();

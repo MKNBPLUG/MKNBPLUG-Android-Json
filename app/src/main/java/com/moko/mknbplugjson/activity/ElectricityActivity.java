@@ -16,7 +16,7 @@ import com.moko.mknbplugjson.R;
 import com.moko.mknbplugjson.R2;
 import com.moko.mknbplugjson.base.BaseActivity;
 import com.moko.mknbplugjson.entity.MokoDevice;
-import com.moko.mknbplugjson.utils.SPUtiles;
+import com.moko.mknbplugjson.utils.SPUtils;
 import com.moko.mknbplugjson.utils.Utils;
 import com.moko.support.json.MQTTConstants;
 import com.moko.support.json.MQTTMessageAssembler;
@@ -60,7 +60,7 @@ public class ElectricityActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_electricity_manager);
         ButterKnife.bind(this);
-        String mqttConfigAppStr = SPUtiles.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
+        String mqttConfigAppStr = SPUtils.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
         appMqttConfig = new Gson().fromJson(mqttConfigAppStr, MQTTConfig.class);
         mMokoDevice = (MokoDevice) getIntent().getSerializableExtra(AppConstants.EXTRA_KEY_DEVICE);
         mHandler = new Handler(Looper.getMainLooper());

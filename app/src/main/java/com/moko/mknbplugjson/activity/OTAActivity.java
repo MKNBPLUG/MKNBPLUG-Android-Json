@@ -20,7 +20,7 @@ import com.moko.mknbplugjson.R2;
 import com.moko.mknbplugjson.base.BaseActivity;
 import com.moko.mknbplugjson.dialog.BottomDialog;
 import com.moko.mknbplugjson.entity.MokoDevice;
-import com.moko.mknbplugjson.utils.SPUtiles;
+import com.moko.mknbplugjson.utils.SPUtils;
 import com.moko.mknbplugjson.utils.ToastUtils;
 import com.moko.support.json.MQTTConstants;
 import com.moko.support.json.MQTTMessageAssembler;
@@ -112,7 +112,7 @@ public class OTAActivity extends BaseActivity {
         etBothWayClientKeyFilePath.setFilters(new InputFilter[]{new InputFilter.LengthFilter(128), inputFilter});
         etBothWayClientCertFilePath.setFilters(new InputFilter[]{new InputFilter.LengthFilter(128), inputFilter});
         mHandler = new Handler(Looper.getMainLooper());
-        String mqttConfigAppStr = SPUtiles.getStringValue(OTAActivity.this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
+        String mqttConfigAppStr = SPUtils.getStringValue(OTAActivity.this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
         appMqttConfig = new Gson().fromJson(mqttConfigAppStr, MQTTConfig.class);
         mValues = new ArrayList<>();
         mValues.add("Firmware");

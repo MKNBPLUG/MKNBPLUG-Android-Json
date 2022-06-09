@@ -40,7 +40,7 @@ import com.moko.mknbplugjson.fragment.LWTFragment;
 import com.moko.mknbplugjson.fragment.SSLDeviceFragment;
 import com.moko.mknbplugjson.fragment.UserDeviceFragment;
 import com.moko.mknbplugjson.utils.FileUtils;
-import com.moko.mknbplugjson.utils.SPUtiles;
+import com.moko.mknbplugjson.utils.SPUtils;
 import com.moko.mknbplugjson.utils.ToastUtils;
 import com.moko.mknbplugjson.utils.Utils;
 import com.moko.support.json.MQTTConstants;
@@ -150,7 +150,7 @@ public class SetDeviceMQTTActivity extends BaseActivity implements RadioGroup.On
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_mqtt_device);
         ButterKnife.bind(this);
-        String MQTTConfigStr = SPUtiles.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
+        String MQTTConfigStr = SPUtils.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
         mqttAppConfig = new Gson().fromJson(MQTTConfigStr, MQTTConfig.class);
         mSelectedDeviceName = getIntent().getStringExtra(AppConstants.EXTRA_KEY_SELECTED_DEVICE_NAME);
         mSelectedDeviceMac = getIntent().getStringExtra(AppConstants.EXTRA_KEY_SELECTED_DEVICE_MAC);

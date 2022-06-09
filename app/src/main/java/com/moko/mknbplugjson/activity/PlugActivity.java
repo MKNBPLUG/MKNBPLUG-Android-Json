@@ -23,7 +23,7 @@ import com.moko.mknbplugjson.base.BaseActivity;
 import com.moko.mknbplugjson.dialog.AlertMessageDialog;
 import com.moko.mknbplugjson.dialog.TimerDialog;
 import com.moko.mknbplugjson.entity.MokoDevice;
-import com.moko.mknbplugjson.utils.SPUtiles;
+import com.moko.mknbplugjson.utils.SPUtils;
 import com.moko.mknbplugjson.utils.ToastUtils;
 import com.moko.support.json.MQTTConstants;
 import com.moko.support.json.MQTTMessageAssembler;
@@ -79,7 +79,7 @@ public class PlugActivity extends BaseActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_plug);
         ButterKnife.bind(this);
-        String mqttConfigAppStr = SPUtiles.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
+        String mqttConfigAppStr = SPUtils.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
         appMqttConfig = new Gson().fromJson(mqttConfigAppStr, MQTTConfig.class);
         mMokoDevice = (MokoDevice) getIntent().getSerializableExtra(AppConstants.EXTRA_KEY_DEVICE);
         tvTitle.setText(mMokoDevice.name);

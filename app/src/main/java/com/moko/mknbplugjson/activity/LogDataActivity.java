@@ -28,7 +28,7 @@ import com.moko.mknbplugjson.db.DBTools;
 import com.moko.mknbplugjson.dialog.AlertMessageDialog;
 import com.moko.mknbplugjson.entity.LogData;
 import com.moko.mknbplugjson.entity.MokoDevice;
-import com.moko.mknbplugjson.utils.SPUtiles;
+import com.moko.mknbplugjson.utils.SPUtils;
 import com.moko.mknbplugjson.utils.Utils;
 import com.moko.support.json.MQTTSupport;
 import com.moko.support.json.MokoSupport;
@@ -132,7 +132,7 @@ public class LogDataActivity extends BaseActivity implements BaseQuickAdapter.On
         voidDuration = 1000;
         storeString = new StringBuilder();
         mMokoDevice = DBTools.getInstance(this).selectDeviceByMac(mDeviceMac);
-        String mqttConfigAppStr = SPUtiles.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
+        String mqttConfigAppStr = SPUtils.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
         appMqttConfig = new Gson().fromJson(mqttConfigAppStr, MQTTConfig.class);
     }
 

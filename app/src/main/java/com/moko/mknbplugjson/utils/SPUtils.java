@@ -5,7 +5,7 @@ import android.content.SharedPreferences.Editor;
 
 import com.moko.mknbplugjson.AppConstants;
 
-public class SPUtiles {
+public class SPUtils {
     public static void clearAllData(Context context) {
         Editor editor = context.getSharedPreferences(AppConstants.SP_NAME, Context.MODE_PRIVATE).edit();
         editor.clear();

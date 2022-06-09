@@ -21,7 +21,7 @@ import com.moko.mknbplugjson.adapter.EnergyListAdapter;
 import com.moko.mknbplugjson.base.BaseActivity;
 import com.moko.mknbplugjson.dialog.AlertMessageDialog;
 import com.moko.mknbplugjson.entity.MokoDevice;
-import com.moko.mknbplugjson.utils.SPUtiles;
+import com.moko.mknbplugjson.utils.SPUtils;
 import com.moko.mknbplugjson.utils.ToastUtils;
 import com.moko.support.json.MQTTConstants;
 import com.moko.support.json.MQTTMessageAssembler;
@@ -91,7 +91,7 @@ public class EnergyActivity extends BaseActivity implements RadioGroup.OnChecked
             mMokoDevice = (MokoDevice) getIntent().getSerializableExtra(AppConstants.EXTRA_KEY_DEVICE);
             tvTitle.setText(mMokoDevice.name);
         }
-        String mqttConfigAppStr = SPUtiles.getStringValue(EnergyActivity.this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
+        String mqttConfigAppStr = SPUtils.getStringValue(EnergyActivity.this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
         appMqttConfig = new Gson().fromJson(mqttConfigAppStr, MQTTConfig.class);
         mHandler = new Handler(Looper.getMainLooper());
         energyInfoList = new ArrayList<>();

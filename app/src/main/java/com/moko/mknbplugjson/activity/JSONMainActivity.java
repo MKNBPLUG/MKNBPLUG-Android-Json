@@ -26,7 +26,7 @@ import com.moko.mknbplugjson.base.BaseActivity;
 import com.moko.mknbplugjson.db.DBTools;
 import com.moko.mknbplugjson.dialog.AlertMessageDialog;
 import com.moko.mknbplugjson.entity.MokoDevice;
-import com.moko.mknbplugjson.utils.SPUtiles;
+import com.moko.mknbplugjson.utils.SPUtils;
 import com.moko.mknbplugjson.utils.ToastUtils;
 import com.moko.mknbplugjson.utils.Utils;
 import com.moko.support.json.MQTTConstants;
@@ -123,7 +123,7 @@ public class JSONMainActivity extends BaseActivity implements BaseQuickAdapter.O
             rlEmpty.setVisibility(View.GONE);
         }
         mHandler = new Handler(Looper.getMainLooper());
-        MQTTAppConfigStr = SPUtiles.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
+        MQTTAppConfigStr = SPUtils.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
         if (!TextUtils.isEmpty(MQTTAppConfigStr)) {
             appMqttConfig = new Gson().fromJson(MQTTAppConfigStr, MQTTConfig.class);
             tvTitle.setText(getString(R.string.mqtt_connecting));
