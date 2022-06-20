@@ -148,7 +148,6 @@ public class SetAppMQTTActivity extends BaseActivity implements RadioGroup.OnChe
     public void onMQTTConnectionCompleteEvent(MQTTConnectionCompleteEvent event) {
         EventBus.getDefault().cancelEventDelivery(event);
         String mqttConfigStr = new Gson().toJson(mqttConfig, MQTTConfig.class);
-        SPUtils.setStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, mqttConfigStr);
         ToastUtils.showToast(SetAppMQTTActivity.this, getString(R.string.success));
         dismissLoadingProgressDialog();
         Intent intent = new Intent();
@@ -219,6 +218,7 @@ public class SetAppMQTTActivity extends BaseActivity implements RadioGroup.OnChe
             return;
         if (isVerify()) return;
         String mqttConfigStr = new Gson().toJson(mqttConfig, MQTTConfig.class);
+        SPUtils.setStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, mqttConfigStr);
         MQTTSupport.getInstance().disconnectMqtt();
         showLoadingProgressDialog();
         etMqttHost.postDelayed(() -> {
@@ -269,7 +269,6 @@ public class SetAppMQTTActivity extends BaseActivity implements RadioGroup.OnChe
         mqttConfig.cleanSession = generalFragment.isCleanSession();
         mqttConfig.qos = generalFragment.getQos();
         mqttConfig.keepAlive = generalFragment.getKeepAlive();
-        mqttConfig.keepAlive = generalFragment.getKeepAlive();
         mqttConfig.topicSubscribe = subscribeTopic;
         mqttConfig.topicPublish = publishTopic;
         mqttConfig.username = userFragment.getUsername();
@@ -314,7 +313,17 @@ public class SetAppMQTTActivity extends BaseActivity implements RadioGroup.OnChe
     public void onExportSettings(View view) {
         if (isWindowLocked())
             return;
-        if (isVerify()) return;
+        mqttConfig.host = etMqttHost.getText().toString().replaceAll(" ", "");
+        mqttConfig.port = etMqttPort.getText().toString();
+        mqttConfig.clientId = etMqttClientId.getText().toString().replaceAll(" ", "");
+        mqttConfig.topicSubscribe = etMqttSubscribeTopic.getText().toString().replaceAll(" ", "");
+        mqttConfig.topicPublish = etMqttPublishTopic.getText().toString().replaceAll(" ", "");
+        mqttConfig.cleanSession = generalFragment.isCleanSession();
+        mqttConfig.qos = generalFragment.getQos();
+        mqttConfig.keepAlive = generalFragment.getKeepAlive();
+        mqttConfig.username = userFragment.getUsername();
+        mqttConfig.password = userFragment.getPassword();
+        mqttConfig.connectMode = sslFragment.getConnectMode();
         showLoadingProgressDialog();
         final File expertFile = new File(expertFilePath);
         try {

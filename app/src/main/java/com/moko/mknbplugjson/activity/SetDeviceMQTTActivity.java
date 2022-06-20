@@ -567,7 +567,6 @@ public class SetDeviceMQTTActivity extends BaseActivity implements RadioGroup.On
         mqttDeviceConfig.cleanSession = generalFragment.isCleanSession();
         mqttDeviceConfig.qos = generalFragment.getQos();
         mqttDeviceConfig.keepAlive = generalFragment.getKeepAlive();
-        mqttDeviceConfig.keepAlive = generalFragment.getKeepAlive();
         mqttDeviceConfig.topicSubscribe = topicSubscribe;
         mqttDeviceConfig.topicPublish = topicPublish;
         mqttDeviceConfig.username = userFragment.getUsername();
@@ -768,7 +767,33 @@ public class SetDeviceMQTTActivity extends BaseActivity implements RadioGroup.On
     public void onExportSettings(View view) {
         if (isWindowLocked())
             return;
-        if (isVerify()) return;
+        mqttDeviceConfig.host = etMqttHost.getText().toString().replaceAll(" ", "");
+        mqttDeviceConfig.port = etMqttPort.getText().toString();
+        mqttDeviceConfig.clientId = etMqttClientId.getText().toString().replaceAll(" ", "");
+        mqttDeviceConfig.deviceId = etDeviceId.getText().toString().replaceAll(" ", "");
+        mqttDeviceConfig.topicSubscribe = etMqttSubscribeTopic.getText().toString().replaceAll(" ", "");
+        mqttDeviceConfig.topicPublish = etMqttPublishTopic.getText().toString().replaceAll(" ", "");
+        mqttDeviceConfig.ntpUrl = etNtpUrl.getText().toString().replaceAll(" ", "");
+        mqttDeviceConfig.apn = etApn.getText().toString().replaceAll(" ", "");
+        mqttDeviceConfig.apnUsername = etApnUsername.getText().toString().replaceAll(" ", "");
+        mqttDeviceConfig.apnPassword = etApnPassword.getText().toString().replaceAll(" ", "");
+        mqttDeviceConfig.cleanSession = generalFragment.isCleanSession();
+        mqttDeviceConfig.qos = generalFragment.getQos();
+        mqttDeviceConfig.keepAlive = generalFragment.getKeepAlive();
+        mqttDeviceConfig.username = userFragment.getUsername();
+        mqttDeviceConfig.password = userFragment.getPassword();
+        mqttDeviceConfig.connectMode = sslFragment.getConnectMode();
+        mqttDeviceConfig.caPath = sslFragment.getCaPath();
+        mqttDeviceConfig.clientKeyPath = sslFragment.getClientKeyPath();
+        mqttDeviceConfig.clientCertPath = sslFragment.getClientCertPath();
+        mqttDeviceConfig.lwtEnable = lwtFragment.getLwtEnable();
+        mqttDeviceConfig.lwtRetain = lwtFragment.getLwtRetain();
+        mqttDeviceConfig.lwtQos = lwtFragment.getQos();
+        mqttDeviceConfig.lwtTopic = lwtFragment.getTopic();
+        mqttDeviceConfig.lwtPayload = lwtFragment.getPayload();
+        mqttDeviceConfig.timeZone = mSelectedTimeZone - 24;
+        mqttDeviceConfig.networkPriority = mSelectedNetworkPriority;
+        mqttDeviceConfig.debugModeEnable = cbDebugMode.isChecked();
         if ("{device_name}/{device_id}/app_to_device".equals(mqttDeviceConfig.topicSubscribe)) {
             mqttDeviceConfig.topicSubscribe = "";
         }

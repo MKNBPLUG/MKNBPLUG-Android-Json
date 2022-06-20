@@ -72,13 +72,15 @@ public class ChooseFunctionActivity extends BaseActivity {
     @Subscribe(threadMode = ThreadMode.POSTING, priority = 100)
     public void onConnectStatusEvent(ConnectStatusEvent event) {
         final String action = event.getAction();
+        EventBus.getDefault().cancelEventDelivery(event);
         if (isUpdate) {
-            EventBus.getDefault().cancelEventDelivery(event);
             return;
         }
         if (MokoConstants.ACTION_DISCONNECTED.equals(action)) {
             runOnUiThread(() -> {
                 dismissLoadingProgressDialog();
+                ToastUtils.showToast(ChooseFunctionActivity.this,"Disconnected!");
+                setResult(RESULT_OK);
                 finish();
             });
         }

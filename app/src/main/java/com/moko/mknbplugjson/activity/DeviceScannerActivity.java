@@ -185,7 +185,7 @@ public class DeviceScannerActivity extends BaseActivity implements MokoScanDevic
             public void run() {
                 mokoBleScanner.stopScanDevice();
             }
-        }, 1000 * 10);
+        }, 1000 * 60);
     }
 
     @Override
