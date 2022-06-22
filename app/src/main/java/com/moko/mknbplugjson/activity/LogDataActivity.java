@@ -124,7 +124,7 @@ public class LogDataActivity extends BaseActivity implements BaseQuickAdapter.On
                 LogData data = new LogData();
                 data.filePath = logFile.getAbsolutePath();
                 data.name = logFile.getName().replaceAll(".txt", "");
-                LogDatas.add(data);
+                LogDatas.add(0, data);
             }
             adapter.replaceData(LogDatas);
         }
@@ -347,7 +347,7 @@ public class LogDataActivity extends BaseActivity implements BaseQuickAdapter.On
         LogData LogData = new LogData();
         LogData.name = syncTime;
         LogData.filePath = logFilePath;
-        LogDatas.add(LogData);
+        LogDatas.add(0, LogData);
         adapter.replaceData(LogDatas);
         if (isBack)
             finish();

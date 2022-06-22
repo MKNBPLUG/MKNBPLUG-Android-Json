@@ -997,7 +997,7 @@ public class SetDeviceMQTTActivity extends BaseActivity implements RadioGroup.On
                         return;
                     }
                     ToastUtils.showToast(SetDeviceMQTTActivity.this, "Export success!");
-                    Utils.sendEmail(SetDeviceMQTTActivity.this, "", "", "Settings for APP", "Choose Email Client", expertFile);
+                    Utils.sendEmail(SetDeviceMQTTActivity.this, "", "", "Settings for Device", "Choose Email Client", expertFile);
 
                 });
             }).start();

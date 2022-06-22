@@ -17,7 +17,7 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 
 public class LoadingMessageDialog extends MokoBaseDialog {
-    private static final int DIALOG_DISMISS_DELAY_TIME = 5000;
+    private static final int DIALOG_DISMISS_DELAY_TIME = 190000;
     public static final String TAG = LoadingMessageDialog.class.getSimpleName();
     @BindView(R2.id.iv_loading)
     ImageView ivLoading;
@@ -114,13 +114,13 @@ public class LoadingMessageDialog extends MokoBaseDialog {
         this.messageId = messageId;
     }
 
-    private DialogDissmissCallback callback;
+    private DialogDismissCallback callback;
 
-    public void setDialogDismissCallback(final DialogDissmissCallback callback) {
+    public void setDialogDismissCallback(final DialogDismissCallback callback) {
         this.callback = callback;
     }
 
-    public interface DialogDissmissCallback {
+    public interface DialogDismissCallback {
         void onOvertimeDismiss();
 
         void onDismiss();

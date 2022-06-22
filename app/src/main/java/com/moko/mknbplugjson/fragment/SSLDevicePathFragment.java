@@ -162,7 +162,7 @@ public class SSLDevicePathFragment extends Fragment {
                 return false;
             }
             int portInt = Integer.parseInt(port);
-            if (portInt > 65535) {
+            if (portInt < 1 || portInt > 65535) {
                 ToastUtils.showToast(activity, "Port error");
                 return false;
             }

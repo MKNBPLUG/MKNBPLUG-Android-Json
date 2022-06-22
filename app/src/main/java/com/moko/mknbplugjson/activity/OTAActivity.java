@@ -159,7 +159,7 @@ public class OTAActivity extends BaseActivity {
             mHandler.postDelayed(() -> {
                 dismissLoadingMessageDialog();
                 ToastUtils.showToast(this, "Set up failed");
-            }, 50 * 1000);
+            }, 190 * 1000);
             showLoadingMessageDialog("waiting");
             if (mSelected == 0) {
                 setOTAFirmware();
@@ -191,6 +191,7 @@ public class OTAActivity extends BaseActivity {
                 || msgCommon.msg_id == MQTTConstants.CONFIG_MSG_ID_OTA_ONE_WAY
                 || msgCommon.msg_id == MQTTConstants.CONFIG_MSG_ID_OTA_BOTH_WAY) {
             if (msgCommon.result_code != 0) {
+                dismissLoadingMessageDialog();
                 ToastUtils.showToast(this, "Set up failed");
             }
         }
@@ -231,7 +232,7 @@ public class OTAActivity extends BaseActivity {
                 ToastUtils.showToast(this, R.string.mqtt_verify_host);
                 return;
             }
-            if (TextUtils.isEmpty(portStr) || Integer.parseInt(portStr) > 65535) {
+            if (TextUtils.isEmpty(portStr) || Integer.parseInt(portStr) < 1 || Integer.parseInt(portStr) > 65535) {
                 ToastUtils.showToast(this, R.string.mqtt_verify_port_empty);
                 return;
             }
@@ -248,7 +249,7 @@ public class OTAActivity extends BaseActivity {
                 ToastUtils.showToast(this, R.string.mqtt_verify_host);
                 return;
             }
-            if (TextUtils.isEmpty(portStr) || Integer.parseInt(portStr) > 65535) {
+            if (TextUtils.isEmpty(portStr) || Integer.parseInt(portStr) < 1 || Integer.parseInt(portStr) > 65535) {
                 ToastUtils.showToast(this, R.string.mqtt_verify_port_empty);
                 return;
             }
@@ -267,7 +268,7 @@ public class OTAActivity extends BaseActivity {
                 ToastUtils.showToast(this, R.string.mqtt_verify_host);
                 return;
             }
-            if (TextUtils.isEmpty(portStr) || Integer.parseInt(portStr) > 65535) {
+            if (TextUtils.isEmpty(portStr) || Integer.parseInt(portStr) < 1 || Integer.parseInt(portStr) > 65535) {
                 ToastUtils.showToast(this, R.string.mqtt_verify_port_empty);
                 return;
             }

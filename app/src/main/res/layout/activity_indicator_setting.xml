@@ -190,7 +190,7 @@
         android:onClick="onIndicatorStatus"
         android:paddingLeft="12dp"
         android:paddingRight="12dp"
-        android:text="Indicator status"
+        android:text="Indicator setting"
         android:textColor="@color/black_333333"
         android:textSize="15sp"
         android:visibility="gone" />

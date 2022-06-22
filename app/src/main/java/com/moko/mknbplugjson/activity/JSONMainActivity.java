@@ -360,16 +360,24 @@ public class JSONMainActivity extends BaseActivity implements BaseQuickAdapter.O
             ToastUtils.showToast(this, R.string.network_error);
             return;
         }
+        if (!device.isOnline) {
+            ToastUtils.showToast(this, R.string.device_offline);
+            return;
+        }
         if (device.isOverload) {
-            ToastUtils.showToast(this, "Socket is overload, please check it!");
+            ToastUtils.showToast(this, "Device is overload, please check it!");
             return;
         }
         if (device.isOverCurrent) {
-            ToastUtils.showToast(this, "Socket is overcurrent, please check it!");
+            ToastUtils.showToast(this, "Device is overcurrent, please check it!");
             return;
         }
         if (device.isOverVoltage) {
-            ToastUtils.showToast(this, "Socket is overvoltage, please check it!");
+            ToastUtils.showToast(this, "Device is overvoltage, please check it!");
+            return;
+        }
+        if (device.isUnderVoltage) {
+            ToastUtils.showToast(this, "Device is undervoltage, please check it!");
             return;
         }
         mHandler.postDelayed(() -> {

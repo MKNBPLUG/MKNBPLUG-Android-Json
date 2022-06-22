@@ -1,5 +1,5 @@
 package com.moko.support.json.entity;
 
-public class TimeZone {
+public class DeviceTimeZone {
     public int time_zone;
 }

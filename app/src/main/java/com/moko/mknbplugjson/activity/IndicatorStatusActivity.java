@@ -245,7 +245,7 @@ public class IndicatorStatusActivity extends BaseActivity implements NumberPicke
             return;
         }
         int blueValue = Integer.parseInt(blue);
-        if (blueValue <= 0 || blueValue > (maxValue - 5)) {
+        if (blueValue < 1 || blueValue > (maxValue - 5)) {
             ToastUtils.showToast(this, "Para Error");
             return;
         }

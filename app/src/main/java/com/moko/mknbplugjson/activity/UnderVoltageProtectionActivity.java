@@ -63,9 +63,9 @@ public class UnderVoltageProtectionActivity extends BaseActivity {
         mMokoDevice = (MokoDevice) getIntent().getSerializableExtra(AppConstants.EXTRA_KEY_DEVICE);
         mDeviceType = getIntent().getIntExtra(AppConstants.EXTRA_KEY_DEVICE_TYPE, 0);
         if (mDeviceType == 0 || mDeviceType == 2) {
-            etVoltageThreshold.setHint("231-264");
+            etVoltageThreshold.setHint("196-229");
         } else if (mDeviceType == 1) {
-            etVoltageThreshold.setHint("121-136");
+            etVoltageThreshold.setHint("102-119");
         }
         mHandler = new Handler(Looper.getMainLooper());
         showLoadingProgressDialog();

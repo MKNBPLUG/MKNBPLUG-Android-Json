@@ -61,7 +61,7 @@ public class ParamsTask extends OrderTask {
         }
     }
 
-    public void setMqttPort(@IntRange(from = 0, to = 65535) int port) {
+    public void setMqttPort(@IntRange(from = 1, to = 65535) int port) {
         byte[] dataBytes = MokoUtils.toByteArray(port, 2);
         data = new byte[]{
                 (byte) 0xED,

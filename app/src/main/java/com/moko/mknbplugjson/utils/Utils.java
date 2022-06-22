@@ -18,7 +18,11 @@ import java.io.File;
 import java.io.IOException;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Locale;
+import java.util.TimeZone;
 
 import androidx.core.content.FileProvider;
 
@@ -162,5 +166,11 @@ public class Utils {
         dfs.setDecimalSeparator('.');
         decimalFormat.setDecimalFormatSymbols(dfs);
         return decimalFormat;
+    }
+
+    public static String calendar2strDate(Calendar calendar, String pattern, String timeZoneId) {
+        SimpleDateFormat sdf = new SimpleDateFormat(pattern, Locale.US);
+        sdf.setTimeZone(TimeZone.getTimeZone(timeZoneId));
+        return sdf.format(calendar.getTime());
     }
 }

@@ -146,6 +146,13 @@ public class SSLDeviceFragment extends Fragment {
         if (connectMode > 0) {
             selected = connectMode - 1;
             tvCertification.setText(values.get(selected));
+            if (selected == 0) {
+                llClientKey.setVisibility(View.GONE);
+                llClientCert.setVisibility(View.GONE);
+            } else if (selected == 1) {
+                llClientKey.setVisibility(View.VISIBLE);
+                llClientCert.setVisibility(View.VISIBLE);
+            }
         }
     }
 

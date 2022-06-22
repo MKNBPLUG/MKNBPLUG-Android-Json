@@ -94,7 +94,7 @@ Use this method `MokoSupport.getInstance().sendOrder(OrderTask... orderTasks)` t
 
 2、Set port
 	
-    public static OrderTask setMqttPort(@IntRange(from = 0, to = 65535) int port) {
+    public static OrderTask setMqttPort(@IntRange(from = 1, to = 65535) int port) {
         ParamsTask task = new ParamsTask();
         task.setMqttPort(port);
         return task;

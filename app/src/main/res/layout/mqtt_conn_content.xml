@@ -21,8 +21,8 @@
         android:layout_width="100dp"
         android:layout_height="100dp"
         android:layout_gravity="center"
-        android:layout_marginBottom="33dp"
         android:layout_marginTop="33dp"
+        android:layout_marginBottom="33dp"
         app:donut_circle_starting_degree="-90"
         app:donut_finished_color="@color/blue_0188cc"
         app:donut_finished_stroke_width="5dp"
@@ -32,13 +32,4 @@
         app:donut_text_color="@color/black_333333"
         app:donut_unfinished_color="@color/grey_cccccc"
         app:donut_unfinished_stroke_width="5dp" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:gravity="center"
-        android:text="@string/mqtt_connecting_content"
-        android:textColor="@color/black_333333"
-        android:textSize="15sp" />
 </LinearLayout>

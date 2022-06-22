@@ -568,7 +568,7 @@ public class ModifyMQTTSettingsActivity extends BaseActivity implements RadioGro
             ToastUtils.showToast(this, getString(R.string.mqtt_verify_port_empty));
             return false;
         }
-        if (Integer.parseInt(port) > 65535) {
+        if (Integer.parseInt(port) < 1 || Integer.parseInt(port) > 65535) {
             ToastUtils.showToast(this, getString(R.string.mqtt_verify_port));
             return false;
         }

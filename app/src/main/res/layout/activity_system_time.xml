@@ -117,7 +117,7 @@
             android:gravity="center"
             android:minWidth="100dp"
             android:onClick="onSelectTimeZoneClick"
-            android:text="UTC+08:00"
+            android:text="UTC+00:00"
             android:textColor="@color/white_ffffff"
             android:textSize="15sp"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -135,7 +135,7 @@
         android:layout_marginLeft="12dp"
         android:layout_marginTop="20dp"
         android:layout_marginRight="12dp"
-        android:text="Device time: 2021-7-21 16:07 UTC+08:00"
+        android:text=""
         android:textColor="@color/grey_b3b3b3"
         android:textSize="15sp" />
 </LinearLayout>

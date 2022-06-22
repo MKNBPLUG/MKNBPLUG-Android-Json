@@ -65,7 +65,7 @@ public class OverVoltageProtectionActivity extends BaseActivity {
         if (mDeviceType == 0 || mDeviceType == 2) {
             etVoltageThreshold.setHint("231-264");
         } else if (mDeviceType == 1) {
-            etVoltageThreshold.setHint("121-136");
+            etVoltageThreshold.setHint("121-138");
         }
         mHandler = new Handler(Looper.getMainLooper());
         showLoadingProgressDialog();
