@@ -6,6 +6,7 @@ import com.moko.support.json.entity.APNSettings;
 import com.moko.support.json.entity.ButtonControlEnable;
 import com.moko.support.json.entity.ConnectionTimeout;
 import com.moko.support.json.entity.DeviceParams;
+import com.moko.support.json.entity.DeviceTimeZone;
 import com.moko.support.json.entity.EnergyStorageReport;
 import com.moko.support.json.entity.FirmwareOTA;
 import com.moko.support.json.entity.IndicatorStatus;
@@ -26,9 +27,8 @@ import com.moko.support.json.entity.PowerReportSetting;
 import com.moko.support.json.entity.PowerStatus;
 import com.moko.support.json.entity.ReportInterval;
 import com.moko.support.json.entity.SetCountdown;
-import com.moko.support.json.entity.SwitchInfo;
+import com.moko.support.json.entity.SwitchState;
 import com.moko.support.json.entity.SystemTime;
-import com.moko.support.json.entity.DeviceTimeZone;
 
 public class MQTTMessageAssembler {
 
@@ -69,8 +69,8 @@ public class MQTTMessageAssembler {
         return message;
     }
 
-    public static String assembleWriteSwitchInfo(DeviceParams deviceParams, SwitchInfo data) {
-        MsgReq<SwitchInfo> msgReq = new MsgReq();
+    public static String assembleWriteSwitchInfo(DeviceParams deviceParams, SwitchState data) {
+        MsgReq<SwitchState> msgReq = new MsgReq();
         msgReq.device_info = deviceParams;
         msgReq.msg_id = MQTTConstants.CONFIG_MSG_ID_SWITCH_STATE;
         msgReq.data = data;

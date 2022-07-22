@@ -36,11 +36,13 @@ import com.moko.support.json.entity.MsgCommon;
 import com.moko.support.json.entity.OverloadOccur;
 import com.moko.support.json.entity.SetCountdown;
 import com.moko.support.json.entity.SwitchInfo;
+import com.moko.support.json.entity.SwitchState;
 import com.moko.support.json.event.DeviceModifyNameEvent;
 import com.moko.support.json.event.DeviceOnlineEvent;
 import com.moko.support.json.event.MQTTMessageArrivedEvent;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
+import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
@@ -94,9 +96,10 @@ public class PlugActivity extends BaseActivity {
         }
         showLoadingProgressDialog();
         mHandler.postDelayed(() -> {
+            EventBus.getDefault().post(new DeviceOnlineEvent(mMokoDevice.deviceId, false));
             dismissLoadingProgressDialog();
             finish();
-        }, 30 * 1000);
+        }, 90 * 1000);
         getSwitchInfo();
     }
 
@@ -137,9 +140,10 @@ public class PlugActivity extends BaseActivity {
         dialog.setOnAlertConfirmListener(() -> {
             showLoadingProgressDialog();
             mHandler.postDelayed(() -> {
+                EventBus.getDefault().post(new DeviceOnlineEvent(mMokoDevice.deviceId, false));
                 dismissLoadingProgressDialog();
                 finish();
-            }, 30 * 1000);
+            }, 90 * 1000);
             clearOverStatus();
         });
         dialog.show(getSupportFragmentManager());
@@ -357,16 +361,16 @@ public class PlugActivity extends BaseActivity {
         }
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onDeviceOnlineEvent(DeviceOnlineEvent event) {
-        String deviceId = event.getDeviceId();
-        if (!mMokoDevice.deviceId.equals(deviceId)) {
-            return;
-        }
-        boolean online = event.isOnline();
-        if (!online)
-            finish();
-    }
+//    @Subscribe(threadMode = ThreadMode.MAIN)
+//    public void onDeviceOnlineEvent(DeviceOnlineEvent event) {
+//        String deviceId = event.getDeviceId();
+//        if (!mMokoDevice.deviceId.equals(deviceId)) {
+//            return;
+//        }
+//        boolean online = event.isOnline();
+//        if (!online)
+//            finish();
+//    }
 
     private void changeSwitchState() {
         rlTitle.setBackgroundColor(ContextCompat.getColor(this, mMokoDevice.on_off ? R.color.blue_0188cc : R.color.black_303a4b));
@@ -525,12 +529,12 @@ public class PlugActivity extends BaseActivity {
             appTopic = appMqttConfig.topicPublish;
         }
         mMokoDevice.on_off = !mMokoDevice.on_off;
-        SwitchInfo switchInfo = new SwitchInfo();
-        switchInfo.switch_state = mMokoDevice.on_off ? 1 : 0;
+        SwitchState switchState = new SwitchState();
+        switchState.switch_state = mMokoDevice.on_off ? 1 : 0;
         DeviceParams deviceParams = new DeviceParams();
         deviceParams.device_id = mMokoDevice.deviceId;
         deviceParams.mac = mMokoDevice.mac;
-        String message = MQTTMessageAssembler.assembleWriteSwitchInfo(deviceParams, switchInfo);
+        String message = MQTTMessageAssembler.assembleWriteSwitchInfo(deviceParams, switchState);
         try {
             MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.CONFIG_MSG_ID_SWITCH_STATE, appMqttConfig.qos);
         } catch (MqttException e) {

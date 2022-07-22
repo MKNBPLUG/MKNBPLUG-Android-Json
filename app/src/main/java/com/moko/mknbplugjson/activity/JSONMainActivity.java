@@ -38,6 +38,7 @@ import com.moko.support.json.entity.MQTTConfig;
 import com.moko.support.json.entity.MsgCommon;
 import com.moko.support.json.entity.OverloadOccur;
 import com.moko.support.json.entity.SwitchInfo;
+import com.moko.support.json.entity.SwitchState;
 import com.moko.support.json.event.DeviceDeletedEvent;
 import com.moko.support.json.event.DeviceModifyNameEvent;
 import com.moko.support.json.event.DeviceOnlineEvent;
@@ -233,9 +234,6 @@ public class JSONMainActivity extends BaseActivity implements BaseQuickAdapter.O
             rlEmpty.setVisibility(View.VISIBLE);
             rvDeviceList.setVisibility(View.GONE);
         }
-        if (id > 0 && mHandler.hasMessages(id)) {
-            mHandler.removeMessages(id);
-        }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -259,6 +257,22 @@ public class JSONMainActivity extends BaseActivity implements BaseQuickAdapter.O
         }
     }
 
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onDeviceOnlineEvent(DeviceOnlineEvent event) {
+        String deviceId = event.getDeviceId();
+        if (devices == null || devices.size() == 0 || event.isOnline())
+            return;
+        for (MokoDevice mokoDevice : devices) {
+            if (deviceId.equals(mokoDevice.deviceId)){
+                mokoDevice.isOnline = false;
+                mokoDevice.on_off = false;
+                XLog.i(mokoDevice.deviceId + "离线");
+                adapter.replaceData(devices);
+                break;
+            }
+        }
+    }
+
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
@@ -278,16 +292,6 @@ public class JSONMainActivity extends BaseActivity implements BaseQuickAdapter.O
                     for (final MokoDevice device : devices) {
                         if (deviceId.equals(device.deviceId)) {
                             device.isOnline = true;
-                            if (mHandler.hasMessages(device.id)) {
-                                mHandler.removeMessages(device.id);
-                            }
-                            Message message = Message.obtain(mHandler, () -> {
-                                device.isOnline = false;
-                                XLog.i(device.deviceId + "离线");
-                                adapter.replaceData(devices);
-                            });
-                            message.what = device.id;
-                            mHandler.sendMessageDelayed(message, 90 * 1000);
                             break;
                         }
                     }
@@ -396,13 +400,13 @@ public class JSONMainActivity extends BaseActivity implements BaseQuickAdapter.O
             appTopic = appMqttConfig.topicPublish;
         }
         device.on_off = !device.on_off;
-        SwitchInfo switchInfo = new SwitchInfo();
+        SwitchState switchState = new SwitchState();
         // 设置与当前开关相反的状态
-        switchInfo.switch_state = device.on_off ? 1 : 0;
+        switchState.switch_state = device.on_off ? 1 : 0;
         DeviceParams deviceParams = new DeviceParams();
         deviceParams.device_id = device.deviceId;
         deviceParams.mac = device.mac;
-        String message = MQTTMessageAssembler.assembleWriteSwitchInfo(deviceParams, switchInfo);
+        String message = MQTTMessageAssembler.assembleWriteSwitchInfo(deviceParams, switchState);
         try {
             MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.CONFIG_MSG_ID_SWITCH_STATE, appMqttConfig.qos);
         } catch (MqttException e) {
@@ -492,18 +496,6 @@ public class JSONMainActivity extends BaseActivity implements BaseQuickAdapter.O
         for (final MokoDevice device : devices) {
             if (device.deviceId.equals(msgCommon.device_info.device_id)) {
                 device.isOnline = true;
-                if (mHandler.hasMessages(device.id)) {
-                    mHandler.removeMessages(device.id);
-                }
-                Message offline = Message.obtain(mHandler, () -> {
-                    device.isOnline = false;
-                    device.on_off = false;
-                    XLog.i(device.deviceId + "离线");
-                    adapter.replaceData(devices);
-                    EventBus.getDefault().post(new DeviceOnlineEvent(device.deviceId, false));
-                });
-                offline.what = device.id;
-                mHandler.sendMessageDelayed(offline, 90 * 1000);
                 if (msgCommon.msg_id == MQTTConstants.NOTIFY_MSG_ID_SWITCH_STATE
                         || msgCommon.msg_id == MQTTConstants.READ_MSG_ID_SWITCH_INFO) {
                     Type infoType = new TypeToken<SwitchInfo>() {
@@ -518,13 +510,6 @@ public class JSONMainActivity extends BaseActivity implements BaseQuickAdapter.O
                     device.isUnderVoltage = switchInfo.undervoltage_state == 1;
                     break;
                 }
-//                if (msgCommon.msg_id == MQTTConstants.NOTIFY_MSG_ID_OVERLOAD_OCCUR) {
-//                    Type infoType = new TypeToken<OverloadInfo>() {
-//                    }.getType();
-//                    OverloadInfo overLoadInfo = new Gson().fromJson(msgCommon.data, infoType);
-//                    device.isOverload = overLoadInfo.overload_state == 1;
-//                    device.overloadValue = overLoadInfo.overload_value;
-//                }
                 if (msgCommon.msg_id == MQTTConstants.NOTIFY_MSG_ID_OVERLOAD_OCCUR) {
                     Type infoType = new TypeToken<OverloadOccur>() {
                     }.getType();
@@ -585,27 +570,7 @@ public class JSONMainActivity extends BaseActivity implements BaseQuickAdapter.O
     protected void onDestroy() {
         super.onDestroy();
         MQTTSupport.getInstance().disconnectMqtt();
-        if (!devices.isEmpty()) {
-            for (final MokoDevice device : devices) {
-                if (mHandler.hasMessages(device.id)) {
-                    mHandler.removeMessages(device.id);
-                }
-            }
-        }
     }
-
-    // 记录上次收到信息的时间,屏蔽无效事件
-//    protected long mLastMessageTime = 0;
-//
-//    public boolean isDurationVoid() {
-//        long current = SystemClock.elapsedRealtime();
-//        if (current - mLastMessageTime > 500) {
-//            mLastMessageTime = current;
-//            return false;
-//        } else {
-//            return true;
-//        }
-//    }
 
     public void onBack(View view) {
         back();

@@ -520,11 +520,11 @@ public class SetAppMQTTActivity extends BaseActivity implements RadioGroup.OnChe
                             mqttConfig.keepAlive = Integer.parseInt(keepAliveCell.getStringCellValue().replaceAll("value:", ""));
                             Cell usernameCell = sheet.getRow(9).getCell(1);
                             if (usernameCell != null) {
-                                mqttConfig.username = topicPublishCell.getStringCellValue().replaceAll("value:", "");
+                                mqttConfig.username = usernameCell.getStringCellValue().replaceAll("value:", "");
                             }
                             Cell passwordCell = sheet.getRow(10).getCell(1);
                             if (passwordCell != null) {
-                                mqttConfig.password = topicPublishCell.getStringCellValue().replaceAll("value:", "");
+                                mqttConfig.password = passwordCell.getStringCellValue().replaceAll("value:", "");
                             }
                             Cell connectModeCell = sheet.getRow(11).getCell(1);
                             if (connectModeCell != null) {

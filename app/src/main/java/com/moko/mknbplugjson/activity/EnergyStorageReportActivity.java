@@ -25,7 +25,6 @@ import com.moko.support.json.entity.EnergyStorageReport;
 import com.moko.support.json.entity.MQTTConfig;
 import com.moko.support.json.entity.MsgCommon;
 import com.moko.support.json.entity.OverloadOccur;
-import com.moko.support.json.event.DeviceOnlineEvent;
 import com.moko.support.json.event.MQTTMessageArrivedEvent;
 
 import org.eclipse.paho.client.mqttv3.MqttException;
@@ -124,16 +123,16 @@ public class EnergyStorageReportActivity extends BaseActivity {
         }
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onDeviceOnlineEvent(DeviceOnlineEvent event) {
-        String deviceId = event.getDeviceId();
-        if (!mMokoDevice.deviceId.equals(deviceId)) {
-            return;
-        }
-        boolean online = event.isOnline();
-        if (!online)
-            finish();
-    }
+//    @Subscribe(threadMode = ThreadMode.MAIN)
+//    public void onDeviceOnlineEvent(DeviceOnlineEvent event) {
+//        String deviceId = event.getDeviceId();
+//        if (!mMokoDevice.deviceId.equals(deviceId)) {
+//            return;
+//        }
+//        boolean online = event.isOnline();
+//        if (!online)
+//            finish();
+//    }
 
     public void onBack(View view) {
         finish();
