@@ -4,19 +4,14 @@ import android.view.Gravity;
 import android.view.View;
 import android.widget.ImageView;
 
+import androidx.core.content.ContextCompat;
+
 import com.moko.mknbplugjson.R;
-import com.moko.mknbplugjson.R2;
 import com.moko.mknbplugjson.view.ProgressDrawable;
 
-import androidx.core.content.ContextCompat;
-import butterknife.BindView;
-import butterknife.ButterKnife;
-
 public class LoadingDialog extends MokoBaseDialog {
-
     public static final String TAG = LoadingDialog.class.getSimpleName();
-    @BindView(R2.id.iv_loading)
-    ImageView ivLoading;
+    private ImageView ivLoading;
 
     @Override
     public int getLayoutRes() {
@@ -25,7 +20,7 @@ public class LoadingDialog extends MokoBaseDialog {
 
     @Override
     public void bindView(View v) {
-        ButterKnife.bind(this, v);
+        ivLoading = v.findViewById(R.id.iv_loading);
         ProgressDrawable progressDrawable = new ProgressDrawable();
         progressDrawable.setColor(ContextCompat.getColor(getContext(), R.color.black_333333));
         ivLoading.setImageDrawable(progressDrawable);

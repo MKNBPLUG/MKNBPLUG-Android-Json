@@ -1,20 +1,17 @@
 package com.moko.mknbplugjson.activity;
 
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
 import android.view.View;
-import android.widget.CheckBox;
-import android.widget.EditText;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.moko.mknbplugjson.AppConstants;
 import com.moko.mknbplugjson.R;
-import com.moko.mknbplugjson.R2;
 import com.moko.mknbplugjson.base.BaseActivity;
+import com.moko.mknbplugjson.databinding.ActivityOvercurrentProtectionBinding;
 import com.moko.mknbplugjson.entity.MokoDevice;
 import com.moko.mknbplugjson.utils.SPUtils;
 import com.moko.mknbplugjson.utils.ToastUtils;
@@ -34,39 +31,24 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.lang.reflect.Type;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-
-
-public class OverCurrentProtectionActivity extends BaseActivity {
-
-
-    @BindView(R2.id.cb_overcurrent_protection)
-    CheckBox cbOvercurrentProtection;
-    @BindView(R2.id.et_current_threshold)
-    EditText etCurrentThreshold;
-    @BindView(R2.id.et_time_threshold)
-    EditText etTimeThreshold;
+public class OverCurrentProtectionActivity extends BaseActivity<ActivityOvercurrentProtectionBinding> {
     private MQTTConfig appMqttConfig;
     private MokoDevice mMokoDevice;
     private Handler mHandler;
     private int mDeviceType;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_overcurrent_protection);
-        ButterKnife.bind(this);
+    protected void onCreate() {
         String mqttConfigAppStr = SPUtils.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
         appMqttConfig = new Gson().fromJson(mqttConfigAppStr, MQTTConfig.class);
         mMokoDevice = (MokoDevice) getIntent().getSerializableExtra(AppConstants.EXTRA_KEY_DEVICE);
         mDeviceType = getIntent().getIntExtra(AppConstants.EXTRA_KEY_DEVICE_TYPE, 0);
         if (mDeviceType == 0) {
-            etCurrentThreshold.setHint("1-192");
+            mBind.etCurrentThreshold.setHint("1-192");
         } else if (mDeviceType == 1) {
-            etCurrentThreshold.setHint("1-180");
+            mBind.etCurrentThreshold.setHint("1-180");
         } else {
-            etCurrentThreshold.setHint("1-156");
+            mBind.etCurrentThreshold.setHint("1-156");
         }
         mHandler = new Handler(Looper.getMainLooper());
         showLoadingProgressDialog();
@@ -77,10 +59,14 @@ public class OverCurrentProtectionActivity extends BaseActivity {
         getOverCurrentProtection();
     }
 
+    @Override
+    protected ActivityOvercurrentProtectionBinding getViewBinding() {
+        return ActivityOvercurrentProtectionBinding.inflate(getLayoutInflater());
+    }
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMQTTMessageArrivedEvent(MQTTMessageArrivedEvent event) {
         // 更新所有设备的网络状态
-        final String topic = event.getTopic();
         final String message = event.getMessage();
         if (TextUtils.isEmpty(message))
             return;
@@ -92,7 +78,7 @@ public class OverCurrentProtectionActivity extends BaseActivity {
         } catch (Exception e) {
             return;
         }
-        if (!mMokoDevice.deviceId.equals(msgCommon.device_info.device_id)) {
+        if (!mMokoDevice.mac.equalsIgnoreCase(msgCommon.device_info.mac)) {
             return;
         }
         mMokoDevice.isOnline = true;
@@ -109,9 +95,9 @@ public class OverCurrentProtectionActivity extends BaseActivity {
             int enable = overloadProtection.protection_enable;
             int value = overloadProtection.protection_value;
             int judge_time = overloadProtection.judge_time;
-            cbOvercurrentProtection.setChecked(enable == 1);
-            etCurrentThreshold.setText(String.valueOf(value));
-            etTimeThreshold.setText(String.valueOf(judge_time));
+            mBind.cbOvercurrentProtection.setChecked(enable == 1);
+            mBind.etCurrentThreshold.setText(String.valueOf(value));
+            mBind.etTimeThreshold.setText(String.valueOf(judge_time));
         }
         if (msgCommon.msg_id == MQTTConstants.CONFIG_MSG_ID_OVER_CURRENT_PROTECTION) {
             if (mHandler.hasMessages(0)) {
@@ -136,23 +122,9 @@ public class OverCurrentProtectionActivity extends BaseActivity {
         }
     }
 
-
-//    @Subscribe(threadMode = ThreadMode.MAIN)
-//    public void onDeviceOnlineEvent(DeviceOnlineEvent event) {
-//        String deviceId = event.getDeviceId();
-//        if (!mMokoDevice.deviceId.equals(deviceId)) {
-//            return;
-//        }
-//        boolean online = event.isOnline();
-//        if (!online)
-//            finish();
-//    }
-
-
     public void onBack(View view) {
         finish();
     }
-
 
     private void getOverCurrentProtection() {
         String appTopic;
@@ -162,7 +134,6 @@ public class OverCurrentProtectionActivity extends BaseActivity {
             appTopic = appMqttConfig.topicPublish;
         }
         DeviceParams deviceParams = new DeviceParams();
-        deviceParams.device_id = mMokoDevice.deviceId;
         deviceParams.mac = mMokoDevice.mac;
         String message = MQTTMessageAssembler.assembleReadOverCurrentProtection(deviceParams);
         try {
@@ -173,8 +144,7 @@ public class OverCurrentProtectionActivity extends BaseActivity {
     }
 
     public void onSave(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         if (!MQTTSupport.getInstance().isConnected()) {
             ToastUtils.showToast(this, R.string.network_error);
             return;
@@ -185,7 +155,7 @@ public class OverCurrentProtectionActivity extends BaseActivity {
         } else if (mDeviceType == 2) {
             max = 156;
         }
-        String currentThresholdStr = etCurrentThreshold.getText().toString();
+        String currentThresholdStr = mBind.etCurrentThreshold.getText().toString();
         if (TextUtils.isEmpty(currentThresholdStr)) {
             ToastUtils.showToast(this, "Para Error");
             return;
@@ -195,7 +165,7 @@ public class OverCurrentProtectionActivity extends BaseActivity {
             ToastUtils.showToast(this, "Para Error");
             return;
         }
-        String timeThresholdStr = etTimeThreshold.getText().toString();
+        String timeThresholdStr = mBind.etTimeThreshold.getText().toString();
         if (TextUtils.isEmpty(timeThresholdStr)) {
             ToastUtils.showToast(this, "Para Error");
             return;
@@ -221,10 +191,9 @@ public class OverCurrentProtectionActivity extends BaseActivity {
             appTopic = appMqttConfig.topicPublish;
         }
         DeviceParams deviceParams = new DeviceParams();
-        deviceParams.device_id = mMokoDevice.deviceId;
         deviceParams.mac = mMokoDevice.mac;
         OverloadProtection protection = new OverloadProtection();
-        protection.protection_enable = cbOvercurrentProtection.isChecked() ? 1 : 0;
+        protection.protection_enable = mBind.cbOvercurrentProtection.isChecked() ? 1 : 0;
         protection.protection_value = currentThreshold;
         protection.judge_time = timeThreshold;
         String message = MQTTMessageAssembler.assembleWriteOverCurrentProtection(deviceParams, protection);

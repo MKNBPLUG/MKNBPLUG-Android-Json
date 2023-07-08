@@ -8,7 +8,6 @@ public class MokoDevice implements Serializable {
     public int id;
     public String name;
     public String mac;
-    public String deviceId;
     public String mqttInfo;
     public String topicPublish;
     public String topicSubscribe;
@@ -20,4 +19,5 @@ public class MokoDevice implements Serializable {
     public boolean isOverCurrent;
     public boolean isOverVoltage;
     public boolean isUnderVoltage;
+    public int csq;//信号强度
 }

@@ -1,20 +1,18 @@
 package com.moko.mknbplugjson.activity;
 
 import android.content.Intent;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
 import android.view.View;
-import android.widget.TextView;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.moko.mknbplugjson.AppConstants;
 import com.moko.mknbplugjson.R;
-import com.moko.mknbplugjson.R2;
 import com.moko.mknbplugjson.base.BaseActivity;
+import com.moko.mknbplugjson.databinding.ActivitySystemTimeBinding;
 import com.moko.mknbplugjson.dialog.BottomDialog;
 import com.moko.mknbplugjson.entity.MokoDevice;
 import com.moko.mknbplugjson.utils.SPUtils;
@@ -39,29 +37,16 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Calendar;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-
-public class SystemTimeActivity extends BaseActivity {
-
-    @BindView(R2.id.tv_time_zone)
-    TextView tvTimeZone;
-    @BindView(R2.id.tv_device_time)
-    TextView tvDeviceTime;
+public class SystemTimeActivity extends BaseActivity<ActivitySystemTimeBinding> {
     private MokoDevice mMokoDevice;
     private MQTTConfig appMqttConfig;
-
     public Handler mHandler;
     public Handler mSyncTimeHandler;
-
     private ArrayList<String> mTimeZones;
     private int mSelectedTimeZone;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_system_time);
-        ButterKnife.bind(this);
+    protected void onCreate() {
         String mqttConfigAppStr = SPUtils.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
         appMqttConfig = new Gson().fromJson(mqttConfigAppStr, MQTTConfig.class);
         mMokoDevice = (MokoDevice) getIntent().getSerializableExtra(AppConstants.EXTRA_KEY_DEVICE);
@@ -85,13 +70,16 @@ public class SystemTimeActivity extends BaseActivity {
         getTimeZone();
     }
 
+    @Override
+    protected ActivitySystemTimeBinding getViewBinding() {
+        return ActivitySystemTimeBinding.inflate(getLayoutInflater());
+    }
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMQTTMessageArrivedEvent(MQTTMessageArrivedEvent event) {
         // 更新所有设备的网络状态
-        final String topic = event.getTopic();
         final String message = event.getMessage();
-        if (TextUtils.isEmpty(message))
-            return;
+        if (TextUtils.isEmpty(message)) return;
         MsgCommon<JsonObject> msgCommon;
         try {
             Type type = new TypeToken<MsgCommon<JsonObject>>() {
@@ -100,18 +88,17 @@ public class SystemTimeActivity extends BaseActivity {
         } catch (Exception e) {
             return;
         }
-        if (!mMokoDevice.deviceId.equals(msgCommon.device_info.device_id)) {
+        if (!mMokoDevice.mac.equalsIgnoreCase(msgCommon.device_info.mac)) {
             return;
         }
         mMokoDevice.isOnline = true;
         if (msgCommon.msg_id == MQTTConstants.READ_MSG_ID_TIMEZONE) {
-            if (msgCommon.result_code != 0)
-                return;
+            if (msgCommon.result_code != 0) return;
             Type infoType = new TypeToken<DeviceTimeZone>() {
             }.getType();
             DeviceTimeZone timeZone = new Gson().fromJson(msgCommon.data, infoType);
             mSelectedTimeZone = timeZone.time_zone + 24;
-            tvTimeZone.setText(mTimeZones.get(mSelectedTimeZone));
+            mBind.tvTimeZone.setText(mTimeZones.get(mSelectedTimeZone));
             getSystemTime();
         }
         if (msgCommon.msg_id == MQTTConstants.READ_MSG_ID_SYSTEM_TIME) {
@@ -119,8 +106,7 @@ public class SystemTimeActivity extends BaseActivity {
                 dismissLoadingProgressDialog();
                 mHandler.removeMessages(0);
             }
-            if (msgCommon.result_code != 0)
-                return;
+            if (msgCommon.result_code != 0) return;
             Type infoType = new TypeToken<SystemTime>() {
             }.getType();
             SystemTime systemTime = new Gson().fromJson(msgCommon.data, infoType);
@@ -128,13 +114,11 @@ public class SystemTimeActivity extends BaseActivity {
             Calendar calendar = Calendar.getInstance();
             calendar.setTimeInMillis(time * 1000L);
             String timeZoneId = mTimeZones.get(mSelectedTimeZone);
-            String showTime = Utils.calendar2strDate(calendar, AppConstants.PATTERN_YYYY_MM_DD_HH_MM, timeZoneId.replaceAll("UTC","GMT"));
-            tvDeviceTime.setText(String.format("Device time:%s %s", showTime, timeZoneId));
+            String showTime = Utils.calendar2strDate(calendar, AppConstants.PATTERN_YYYY_MM_DD_HH_MM, timeZoneId.replaceAll("UTC", "GMT"));
+            mBind.tvDeviceTime.setText(String.format("Device time:%s %s", showTime, timeZoneId));
             if (mSyncTimeHandler.hasMessages(0))
                 mSyncTimeHandler.removeMessages(0);
-            mSyncTimeHandler.postDelayed(() -> {
-                getTimeZone();
-            }, 60 * 1000);
+            mSyncTimeHandler.postDelayed(this::getTimeZone, 60 * 1000);
         }
         if (msgCommon.msg_id == MQTTConstants.CONFIG_MSG_ID_TIMEZONE
                 || msgCommon.msg_id == MQTTConstants.CONFIG_MSG_ID_SYSTEM_TIME) {
@@ -152,21 +136,9 @@ public class SystemTimeActivity extends BaseActivity {
             Type infoType = new TypeToken<OverloadOccur>() {
             }.getType();
             OverloadOccur overloadOccur = new Gson().fromJson(msgCommon.data, infoType);
-            if (overloadOccur.state == 1)
-                finish();
+            if (overloadOccur.state == 1) finish();
         }
     }
-
-//    @Subscribe(threadMode = ThreadMode.MAIN)
-//    public void onDeviceOnlineEvent(DeviceOnlineEvent event) {
-//        String deviceId = event.getDeviceId();
-//        if (!mMokoDevice.deviceId.equals(deviceId)) {
-//            return;
-//        }
-//        boolean online = event.isOnline();
-//        if (!online)
-//            finish();
-//    }
 
     public void onBack(View view) {
         finish();
@@ -180,7 +152,6 @@ public class SystemTimeActivity extends BaseActivity {
             appTopic = appMqttConfig.topicPublish;
         }
         DeviceParams deviceParams = new DeviceParams();
-        deviceParams.device_id = mMokoDevice.deviceId;
         deviceParams.mac = mMokoDevice.mac;
         String message = MQTTMessageAssembler.assembleReadTimeZone(deviceParams);
         try {
@@ -198,7 +169,6 @@ public class SystemTimeActivity extends BaseActivity {
             appTopic = appMqttConfig.topicPublish;
         }
         DeviceParams deviceParams = new DeviceParams();
-        deviceParams.device_id = mMokoDevice.deviceId;
         deviceParams.mac = mMokoDevice.mac;
         DeviceTimeZone timeZone = new DeviceTimeZone();
         timeZone.time_zone = mSelectedTimeZone - 24;
@@ -210,7 +180,6 @@ public class SystemTimeActivity extends BaseActivity {
         }
     }
 
-
     private void getSystemTime() {
         String appTopic;
         if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
@@ -219,7 +188,6 @@ public class SystemTimeActivity extends BaseActivity {
             appTopic = appMqttConfig.topicPublish;
         }
         DeviceParams deviceParams = new DeviceParams();
-        deviceParams.device_id = mMokoDevice.deviceId;
         deviceParams.mac = mMokoDevice.mac;
         String message = MQTTMessageAssembler.assembleReadSystemTime(deviceParams);
         try {
@@ -237,7 +205,6 @@ public class SystemTimeActivity extends BaseActivity {
             appTopic = appMqttConfig.topicPublish;
         }
         DeviceParams deviceParams = new DeviceParams();
-        deviceParams.device_id = mMokoDevice.deviceId;
         deviceParams.mac = mMokoDevice.mac;
         Calendar calendar = Calendar.getInstance();
         SystemTime systemTime = new SystemTime();
@@ -251,8 +218,7 @@ public class SystemTimeActivity extends BaseActivity {
     }
 
     public void onSelectTimeZoneClick(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         BottomDialog dialog = new BottomDialog();
         dialog.setDatas(mTimeZones, mSelectedTimeZone);
         dialog.setListener(value -> {
@@ -261,7 +227,7 @@ public class SystemTimeActivity extends BaseActivity {
                 return;
             }
             mSelectedTimeZone = value;
-            tvTimeZone.setText(mTimeZones.get(mSelectedTimeZone));
+            mBind.tvTimeZone.setText(mTimeZones.get(mSelectedTimeZone));
             mHandler.postDelayed(() -> {
                 dismissLoadingProgressDialog();
                 ToastUtils.showToast(this, "Set up failed");
@@ -273,8 +239,7 @@ public class SystemTimeActivity extends BaseActivity {
     }
 
     public void onSyncClick(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         mHandler.postDelayed(() -> {
             dismissLoadingProgressDialog();
             ToastUtils.showToast(this, "Set up failed");
@@ -284,8 +249,7 @@ public class SystemTimeActivity extends BaseActivity {
     }
 
     public void onSyncTimeFromNTPClick(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         if (!MQTTSupport.getInstance().isConnected()) {
             ToastUtils.showToast(this, R.string.network_error);
             return;
@@ -303,5 +267,4 @@ public class SystemTimeActivity extends BaseActivity {
         if (mHandler.hasMessages(0))
             mHandler.removeMessages(0);
     }
-
 }

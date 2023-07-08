@@ -1,9 +1,7 @@
 package com.moko.mknbplugjson.activity;
 
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.InputFilter;
@@ -12,8 +10,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.RelativeLayout;
+
+import androidx.annotation.Nullable;
 
 import com.elvishew.xlog.XLog;
 import com.google.gson.Gson;
@@ -23,8 +21,8 @@ import com.moko.ble.lib.MokoConstants;
 import com.moko.ble.lib.event.ConnectStatusEvent;
 import com.moko.mknbplugjson.AppConstants;
 import com.moko.mknbplugjson.R;
-import com.moko.mknbplugjson.R2;
 import com.moko.mknbplugjson.base.BaseActivity;
+import com.moko.mknbplugjson.databinding.ActivityPlugSettingBinding;
 import com.moko.mknbplugjson.db.DBTools;
 import com.moko.mknbplugjson.dialog.AlertMessageDialog;
 import com.moko.mknbplugjson.dialog.CustomDialog;
@@ -51,23 +49,9 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.lang.reflect.Type;
 
-import androidx.annotation.Nullable;
-import butterknife.BindView;
-import butterknife.ButterKnife;
-
-public class PlugSettingActivity extends BaseActivity {
+public class PlugSettingActivity extends BaseActivity<ActivityPlugSettingBinding> {
     private final String FILTER_ASCII = "[ -~]*";
     public static String TAG = PlugSettingActivity.class.getSimpleName();
-    @BindView(R2.id.iv_button_control)
-    ImageView ivButtonControl;
-    @BindView(R2.id.rl_debug_mode)
-    RelativeLayout rlDebugMode;
-    @BindView(R2.id.rl_modify_network)
-    RelativeLayout rlModifyNetwork;
-    @BindView(R2.id.rl_ota)
-    RelativeLayout rlOta;
-
-
     private MokoDevice mMokoDevice;
     private MQTTConfig appMqttConfig;
 
@@ -76,24 +60,21 @@ public class PlugSettingActivity extends BaseActivity {
     private boolean mButtonControlEnable;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_plug_setting);
-        ButterKnife.bind(this);
+    protected void onCreate() {
         filter = (source, start, end, dest, dstart, dend) -> {
             if (!(source + "").matches(FILTER_ASCII)) {
                 return "";
             }
-
             return null;
         };
         if (getIntent().getExtras() != null) {
             mMokoDevice = (MokoDevice) getIntent().getSerializableExtra(AppConstants.EXTRA_KEY_DEVICE);
         }
         assert mMokoDevice != null;
-        rlDebugMode.setVisibility(mMokoDevice.deviceMode == 2 ? View.VISIBLE : View.GONE);
-        rlModifyNetwork.setVisibility(mMokoDevice.deviceMode == 2 ? View.GONE : View.VISIBLE);
-        rlOta.setVisibility(mMokoDevice.deviceMode == 2 ? View.GONE : View.VISIBLE);
+        mBind.rlDebugMode.setVisibility(mMokoDevice.deviceMode == 2 ? View.VISIBLE : View.GONE);
+        mBind.rlModifyNetwork.setVisibility(mMokoDevice.deviceMode == 2 ? View.GONE : View.VISIBLE);
+        mBind.rlOta.setVisibility(mMokoDevice.deviceMode == 2 ? View.GONE : View.VISIBLE);
+        mBind.layoutResetByButton.setVisibility(mMokoDevice.deviceMode == 2 ? View.GONE : View.VISIBLE);
         String mqttConfigAppStr = SPUtils.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
         appMqttConfig = new Gson().fromJson(mqttConfigAppStr, MQTTConfig.class);
         mHandler = new Handler(Looper.getMainLooper());
@@ -103,6 +84,11 @@ public class PlugSettingActivity extends BaseActivity {
             finish();
         }, 30 * 1000);
         getButtonControlEnable();
+    }
+
+    @Override
+    protected ActivityPlugSettingBinding getViewBinding() {
+        return ActivityPlugSettingBinding.inflate(getLayoutInflater());
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -120,7 +106,7 @@ public class PlugSettingActivity extends BaseActivity {
         } catch (Exception e) {
             return;
         }
-        if (!mMokoDevice.deviceId.equals(msgCommon.device_info.device_id)) {
+        if (!mMokoDevice.mac.equalsIgnoreCase(msgCommon.device_info.mac)) {
             return;
         }
         mMokoDevice.isOnline = true;
@@ -135,7 +121,7 @@ public class PlugSettingActivity extends BaseActivity {
             }.getType();
             ButtonControlEnable enable = new Gson().fromJson(msgCommon.data, infoType);
             mButtonControlEnable = enable.key_enable == 1;
-            ivButtonControl.setImageResource(mButtonControlEnable ? R.drawable.checkbox_open : R.drawable.checkbox_close);
+            mBind.ivButtonControl.setImageResource(mButtonControlEnable ? R.drawable.checkbox_open : R.drawable.checkbox_close);
         }
         if (msgCommon.msg_id == MQTTConstants.CONFIG_MSG_ID_BUTTON_CONTROL_ENABLE) {
             if (mHandler.hasMessages(0)) {
@@ -146,7 +132,7 @@ public class PlugSettingActivity extends BaseActivity {
                 ToastUtils.showToast(this, "Set up failed");
                 return;
             }
-            ivButtonControl.setImageResource(mButtonControlEnable ? R.drawable.checkbox_open : R.drawable.checkbox_close);
+            mBind.ivButtonControl.setImageResource(mButtonControlEnable ? R.drawable.checkbox_open : R.drawable.checkbox_close);
             ToastUtils.showToast(this, "Set up succeed");
         }
         if (msgCommon.msg_id == MQTTConstants.CONFIG_MSG_ID_RESET) {
@@ -170,12 +156,12 @@ public class PlugSettingActivity extends BaseActivity {
             XLog.i(String.format("删除设备:%s", mMokoDevice.name));
             DBTools.getInstance(this).deleteDevice(mMokoDevice);
             EventBus.getDefault().post(new DeviceDeletedEvent(mMokoDevice.id));
-            ivButtonControl.postDelayed(() -> {
+            mBind.ivButtonControl.postDelayed(() -> {
                 dismissLoadingProgressDialog();
                 // 跳转首页，刷新数据
                 Intent intent = new Intent(this, JSONMainActivity.class);
                 intent.putExtra(AppConstants.EXTRA_KEY_FROM_ACTIVITY, TAG);
-                intent.putExtra(AppConstants.EXTRA_KEY_DEVICE_ID, mMokoDevice.deviceId);
+                intent.putExtra(AppConstants.EXTRA_KEY_DEVICE_MAC, mMokoDevice.mac);
                 startActivity(intent);
             }, 500);
         }
@@ -194,32 +180,18 @@ public class PlugSettingActivity extends BaseActivity {
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onDeviceModifyNameEvent(DeviceModifyNameEvent event) {
         // 修改了设备名称
-        String deviceId = event.getDeviceId();
-        if (deviceId.equals(mMokoDevice.deviceId)) {
+        String deviceMac = event.getMac();
+        if (deviceMac.equalsIgnoreCase(mMokoDevice.mac)) {
             mMokoDevice.name = event.getName();
         }
     }
-
-//    @Subscribe(threadMode = ThreadMode.MAIN)
-//    public void onDeviceOnlineEvent(DeviceOnlineEvent event) {
-//        String deviceId = event.getDeviceId();
-//        if (!mMokoDevice.deviceId.equals(deviceId)) {
-//            return;
-//        }
-//        boolean online = event.isOnline();
-//        if (!online) {
-//            finish();
-//        }
-//    }
 
     public void onBack(View view) {
         finish();
     }
 
-
     public void onEditName(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         View content = LayoutInflater.from(this).inflate(R.layout.modify_name, null);
         final EditText etDeviceName = content.findViewById(R.id.et_device_name);
         String deviceName = etDeviceName.getText().toString();
@@ -228,27 +200,19 @@ public class PlugSettingActivity extends BaseActivity {
         etDeviceName.setFilters(new InputFilter[]{filter, new InputFilter.LengthFilter(20)});
         CustomDialog dialog = new CustomDialog.Builder(this)
                 .setContentView(content)
-                .setPositiveButton(R.string.cancel, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        dialog.dismiss();
+                .setPositiveButton(R.string.cancel, (dialog1, which) -> dialog1.dismiss())
+                .setNegativeButton(R.string.save, (dialog12, which) -> {
+                    String name = etDeviceName.getText().toString();
+                    if (TextUtils.isEmpty(name)) {
+                        ToastUtils.showToast(PlugSettingActivity.this, R.string.more_modify_name_tips);
+                        return;
                     }
-                })
-                .setNegativeButton(R.string.save, new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        String name = etDeviceName.getText().toString();
-                        if (TextUtils.isEmpty(name)) {
-                            ToastUtils.showToast(PlugSettingActivity.this, R.string.more_modify_name_tips);
-                            return;
-                        }
-                        mMokoDevice.name = name;
-                        DBTools.getInstance(PlugSettingActivity.this).updateDevice(mMokoDevice);
-                        DeviceModifyNameEvent event = new DeviceModifyNameEvent(mMokoDevice.deviceId);
-                        event.setName(name);
-                        EventBus.getDefault().post(event);
-                        dialog.dismiss();
-                    }
+                    mMokoDevice.name = name;
+                    DBTools.getInstance(PlugSettingActivity.this).updateDevice(mMokoDevice);
+                    DeviceModifyNameEvent event = new DeviceModifyNameEvent(mMokoDevice.mac);
+                    event.setName(name);
+                    EventBus.getDefault().post(event);
+                    dialog12.dismiss();
                 })
                 .create();
         dialog.show();
@@ -264,7 +228,6 @@ public class PlugSettingActivity extends BaseActivity {
             appTopic = appMqttConfig.topicPublish;
         }
         DeviceParams deviceParams = new DeviceParams();
-        deviceParams.device_id = mMokoDevice.deviceId;
         deviceParams.mac = mMokoDevice.mac;
         String message = MQTTMessageAssembler.assembleReadButtonControlEnable(deviceParams);
         try {
@@ -283,7 +246,6 @@ public class PlugSettingActivity extends BaseActivity {
             appTopic = appMqttConfig.topicPublish;
         }
         DeviceParams deviceParams = new DeviceParams();
-        deviceParams.device_id = mMokoDevice.deviceId;
         deviceParams.mac = mMokoDevice.mac;
         ButtonControlEnable enable = new ButtonControlEnable();
         enable.key_enable = mButtonControlEnable ? 1 : 0;
@@ -311,8 +273,7 @@ public class PlugSettingActivity extends BaseActivity {
     }
 
     public void onButtonControlEnable(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         mButtonControlEnable = !mButtonControlEnable;
         showLoadingProgressDialog();
         mHandler.postDelayed(() -> {
@@ -322,44 +283,8 @@ public class PlugSettingActivity extends BaseActivity {
         setButtonControlEnable();
     }
 
-    public void onRemove(View view) {
-        if (isWindowLocked())
-            return;
-        AlertMessageDialog dialog = new AlertMessageDialog();
-        dialog.setTitle("Remove Device");
-        dialog.setMessage("Please confirm again whether to \n remove the device,the device \n will be deleted from the device list.");
-        dialog.setOnAlertConfirmListener(() -> {
-            if (!MQTTSupport.getInstance().isConnected()) {
-                ToastUtils.showToast(this, R.string.network_error);
-                return;
-            }
-            showLoadingProgressDialog();
-            if (TextUtils.isEmpty(appMqttConfig.topicSubscribe)) {
-                // 取消订阅
-                try {
-                    MQTTSupport.getInstance().unSubscribe(mMokoDevice.topicPublish);
-                } catch (MqttException e) {
-                    e.printStackTrace();
-                }
-            }
-            XLog.i(String.format("删除设备:%s", mMokoDevice.name));
-            DBTools.getInstance(this).deleteDevice(mMokoDevice);
-            EventBus.getDefault().post(new DeviceDeletedEvent(mMokoDevice.id));
-            mHandler.postDelayed(() -> {
-                dismissLoadingProgressDialog();
-                // 跳转首页，刷新数据
-                Intent intent = new Intent(this, JSONMainActivity.class);
-                intent.putExtra(AppConstants.EXTRA_KEY_FROM_ACTIVITY, TAG);
-                intent.putExtra(AppConstants.EXTRA_KEY_DEVICE_ID, mMokoDevice.deviceId);
-                startActivity(intent);
-            }, 500);
-        });
-        dialog.show(getSupportFragmentManager());
-    }
-
     public void onReset(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         AlertMessageDialog dialog = new AlertMessageDialog();
         dialog.setTitle("Reset Device");
         dialog.setMessage("After reset, the device will be \n removed from the device list, and \n relevant data will be totally cleared.");
@@ -381,7 +306,6 @@ public class PlugSettingActivity extends BaseActivity {
                 appTopic = appMqttConfig.topicPublish;
             }
             DeviceParams deviceParams = new DeviceParams();
-            deviceParams.device_id = mMokoDevice.deviceId;
             deviceParams.mac = mMokoDevice.mac;
             String message = MQTTMessageAssembler.assembleWriteReset(deviceParams);
             try {
@@ -394,8 +318,7 @@ public class PlugSettingActivity extends BaseActivity {
     }
 
     public void onModifyPowerStatus(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         if (!MQTTSupport.getInstance().isConnected()) {
             ToastUtils.showToast(this, R.string.network_error);
             return;
@@ -406,8 +329,7 @@ public class PlugSettingActivity extends BaseActivity {
     }
 
     public void onPeriodReportClick(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         if (!MQTTSupport.getInstance().isConnected()) {
             ToastUtils.showToast(this, R.string.network_error);
             return;
@@ -418,8 +340,7 @@ public class PlugSettingActivity extends BaseActivity {
     }
 
     public void onPowerReportSettingClick(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         if (!MQTTSupport.getInstance().isConnected()) {
             ToastUtils.showToast(this, R.string.network_error);
             return;
@@ -430,8 +351,7 @@ public class PlugSettingActivity extends BaseActivity {
     }
 
     public void onEnergyStorageReportClick(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         if (!MQTTSupport.getInstance().isConnected()) {
             ToastUtils.showToast(this, R.string.network_error);
             return;
@@ -441,21 +361,12 @@ public class PlugSettingActivity extends BaseActivity {
         startActivity(i);
     }
 
-    public void onConnTimeoutSettingClick(View view) {
-        if (isWindowLocked())
-            return;
-        if (!MQTTSupport.getInstance().isConnected()) {
-            ToastUtils.showToast(this, R.string.network_error);
-            return;
-        }
-        Intent i = new Intent(this, ConnectionTimeoutActivity.class);
-        i.putExtra(AppConstants.EXTRA_KEY_DEVICE, mMokoDevice);
-        startActivity(i);
+    public void onResetByButtonClick(View view) {
+
     }
 
     public void onSystemTimeClick(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         if (!MQTTSupport.getInstance().isConnected()) {
             ToastUtils.showToast(this, R.string.network_error);
             return;
@@ -466,8 +377,7 @@ public class PlugSettingActivity extends BaseActivity {
     }
 
     public void onProtectionSwitchClick(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         if (!MQTTSupport.getInstance().isConnected()) {
             ToastUtils.showToast(this, R.string.network_error);
             return;
@@ -478,8 +388,7 @@ public class PlugSettingActivity extends BaseActivity {
     }
 
     public void onNotificationSwitchClick(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         if (!MQTTSupport.getInstance().isConnected()) {
             ToastUtils.showToast(this, R.string.network_error);
             return;
@@ -490,8 +399,7 @@ public class PlugSettingActivity extends BaseActivity {
     }
 
     public void onIndicatorSettingClick(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         if (!MQTTSupport.getInstance().isConnected()) {
             ToastUtils.showToast(this, R.string.network_error);
             return;
@@ -502,8 +410,7 @@ public class PlugSettingActivity extends BaseActivity {
     }
 
     public void onModifyNetworkMQTTClick(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         if (!MQTTSupport.getInstance().isConnected()) {
             ToastUtils.showToast(this, R.string.network_error);
             return;
@@ -521,18 +428,6 @@ public class PlugSettingActivity extends BaseActivity {
             return;
         }
         Intent i = new Intent(this, OTAActivity.class);
-        i.putExtra(AppConstants.EXTRA_KEY_DEVICE, mMokoDevice);
-        startActivity(i);
-    }
-
-    public void onMQTTSettingForDevice(View view) {
-        if (isWindowLocked())
-            return;
-        if (!MQTTSupport.getInstance().isConnected()) {
-            ToastUtils.showToast(this, R.string.network_error);
-            return;
-        }
-        Intent i = new Intent(this, SettingForDeviceActivity.class);
         i.putExtra(AppConstants.EXTRA_KEY_DEVICE, mMokoDevice);
         startActivity(i);
     }
@@ -560,7 +455,7 @@ public class PlugSettingActivity extends BaseActivity {
         macSB.insert(14, ":");
         // 进入Debug模式
         showLoadingProgressDialog();
-        rlDebugMode.postDelayed(() -> MokoSupport.getInstance().connDevice(macSB.toString()), 500);
+        mBind.rlDebugMode.postDelayed(() -> MokoSupport.getInstance().connDevice(macSB.toString()), 500);
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
@@ -579,7 +474,6 @@ public class PlugSettingActivity extends BaseActivity {
         }
     }
 
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -597,12 +491,12 @@ public class PlugSettingActivity extends BaseActivity {
                 XLog.i(String.format("删除设备:%s", mMokoDevice.name));
                 DBTools.getInstance(this).deleteDevice(mMokoDevice);
                 EventBus.getDefault().post(new DeviceDeletedEvent(mMokoDevice.id));
-                ivButtonControl.postDelayed(() -> {
+                mBind.ivButtonControl.postDelayed(() -> {
                     dismissLoadingProgressDialog();
                     // 跳转首页，刷新数据
                     Intent intent = new Intent(this, JSONMainActivity.class);
                     intent.putExtra(AppConstants.EXTRA_KEY_FROM_ACTIVITY, TAG);
-                    intent.putExtra(AppConstants.EXTRA_KEY_DEVICE_ID, mMokoDevice.deviceId);
+                    intent.putExtra(AppConstants.EXTRA_KEY_DEVICE_MAC, mMokoDevice.mac);
                     startActivity(intent);
                 }, 500);
             }

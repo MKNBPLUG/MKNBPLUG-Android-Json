@@ -2,11 +2,11 @@ package com.moko.support.json.event;
 
 public class DeviceOnlineEvent {
 
-    private String deviceId;
+    private String mac;
     private boolean online;
 
-    public DeviceOnlineEvent(String deviceId, boolean online) {
-        this.deviceId = deviceId;
+    public DeviceOnlineEvent(String mac, boolean online) {
+        this.mac = mac;
         this.online = online;
     }
 
@@ -14,7 +14,7 @@ public class DeviceOnlineEvent {
         return online;
     }
 
-    public String getDeviceId() {
-        return deviceId;
+    public String getMac() {
+        return mac;
     }
 }

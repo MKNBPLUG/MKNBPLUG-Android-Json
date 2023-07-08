@@ -3,18 +3,17 @@ package com.moko.mknbplugjson.activity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.InputFilter;
 import android.text.TextUtils;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.CheckBox;
-import android.widget.EditText;
-import android.widget.RadioButton;
 import android.widget.RadioGroup;
-import android.widget.TextView;
+
+import androidx.annotation.IdRes;
+import androidx.fragment.app.Fragment;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.github.lzyzsd.circleprogress.DonutProgress;
 import com.google.gson.Gson;
@@ -28,9 +27,9 @@ import com.moko.ble.lib.task.OrderTaskResponse;
 import com.moko.ble.lib.utils.MokoUtils;
 import com.moko.mknbplugjson.AppConstants;
 import com.moko.mknbplugjson.R;
-import com.moko.mknbplugjson.R2;
 import com.moko.mknbplugjson.adapter.MQTTFragmentAdapter;
 import com.moko.mknbplugjson.base.BaseActivity;
+import com.moko.mknbplugjson.databinding.ActivityMqttDeviceBinding;
 import com.moko.mknbplugjson.db.DBTools;
 import com.moko.mknbplugjson.dialog.BottomDialog;
 import com.moko.mknbplugjson.dialog.CustomDialog;
@@ -70,58 +69,14 @@ import java.io.OutputStream;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
-import androidx.annotation.IdRes;
-import androidx.fragment.app.Fragment;
-import androidx.viewpager2.widget.ViewPager2;
-import butterknife.BindView;
-import butterknife.ButterKnife;
-
-public class SetDeviceMQTTActivity extends BaseActivity implements RadioGroup.OnCheckedChangeListener {
+public class SetDeviceMQTTActivity extends BaseActivity<ActivityMqttDeviceBinding> implements RadioGroup.OnCheckedChangeListener {
     private final String FILTER_ASCII = "[ -~]*";
-    @BindView(R2.id.et_mqtt_host)
-    EditText etMqttHost;
-    @BindView(R2.id.et_mqtt_port)
-    EditText etMqttPort;
-    @BindView(R2.id.et_mqtt_client_id)
-    EditText etMqttClientId;
-    @BindView(R2.id.et_mqtt_subscribe_topic)
-    EditText etMqttSubscribeTopic;
-    @BindView(R2.id.et_mqtt_publish_topic)
-    EditText etMqttPublishTopic;
-    @BindView(R2.id.rb_general)
-    RadioButton rbGeneral;
-    @BindView(R2.id.rb_user)
-    RadioButton rbUser;
-    @BindView(R2.id.rb_ssl)
-    RadioButton rbSsl;
-    @BindView(R2.id.vp_mqtt)
-    ViewPager2 vpMqtt;
-    @BindView(R2.id.rg_mqtt)
-    RadioGroup rgMqtt;
-    @BindView(R2.id.et_device_id)
-    EditText etDeviceId;
-    @BindView(R2.id.et_ntp_url)
-    EditText etNtpUrl;
-    @BindView(R2.id.tv_time_zone)
-    TextView tvTimeZone;
-    @BindView(R2.id.rb_lwt)
-    RadioButton rbLwt;
-    @BindView(R2.id.et_apn)
-    EditText etApn;
-    @BindView(R2.id.et_apn_username)
-    EditText etApnUsername;
-    @BindView(R2.id.et_apn_password)
-    EditText etApnPassword;
-    @BindView(R2.id.tv_network_priority)
-    TextView tvNetworkPriority;
-    @BindView(R2.id.cb_debug_mode)
-    CheckBox cbDebugMode;
     private GeneralDeviceFragment generalFragment;
     private UserDeviceFragment userFragment;
     private SSLDeviceFragment sslFragment;
     private LWTFragment lwtFragment;
-    private MQTTFragmentAdapter adapter;
     private ArrayList<Fragment> fragments;
 
     private MQTTConfig mqttAppConfig;
@@ -140,81 +95,52 @@ public class SetDeviceMQTTActivity extends BaseActivity implements RadioGroup.On
     private boolean isSettingSuccess;
     private boolean isDeviceConnectSuccess;
     private Handler mHandler;
-    private InputFilter filter;
 
     private String expertFilePath;
     private boolean isFileError;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_mqtt_device);
-        ButterKnife.bind(this);
+    protected void onCreate() {
         String MQTTConfigStr = SPUtils.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
         mqttAppConfig = new Gson().fromJson(MQTTConfigStr, MQTTConfig.class);
         mSelectedDeviceName = getIntent().getStringExtra(AppConstants.EXTRA_KEY_SELECTED_DEVICE_NAME);
         mSelectedDeviceMac = getIntent().getStringExtra(AppConstants.EXTRA_KEY_SELECTED_DEVICE_MAC);
         mSelectedDeviceType = getIntent().getIntExtra(AppConstants.EXTRA_KEY_SELECTED_DEVICE_TYPE, 0);
-        if (TextUtils.isEmpty(MQTTConfigStr)) {
-            mqttDeviceConfig = new MQTTConfig();
-        } else {
-            Gson gson = new Gson();
-            mqttDeviceConfig = gson.fromJson(MQTTConfigStr, MQTTConfig.class);
-            mqttDeviceConfig.connectMode = 0;
-            mqttDeviceConfig.cleanSession = true;
-            mqttDeviceConfig.qos = 1;
-            mqttDeviceConfig.keepAlive = 60;
-            mqttDeviceConfig.clientId = "";
-            mqttDeviceConfig.username = "";
-            mqttDeviceConfig.password = "";
-            mqttDeviceConfig.caPath = "";
-            mqttDeviceConfig.clientKeyPath = "";
-            mqttDeviceConfig.clientCertPath = "";
-            mqttDeviceConfig.lwtTopic = "{device_name}/{device_id}/device_to_app";
-            mqttDeviceConfig.lwtPayload = "Offline";
-            mqttDeviceConfig.apn = "";
-            mqttDeviceConfig.apnUsername = "";
-            mqttDeviceConfig.apnPassword = "";
-            mqttDeviceConfig.topicPublish = "";
-            mqttDeviceConfig.topicSubscribe = "";
-            mqttDeviceConfig.timeZone = 0;
-        }
-        filter = (source, start, end, dest, dstart, dend) -> {
+        mqttDeviceConfig = new MQTTConfig();
+        InputFilter filter = (source, start, end, dest, dstart, dend) -> {
             if (!(source + "").matches(FILTER_ASCII)) {
                 return "";
             }
-
             return null;
         };
-        etMqttHost.setFilters(new InputFilter[]{new InputFilter.LengthFilter(64), filter});
-        etMqttClientId.setFilters(new InputFilter[]{new InputFilter.LengthFilter(64), filter});
-        etMqttSubscribeTopic.setFilters(new InputFilter[]{new InputFilter.LengthFilter(128), filter});
-        etMqttPublishTopic.setFilters(new InputFilter[]{new InputFilter.LengthFilter(128), filter});
-        etDeviceId.setFilters(new InputFilter[]{new InputFilter.LengthFilter(32), filter});
-        etNtpUrl.setFilters(new InputFilter[]{new InputFilter.LengthFilter(64), filter});
-        etApn.setFilters(new InputFilter[]{new InputFilter.LengthFilter(100), filter});
-        etApnUsername.setFilters(new InputFilter[]{new InputFilter.LengthFilter(127), filter});
-        etApnPassword.setFilters(new InputFilter[]{new InputFilter.LengthFilter(127), filter});
+        mBind.etMqttHost.setFilters(new InputFilter[]{new InputFilter.LengthFilter(64), filter});
+        mBind.etMqttClientId.setFilters(new InputFilter[]{new InputFilter.LengthFilter(64), filter});
+        mBind.etMqttSubscribeTopic.setFilters(new InputFilter[]{new InputFilter.LengthFilter(128), filter});
+        mBind.etMqttPublishTopic.setFilters(new InputFilter[]{new InputFilter.LengthFilter(128), filter});
+        mBind.etNtpUrl.setFilters(new InputFilter[]{new InputFilter.LengthFilter(64), filter});
+        mBind.etApn.setFilters(new InputFilter[]{new InputFilter.LengthFilter(100), filter});
+        mBind.etApnUsername.setFilters(new InputFilter[]{new InputFilter.LengthFilter(127), filter});
+        mBind.etApnPassword.setFilters(new InputFilter[]{new InputFilter.LengthFilter(127), filter});
         createFragment();
-        adapter = new MQTTFragmentAdapter(this);
+        MQTTFragmentAdapter adapter = new MQTTFragmentAdapter(this);
         adapter.setFragmentList(fragments);
-        vpMqtt.setAdapter(adapter);
-        vpMqtt.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+        mBind.vpMqtt.setAdapter(adapter);
+        mBind.vpMqtt.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
             public void onPageSelected(int position) {
                 if (position == 0) {
-                    rbGeneral.setChecked(true);
+                    mBind.rbGeneral.setChecked(true);
                 } else if (position == 1) {
-                    rbUser.setChecked(true);
+                    mBind.rbUser.setChecked(true);
                 } else if (position == 2) {
-                    rbSsl.setChecked(true);
+                    mBind.rbSsl.setChecked(true);
                 } else if (position == 3) {
-                    rbLwt.setChecked(true);
+                    mBind.rbLwt.setChecked(true);
                 }
             }
         });
-        vpMqtt.setOffscreenPageLimit(4);
-        rgMqtt.setOnCheckedChangeListener(this);
+        mBind.vpMqtt.setOffscreenPageLimit(4);
+        mBind.rgMqtt.setOnCheckedChangeListener(this);
         mTimeZones = new ArrayList<>();
         for (int i = -24; i <= 28; i++) {
             if (i < 0) {
@@ -252,6 +178,11 @@ public class SetDeviceMQTTActivity extends BaseActivity implements RadioGroup.On
         expertFilePath = JSONMainActivity.PATH_LOGCAT + File.separator + "export" + File.separator + "Settings for Device.xlsx";
     }
 
+    @Override
+    protected ActivityMqttDeviceBinding getViewBinding() {
+        return ActivityMqttDeviceBinding.inflate(getLayoutInflater());
+    }
+
     @Subscribe(threadMode = ThreadMode.POSTING, priority = 200)
     public void onConnectStatusEvent(ConnectStatusEvent event) {
         String action = event.getAction();
@@ -276,91 +207,274 @@ public class SetDeviceMQTTActivity extends BaseActivity implements RadioGroup.On
         if (MokoConstants.ACTION_ORDER_RESULT.equals(action)) {
             OrderTaskResponse response = event.getResponse();
             OrderCHAR orderCHAR = (OrderCHAR) response.orderCHAR;
-            int responseType = response.responseType;
             byte[] value = response.responseValue;
-            switch (orderCHAR) {
-                case CHAR_PARAMS:
-                    if (value.length >= 4) {
-                        int header = value[0] & 0xFF;// 0xED
-                        int flag = value[1] & 0xFF;// read or write
-                        int cmd = value[2] & 0xFF;
-                        if (header != 0xED)
-                            return;
-                        ParamsKeyEnum configKeyEnum = ParamsKeyEnum.fromParamKey(cmd);
-                        if (configKeyEnum == null) {
-                            return;
-                        }
-                        int length = value[3] & 0xFF;
-                        if (flag == 0x01) {
-                            // write
-                            int result = value[4] & 0xFF;
-                            switch (configKeyEnum) {
-                                case KEY_MQTT_HOST:
-                                case KEY_MQTT_PORT:
-                                case KEY_MQTT_USERNAME:
-                                case KEY_MQTT_PASSWORD:
-                                case KEY_MQTT_CLIENT_ID:
-                                case KEY_MQTT_CLEAN_SESSION:
-                                case KEY_MQTT_KEEP_ALIVE:
-                                case KEY_MQTT_QOS:
-                                case KEY_MQTT_SUBSCRIBE_TOPIC:
-                                case KEY_MQTT_PUBLISH_TOPIC:
-                                case KEY_MQTT_LWT_ENABLE:
-                                case KEY_MQTT_LWT_QOS:
-                                case KEY_MQTT_LWT_RETAIN:
-                                case KEY_MQTT_LWT_TOPIC:
-                                case KEY_MQTT_LWT_PAYLOAD:
-                                case KEY_MQTT_DEVICE_ID:
-                                case KEY_MQTT_CONNECT_MODE:
-                                case KEY_MQTT_CA:
-                                case KEY_MQTT_CLIENT_CERT:
-                                case KEY_MQTT_CLIENT_KEY:
-                                case KEY_NTP_URL:
-                                case KEY_NTP_TIME_ZONE:
-                                case KEY_APN:
-                                case KEY_APN_USERNAME:
-                                case KEY_APN_PASSWORD:
-                                case KEY_NETWORK_PRIORITY:
-                                case KEY_DATA_FORMAT:
-                                    if (result != 1) {
-                                        savedParamsError = true;
-                                    }
-                                    break;
-                                case KEY_CHANGE_MODE:
-                                    if (result != 1) {
-                                        savedParamsError = true;
-                                    }
-                                    if (savedParamsError) {
-                                        ToastUtils.showToast(this, "Opps！Save failed. Please check the input characters and try again.");
-                                    } else {
-                                        isSettingSuccess = true;
-                                        showConnMqttDialog();
-                                        subscribeTopic();
-                                    }
-                                    break;
-                            }
-                        }
-                        if (flag == 0x00) {
-                            // read
-                            switch (configKeyEnum) {
-                                case KEY_DEVICE_NAME:
-                                    if (length > 0) {
-                                        byte[] data = Arrays.copyOfRange(value, 4, 4 + length);
-                                        String name = new String(data);
-                                        mSelectedDeviceName = name;
-                                    }
-                                    break;
-                                case KEY_DEVICE_MAC:
-                                    if (length > 0) {
-                                        byte[] data = Arrays.copyOfRange(value, 4, 4 + length);
-                                        String mac = MokoUtils.bytesToHexString(data);
-                                        mSelectedDeviceMac = mac.toUpperCase();
-                                    }
-                                    break;
-                            }
+            if (orderCHAR == OrderCHAR.CHAR_PARAMS) {
+                if (value.length >= 4) {
+                    int header = value[0] & 0xFF;// 0xED
+                    int flag = value[1] & 0xFF;// read or write
+                    int cmd = value[2] & 0xFF;
+                    if (header != 0xED)
+                        return;
+                    ParamsKeyEnum configKeyEnum = ParamsKeyEnum.fromParamKey(cmd);
+                    if (configKeyEnum == null) {
+                        return;
+                    }
+                    int length = value[3] & 0xFF;
+                    if (flag == 0x01) {
+                        // write
+                        int result = value[4] & 0xFF;
+                        switch (configKeyEnum) {
+                            case KEY_MQTT_HOST:
+                            case KEY_MQTT_PORT:
+                            case KEY_MQTT_USERNAME:
+                            case KEY_MQTT_PASSWORD:
+                            case KEY_MQTT_CLIENT_ID:
+                            case KEY_MQTT_CLEAN_SESSION:
+                            case KEY_MQTT_KEEP_ALIVE:
+                            case KEY_MQTT_QOS:
+                            case KEY_MQTT_SUBSCRIBE_TOPIC:
+                            case KEY_MQTT_PUBLISH_TOPIC:
+                            case KEY_MQTT_LWT_ENABLE:
+                            case KEY_MQTT_LWT_QOS:
+                            case KEY_MQTT_LWT_RETAIN:
+                            case KEY_MQTT_LWT_TOPIC:
+                            case KEY_MQTT_LWT_PAYLOAD:
+                            case KEY_MQTT_DEVICE_ID:
+                            case KEY_MQTT_CONNECT_MODE:
+                            case KEY_MQTT_CA:
+                            case KEY_MQTT_CLIENT_CERT:
+                            case KEY_MQTT_CLIENT_KEY:
+                            case KEY_NTP_URL:
+                            case KEY_NTP_TIME_ZONE:
+                            case KEY_APN:
+                            case KEY_APN_USERNAME:
+                            case KEY_APN_PASSWORD:
+                            case KEY_NETWORK_PRIORITY:
+                            case KEY_DATA_FORMAT:
+                                if (result != 1) {
+                                    savedParamsError = true;
+                                }
+                                break;
+                            case KEY_CHANGE_MODE:
+                                if (result != 1) {
+                                    savedParamsError = true;
+                                }
+                                if (savedParamsError) {
+                                    ToastUtils.showToast(this, "Opps！Save failed. Please check the input characters and try again.");
+                                } else {
+                                    isSettingSuccess = true;
+                                    showConnMqttDialog();
+                                    subscribeTopic();
+                                }
+                                break;
                         }
                     }
-                    break;
+                    if (flag == 0x00) {
+                        // read
+                        switch (configKeyEnum) {
+                            case KEY_DEVICE_NAME:
+                                if (length > 0) {
+                                    byte[] data = Arrays.copyOfRange(value, 4, 4 + length);
+                                    mSelectedDeviceName = new String(data);
+                                }
+                                break;
+                            case KEY_DEVICE_MAC:
+                                if (length > 0) {
+                                    byte[] data = Arrays.copyOfRange(value, 4, 4 + length);
+                                    String mac = MokoUtils.bytesToHexString(data);
+                                    mSelectedDeviceMac = mac.toUpperCase();
+                                }
+                                break;
+
+                            case KEY_MQTT_HOST:
+                                if (length > 0) {
+                                    String host = new String(Arrays.copyOfRange(value, 4, value.length));
+                                    mBind.etMqttHost.setText(host);
+                                    mBind.etMqttHost.setSelection(mBind.etMqttHost.getText().length());
+                                    mqttDeviceConfig.host = host;
+                                }
+                                break;
+
+                            case KEY_MQTT_PORT:
+                                if (length == 2) {
+                                    int port = MokoUtils.toInt(Arrays.copyOfRange(value, 4, value.length));
+                                    mBind.etMqttPort.setText(String.valueOf(port));
+                                    mBind.etMqttPort.setSelection(mBind.etMqttPort.getText().length());
+                                    mqttDeviceConfig.port = String.valueOf(port);
+                                }
+                                break;
+
+                            case KEY_MQTT_CLIENT_ID:
+                                if (length > 0) {
+                                    String clientId = new String(Arrays.copyOfRange(value, 4, value.length));
+                                    mBind.etMqttClientId.setText(clientId);
+                                    mBind.etMqttClientId.setSelection(mBind.etMqttClientId.getText().length());
+                                    mqttDeviceConfig.clientId = clientId;
+                                }
+                                break;
+
+                            case KEY_MQTT_SUBSCRIBE_TOPIC:
+                                if (length > 0) {
+                                    String subscribe = new String(Arrays.copyOfRange(value, 4, value.length));
+                                    mBind.etMqttSubscribeTopic.setText(subscribe);
+                                    mBind.etMqttSubscribeTopic.setSelection(mBind.etMqttSubscribeTopic.getText().length());
+                                    mqttDeviceConfig.topicSubscribe = subscribe;
+                                }
+                                break;
+
+                            case KEY_MQTT_PUBLISH_TOPIC:
+                                if (length > 0) {
+                                    String publish = new String(Arrays.copyOfRange(value, 4, value.length));
+                                    mBind.etMqttPublishTopic.setText(publish);
+                                    mBind.etMqttPublishTopic.setSelection(mBind.etMqttPublishTopic.getText().length());
+                                    mqttDeviceConfig.topicPublish = publish;
+                                }
+                                break;
+
+                            case KEY_MQTT_CLEAN_SESSION:
+                                if (length == 1) {
+                                    boolean cleanSession = (value[4] & 0xff) == 1;
+                                    generalFragment.setCleanSession(cleanSession);
+                                    mqttDeviceConfig.cleanSession = cleanSession;
+                                }
+                                break;
+
+                            case KEY_MQTT_QOS:
+                                if (length == 1) {
+                                    generalFragment.setQos(value[4] & 0xff);
+                                    mqttDeviceConfig.qos = value[4] & 0xff;
+                                }
+                                break;
+
+                            case KEY_MQTT_KEEP_ALIVE:
+                                if (length == 1) {
+                                    generalFragment.setKeepAlive(value[4] & 0xff);
+                                    mqttDeviceConfig.keepAlive = value[4] & 0xff;
+                                }
+                                break;
+
+                            case KEY_MQTT_USERNAME:
+                                if (length > 0) {
+                                    String userName = new String(Arrays.copyOfRange(value, 4, value.length));
+                                    userFragment.setUserName(userName);
+                                    mqttDeviceConfig.username = userName;
+                                } else {
+                                    mqttDeviceConfig.username = "";
+                                }
+                                break;
+
+                            case KEY_MQTT_PASSWORD:
+                                if (length > 0) {
+                                    String password = new String(Arrays.copyOfRange(value, 4, value.length));
+                                    userFragment.setPassword(password);
+                                    mqttDeviceConfig.password = password;
+                                } else {
+                                    mqttDeviceConfig.password = "";
+                                }
+                                break;
+
+                            case KEY_MQTT_CONNECT_MODE:
+                                if (length == 1) {
+                                    int mode = value[4] & 0xff;
+                                    sslFragment.setConnectMode(mode);
+                                    mqttDeviceConfig.connectMode = mode;
+                                }
+                                break;
+
+                            case KEY_MQTT_LWT_ENABLE:
+                                if (length == 1) {
+                                    boolean enable = (value[4] & 0xff) == 1;
+                                    lwtFragment.setLwtEnable(enable);
+                                    mqttDeviceConfig.lwtEnable = enable;
+                                }
+                                break;
+
+                            case KEY_MQTT_LWT_RETAIN:
+                                if (length == 1) {
+                                    boolean enable = (value[4] & 0xff) == 1;
+                                    lwtFragment.setLwtRetain(enable);
+                                    mqttDeviceConfig.lwtRetain = enable;
+                                }
+                                break;
+
+                            case KEY_MQTT_LWT_QOS:
+                                if (length == 1) {
+                                    int qos = value[4] & 0xff;
+                                    lwtFragment.setQos(qos);
+                                    mqttDeviceConfig.lwtQos = qos;
+                                }
+                                break;
+
+                            case KEY_MQTT_LWT_TOPIC:
+                                if (length > 0) {
+                                    String topic = new String(Arrays.copyOfRange(value, 4, value.length));
+                                    lwtFragment.setTopic(topic);
+                                    mqttDeviceConfig.lwtTopic = topic;
+                                }
+                                break;
+
+                            case KEY_MQTT_LWT_PAYLOAD:
+                                if (length > 0) {
+                                    String payload = new String(Arrays.copyOfRange(value, 4, value.length));
+                                    lwtFragment.setPayload(payload);
+                                    mqttDeviceConfig.lwtPayload = payload;
+                                }
+                                break;
+
+                            case KEY_APN:
+                                if (length > 0) {
+                                    String apn = new String(Arrays.copyOfRange(value, 4, value.length));
+                                    mBind.etApn.setText(apn);
+                                    mBind.etApn.setSelection(mBind.etApn.getText().length());
+                                    mqttDeviceConfig.apn = apn;
+                                }
+                                break;
+
+                            case KEY_APN_USERNAME:
+                                if (length > 0) {
+                                    String userName = new String(Arrays.copyOfRange(value, 4, value.length));
+                                    mBind.etApnUsername.setText(userName);
+                                    mBind.etApnUsername.setSelection(mBind.etApnUsername.getText().length());
+                                    mqttDeviceConfig.apnUsername = userName;
+                                }
+                                break;
+
+                            case KEY_APN_PASSWORD:
+                                if (length > 0) {
+                                    String password = new String(Arrays.copyOfRange(value, 4, value.length));
+                                    mBind.etApnPassword.setText(password);
+                                    mBind.etApnPassword.setSelection(mBind.etApnPassword.getText().length());
+                                    mqttDeviceConfig.apnPassword = password;
+                                }
+                                break;
+
+                            case KEY_NETWORK_PRIORITY:
+                                if (length == 1) {
+                                    mSelectedNetworkPriority = value[4] & 0xff;
+                                    mBind.tvNetworkPriority.setText(mNetworkPriority.get(mSelectedNetworkPriority));
+                                    mqttDeviceConfig.networkPriority = mSelectedNetworkPriority;
+                                }
+                                break;
+
+                            case KEY_NTP_URL:
+                                if (length > 0) {
+                                    String url = new String(Arrays.copyOfRange(value, 4, value.length));
+                                    mBind.etNtpUrl.setText(url);
+                                    mBind.etNtpUrl.setSelection(mBind.etNtpUrl.getText().length());
+                                    mqttDeviceConfig.ntpUrl = url;
+                                }
+                                break;
+
+                            case KEY_NTP_TIME_ZONE:
+                                if (length == 1) {
+                                    mSelectedTimeZone = value[4] & 0xff;
+                                    mBind.tvTimeZone.setText(mTimeZones.get(mSelectedTimeZone));
+                                    mqttDeviceConfig.timeZone = mSelectedTimeZone;
+                                }
+                                break;
+                        }
+                    }
+                }
             }
         }
     }
@@ -372,8 +486,7 @@ public class SetDeviceMQTTActivity extends BaseActivity implements RadioGroup.On
         if (TextUtils.isEmpty(topic) || isDeviceConnectSuccess) {
             return;
         }
-        if (TextUtils.isEmpty(message))
-            return;
+        if (TextUtils.isEmpty(message)) return;
         MsgCommon<JsonObject> msgCommon;
         try {
             Type type = new TypeToken<MsgCommon<JsonObject>>() {
@@ -382,7 +495,7 @@ public class SetDeviceMQTTActivity extends BaseActivity implements RadioGroup.On
         } catch (Exception e) {
             return;
         }
-        if (!mqttDeviceConfig.deviceId.equals(msgCommon.device_info.device_id)) {
+        if (!mSelectedDeviceMac.equalsIgnoreCase(msgCommon.device_info.mac)) {
             return;
         }
         if (msgCommon.msg_id != MQTTConstants.NOTIFY_MSG_ID_SWITCH_STATE)
@@ -394,38 +507,33 @@ public class SetDeviceMQTTActivity extends BaseActivity implements RadioGroup.On
             donutProgress.setProgress(100);
             donutProgress.setText(100 + "%");
             // 关闭进度条弹框，保存数据，跳转修改设备名称页面
-            etMqttHost.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    dismissConnMqttDialog();
-                    MokoDevice mokoDevice = DBTools.getInstance(SetDeviceMQTTActivity.this).selectDeviceByMac(mSelectedDeviceMac);
-                    String mqttConfigStr = new Gson().toJson(mqttDeviceConfig, MQTTConfig.class);
-                    if (mokoDevice == null) {
-                        mokoDevice = new MokoDevice();
-                        mokoDevice.name = mSelectedDeviceName;
-                        mokoDevice.mac = mSelectedDeviceMac;
-                        mokoDevice.mqttInfo = mqttConfigStr;
-                        mokoDevice.topicSubscribe = mqttDeviceConfig.topicSubscribe;
-                        mokoDevice.topicPublish = mqttDeviceConfig.topicPublish;
-                        mokoDevice.deviceId = mqttDeviceConfig.deviceId;
-                        mokoDevice.deviceMode = cbDebugMode.isChecked() ? 2 : 1;
-                        mokoDevice.deviceType = mSelectedDeviceType;
-                        DBTools.getInstance(SetDeviceMQTTActivity.this).insertDevice(mokoDevice);
-                    } else {
-                        mokoDevice.name = mSelectedDeviceName;
-                        mokoDevice.mac = mSelectedDeviceMac;
-                        mokoDevice.mqttInfo = mqttConfigStr;
-                        mokoDevice.topicSubscribe = mqttDeviceConfig.topicSubscribe;
-                        mokoDevice.topicPublish = mqttDeviceConfig.topicPublish;
-                        mokoDevice.deviceId = mqttDeviceConfig.deviceId;
-                        mokoDevice.deviceMode = cbDebugMode.isChecked() ? 2 : 1;
-                        mokoDevice.deviceType = mSelectedDeviceType;
-                        DBTools.getInstance(SetDeviceMQTTActivity.this).updateDevice(mokoDevice);
-                    }
-                    Intent modifyIntent = new Intent(SetDeviceMQTTActivity.this, ModifyNameActivity.class);
-                    modifyIntent.putExtra(AppConstants.EXTRA_KEY_DEVICE, mokoDevice);
-                    startActivity(modifyIntent);
+            mBind.etMqttHost.postDelayed(() -> {
+                dismissConnMqttDialog();
+                MokoDevice mokoDevice = DBTools.getInstance(SetDeviceMQTTActivity.this).selectDeviceByMac(mSelectedDeviceMac);
+                String mqttConfigStr = new Gson().toJson(mqttDeviceConfig, MQTTConfig.class);
+                if (mokoDevice == null) {
+                    mokoDevice = new MokoDevice();
+                    mokoDevice.name = mSelectedDeviceName;
+                    mokoDevice.mac = mSelectedDeviceMac;
+                    mokoDevice.mqttInfo = mqttConfigStr;
+                    mokoDevice.topicSubscribe = mqttDeviceConfig.topicSubscribe;
+                    mokoDevice.topicPublish = mqttDeviceConfig.topicPublish;
+                    mokoDevice.deviceMode = mBind.cbDebugMode.isChecked() ? 2 : 1;
+                    mokoDevice.deviceType = mSelectedDeviceType;
+                    DBTools.getInstance(SetDeviceMQTTActivity.this).insertDevice(mokoDevice);
+                } else {
+                    mokoDevice.name = mSelectedDeviceName;
+                    mokoDevice.mac = mSelectedDeviceMac;
+                    mokoDevice.mqttInfo = mqttConfigStr;
+                    mokoDevice.topicSubscribe = mqttDeviceConfig.topicSubscribe;
+                    mokoDevice.topicPublish = mqttDeviceConfig.topicPublish;
+                    mokoDevice.deviceMode = mBind.cbDebugMode.isChecked() ? 2 : 1;
+                    mokoDevice.deviceType = mSelectedDeviceType;
+                    DBTools.getInstance(SetDeviceMQTTActivity.this).updateDevice(mokoDevice);
                 }
+                Intent modifyIntent = new Intent(this, ModifyNameActivity.class);
+                modifyIntent.putExtra(AppConstants.EXTRA_KEY_DEVICE, mokoDevice);
+                startActivity(modifyIntent);
             }, 500);
         }
     }
@@ -443,39 +551,33 @@ public class SetDeviceMQTTActivity extends BaseActivity implements RadioGroup.On
     }
 
     private void initData() {
-        etMqttHost.setText(mqttDeviceConfig.host);
-        etMqttPort.setText(mqttDeviceConfig.port);
-        etMqttClientId.setText(mqttDeviceConfig.clientId);
-        if (!TextUtils.isEmpty(mqttDeviceConfig.topicSubscribe))
-            etMqttSubscribeTopic.setText(mqttDeviceConfig.topicSubscribe);
-        if (!TextUtils.isEmpty(mqttDeviceConfig.topicPublish))
-            etMqttPublishTopic.setText(mqttDeviceConfig.topicPublish);
-
-        generalFragment.setCleanSession(mqttDeviceConfig.cleanSession);
-        generalFragment.setQos(mqttDeviceConfig.qos);
-        generalFragment.setKeepAlive(mqttDeviceConfig.keepAlive);
-        userFragment.setUserName(mqttDeviceConfig.username);
-        userFragment.setPassword(mqttDeviceConfig.password);
-        lwtFragment.setLwtEnable(mqttDeviceConfig.lwtEnable);
-        lwtFragment.setLwtRetain(mqttDeviceConfig.lwtRetain);
-        lwtFragment.setQos(mqttDeviceConfig.lwtQos);
-        lwtFragment.setTopic(mqttDeviceConfig.lwtTopic);
-        lwtFragment.setPayload(mqttDeviceConfig.lwtPayload);
-        sslFragment.setConnectMode(mqttDeviceConfig.connectMode);
-        sslFragment.setCAPath(mqttDeviceConfig.caPath);
-        sslFragment.setClientKeyPath(mqttDeviceConfig.clientKeyPath);
-        sslFragment.setClientCertPath(mqttDeviceConfig.clientCertPath);
-
-        etDeviceId.setText(mqttDeviceConfig.deviceId);
-        etNtpUrl.setText(mqttDeviceConfig.ntpUrl);
-        mSelectedTimeZone = mqttDeviceConfig.timeZone + 24;
-        tvTimeZone.setText(mTimeZones.get(mSelectedTimeZone));
-        etApn.setText(mqttDeviceConfig.apn);
-        etApnUsername.setText(mqttDeviceConfig.apnUsername);
-        etApnPassword.setText(mqttDeviceConfig.apnPassword);
-        mSelectedNetworkPriority = mqttDeviceConfig.networkPriority;
-        tvNetworkPriority.setText(mNetworkPriority.get(mSelectedNetworkPriority));
-        cbDebugMode.setChecked(mqttDeviceConfig.debugModeEnable);
+        //读取参数
+        showLoadingProgressDialog();
+        List<OrderTask> orderTasks = new ArrayList<>();
+        orderTasks.add(OrderTaskAssembler.getMqttServer());
+        orderTasks.add(OrderTaskAssembler.getMqttPort());
+        orderTasks.add(OrderTaskAssembler.getMqttClientId());
+        orderTasks.add(OrderTaskAssembler.getMqttSubscribe());
+        orderTasks.add(OrderTaskAssembler.getMqttPublish());
+        orderTasks.add(OrderTaskAssembler.getMqttCleanSession());
+        orderTasks.add(OrderTaskAssembler.getMqttQos());
+        orderTasks.add(OrderTaskAssembler.getMqttKeepAlive());
+        orderTasks.add(OrderTaskAssembler.getMqttUserName());
+        orderTasks.add(OrderTaskAssembler.getMqttPassword());
+        orderTasks.add(OrderTaskAssembler.getMqttSSlMode());
+        orderTasks.add(OrderTaskAssembler.getMqttLwtEnable());
+        orderTasks.add(OrderTaskAssembler.getMqttLwtRetainEnable());
+        orderTasks.add(OrderTaskAssembler.getMqttLwtQos());
+        orderTasks.add(OrderTaskAssembler.getMqttLwtTopic());
+        orderTasks.add(OrderTaskAssembler.getMqttLwtMsg());
+        orderTasks.add(OrderTaskAssembler.getMqttApn());
+        orderTasks.add(OrderTaskAssembler.getMqttApnUsername());
+        orderTasks.add(OrderTaskAssembler.getMqttApnPassword());
+        orderTasks.add(OrderTaskAssembler.getMqttNetworkPriority());
+        orderTasks.add(OrderTaskAssembler.getMqttNtpHost());
+        orderTasks.add(OrderTaskAssembler.getMqttTimezone());
+        orderTasks.add(OrderTaskAssembler.getMqttDebugMode());
+        MokoSupport.getInstance().sendOrder(orderTasks.toArray(new OrderTask[]{}));
     }
 
     public void onBack(View view) {
@@ -494,42 +596,31 @@ public class SetDeviceMQTTActivity extends BaseActivity implements RadioGroup.On
     @Override
     public void onCheckedChanged(RadioGroup group, @IdRes int checkedId) {
         if (checkedId == R.id.rb_general)
-            vpMqtt.setCurrentItem(0);
+            mBind.vpMqtt.setCurrentItem(0);
         else if (checkedId == R.id.rb_user)
-            vpMqtt.setCurrentItem(1);
+            mBind.vpMqtt.setCurrentItem(1);
         else if (checkedId == R.id.rb_ssl)
-            vpMqtt.setCurrentItem(2);
+            mBind.vpMqtt.setCurrentItem(2);
         else if (checkedId == R.id.rb_lwt)
-            vpMqtt.setCurrentItem(3);
+            mBind.vpMqtt.setCurrentItem(3);
     }
 
     public void onSave(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         if (isVerify()) return;
-        if ("{device_name}/{device_id}/app_to_device".equals(mqttDeviceConfig.topicSubscribe)) {
-            mqttDeviceConfig.topicSubscribe = String.format("%s/%s/app_to_device", mSelectedDeviceName, mqttDeviceConfig.deviceId);
-        }
-        if ("{device_name}/{device_id}/device_to_app".equals(mqttDeviceConfig.topicPublish)) {
-            mqttDeviceConfig.topicPublish = String.format("%s/%s/device_to_app", mSelectedDeviceName, mqttDeviceConfig.deviceId);
-        }
-        if ("{device_name}/{device_id}/device_to_app".equals(mqttDeviceConfig.lwtTopic)) {
-            mqttDeviceConfig.lwtTopic = String.format("%s/%s/device_to_app", mSelectedDeviceName, mqttDeviceConfig.deviceId);
-        }
         setMQTTDeviceConfig();
     }
 
     private boolean isVerify() {
-        String host = etMqttHost.getText().toString().replaceAll(" ", "");
-        String port = etMqttPort.getText().toString();
-        String clientId = etMqttClientId.getText().toString().replaceAll(" ", "");
-        String deviceId = etDeviceId.getText().toString().replaceAll(" ", "");
-        String topicSubscribe = etMqttSubscribeTopic.getText().toString().replaceAll(" ", "");
-        String topicPublish = etMqttPublishTopic.getText().toString().replaceAll(" ", "");
-        String ntpUrl = etNtpUrl.getText().toString().replaceAll(" ", "");
-        String apn = etApn.getText().toString().replaceAll(" ", "");
-        String apnUsername = etApnUsername.getText().toString().replaceAll(" ", "");
-        String apnPassword = etApnPassword.getText().toString().replaceAll(" ", "");
+        String host = mBind.etMqttHost.getText().toString().replaceAll(" ", "");
+        String port = mBind.etMqttPort.getText().toString();
+        String clientId = mBind.etMqttClientId.getText().toString().replaceAll(" ", "");
+        String topicSubscribe = mBind.etMqttSubscribeTopic.getText().toString().replaceAll(" ", "");
+        String topicPublish = mBind.etMqttPublishTopic.getText().toString().replaceAll(" ", "");
+        String ntpUrl = mBind.etNtpUrl.getText().toString().replaceAll(" ", "");
+        String apn = mBind.etApn.getText().toString().replaceAll(" ", "");
+        String apnUsername = mBind.etApnUsername.getText().toString().replaceAll(" ", "");
+        String apnPassword = mBind.etApnPassword.getText().toString().replaceAll(" ", "");
 
         if (TextUtils.isEmpty(host)) {
             ToastUtils.showToast(this, getString(R.string.mqtt_verify_host));
@@ -555,10 +646,6 @@ public class SetDeviceMQTTActivity extends BaseActivity implements RadioGroup.On
             ToastUtils.showToast(this, getString(R.string.mqtt_verify_topic_publish));
             return false;
         }
-        if (TextUtils.isEmpty(deviceId)) {
-            ToastUtils.showToast(this, getString(R.string.mqtt_verify_device_id_empty));
-            return true;
-        }
         if (!generalFragment.isValid() || !sslFragment.isValid() || !lwtFragment.isValid())
             return true;
         mqttDeviceConfig.host = host;
@@ -580,14 +667,13 @@ public class SetDeviceMQTTActivity extends BaseActivity implements RadioGroup.On
         mqttDeviceConfig.lwtQos = lwtFragment.getQos();
         mqttDeviceConfig.lwtTopic = lwtFragment.getTopic();
         mqttDeviceConfig.lwtPayload = lwtFragment.getPayload();
-        mqttDeviceConfig.deviceId = deviceId;
         mqttDeviceConfig.ntpUrl = ntpUrl;
         mqttDeviceConfig.timeZone = mSelectedTimeZone - 24;
         mqttDeviceConfig.apn = apn;
         mqttDeviceConfig.apnUsername = apnUsername;
         mqttDeviceConfig.apnPassword = apnPassword;
         mqttDeviceConfig.networkPriority = mSelectedNetworkPriority;
-        mqttDeviceConfig.debugModeEnable = cbDebugMode.isChecked();
+        mqttDeviceConfig.debugModeEnable = mBind.cbDebugMode.isChecked();
 
         if (!mqttDeviceConfig.topicPublish.isEmpty() && !mqttDeviceConfig.topicSubscribe.isEmpty()
                 && mqttDeviceConfig.topicPublish.equals(mqttDeviceConfig.topicSubscribe)) {
@@ -616,7 +702,6 @@ public class SetDeviceMQTTActivity extends BaseActivity implements RadioGroup.On
             orderTasks.add(OrderTaskAssembler.setLwtRetain(mqttDeviceConfig.lwtRetain ? 1 : 0));
             orderTasks.add(OrderTaskAssembler.setLwtTopic(mqttDeviceConfig.lwtTopic));
             orderTasks.add(OrderTaskAssembler.setLwtPayload(mqttDeviceConfig.lwtPayload));
-            orderTasks.add(OrderTaskAssembler.setMqttDeivceId(mqttDeviceConfig.deviceId));
             if (!TextUtils.isEmpty(mqttDeviceConfig.username)) {
                 orderTasks.add(OrderTaskAssembler.setMqttUserName(mqttDeviceConfig.username));
             }
@@ -651,7 +736,7 @@ public class SetDeviceMQTTActivity extends BaseActivity implements RadioGroup.On
             orderTasks.add(OrderTaskAssembler.setNetworkPriority(mqttDeviceConfig.networkPriority));
             // 0:JSON
             orderTasks.add(OrderTaskAssembler.setDataFormat(0));
-            orderTasks.add(OrderTaskAssembler.setMode(cbDebugMode.isChecked() ? 1 : 0));
+            orderTasks.add(OrderTaskAssembler.setMode(mBind.cbDebugMode.isChecked() ? 1 : 0));
             MokoSupport.getInstance().sendOrder(orderTasks.toArray(new OrderTask[]{}));
         } catch (Exception e) {
             ToastUtils.showToast(this, "File is missing");
@@ -659,49 +744,43 @@ public class SetDeviceMQTTActivity extends BaseActivity implements RadioGroup.On
     }
 
     public void selectCertificate(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         sslFragment.selectCertificate();
     }
 
     public void selectCAFile(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         sslFragment.selectCAFile();
     }
 
     public void selectKeyFile(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         sslFragment.selectKeyFile();
     }
 
     public void selectCertFile(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         sslFragment.selectCertFile();
     }
 
     public void selectTimeZone(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         BottomDialog dialog = new BottomDialog();
         dialog.setDatas(mTimeZones, mSelectedTimeZone);
         dialog.setListener(value -> {
             mSelectedTimeZone = value;
-            tvTimeZone.setText(mTimeZones.get(mSelectedTimeZone));
+            mBind.tvTimeZone.setText(mTimeZones.get(mSelectedTimeZone));
         });
         dialog.show(getSupportFragmentManager());
     }
 
     public void selectNetworkPriority(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         BottomDialog dialog = new BottomDialog();
         dialog.setDatas(mNetworkPriority, mSelectedNetworkPriority);
         dialog.setListener(value -> {
             mSelectedNetworkPriority = value;
-            tvNetworkPriority.setText(mNetworkPriority.get(value));
+            mBind.tvNetworkPriority.setText(mNetworkPriority.get(value));
         });
         dialog.show(getSupportFragmentManager());
     }
@@ -765,18 +844,16 @@ public class SetDeviceMQTTActivity extends BaseActivity implements RadioGroup.On
     }
 
     public void onExportSettings(View view) {
-        if (isWindowLocked())
-            return;
-        mqttDeviceConfig.host = etMqttHost.getText().toString().replaceAll(" ", "");
-        mqttDeviceConfig.port = etMqttPort.getText().toString();
-        mqttDeviceConfig.clientId = etMqttClientId.getText().toString().replaceAll(" ", "");
-        mqttDeviceConfig.deviceId = etDeviceId.getText().toString().replaceAll(" ", "");
-        mqttDeviceConfig.topicSubscribe = etMqttSubscribeTopic.getText().toString().replaceAll(" ", "");
-        mqttDeviceConfig.topicPublish = etMqttPublishTopic.getText().toString().replaceAll(" ", "");
-        mqttDeviceConfig.ntpUrl = etNtpUrl.getText().toString().replaceAll(" ", "");
-        mqttDeviceConfig.apn = etApn.getText().toString().replaceAll(" ", "");
-        mqttDeviceConfig.apnUsername = etApnUsername.getText().toString().replaceAll(" ", "");
-        mqttDeviceConfig.apnPassword = etApnPassword.getText().toString().replaceAll(" ", "");
+        if (isWindowLocked()) return;
+        mqttDeviceConfig.host = mBind.etMqttHost.getText().toString().replaceAll(" ", "");
+        mqttDeviceConfig.port = mBind.etMqttPort.getText().toString();
+        mqttDeviceConfig.clientId = mBind.etMqttClientId.getText().toString().replaceAll(" ", "");
+        mqttDeviceConfig.topicSubscribe = mBind.etMqttSubscribeTopic.getText().toString().replaceAll(" ", "");
+        mqttDeviceConfig.topicPublish = mBind.etMqttPublishTopic.getText().toString().replaceAll(" ", "");
+        mqttDeviceConfig.ntpUrl = mBind.etNtpUrl.getText().toString().replaceAll(" ", "");
+        mqttDeviceConfig.apn = mBind.etApn.getText().toString().replaceAll(" ", "");
+        mqttDeviceConfig.apnUsername = mBind.etApnUsername.getText().toString().replaceAll(" ", "");
+        mqttDeviceConfig.apnPassword = mBind.etApnPassword.getText().toString().replaceAll(" ", "");
         mqttDeviceConfig.cleanSession = generalFragment.isCleanSession();
         mqttDeviceConfig.qos = generalFragment.getQos();
         mqttDeviceConfig.keepAlive = generalFragment.getKeepAlive();
@@ -793,13 +870,7 @@ public class SetDeviceMQTTActivity extends BaseActivity implements RadioGroup.On
         mqttDeviceConfig.lwtPayload = lwtFragment.getPayload();
         mqttDeviceConfig.timeZone = mSelectedTimeZone - 24;
         mqttDeviceConfig.networkPriority = mSelectedNetworkPriority;
-        mqttDeviceConfig.debugModeEnable = cbDebugMode.isChecked();
-        if ("{device_name}/{device_id}/app_to_device".equals(mqttDeviceConfig.topicSubscribe)) {
-            mqttDeviceConfig.topicSubscribe = "";
-        }
-        if ("{device_name}/{device_id}/device_to_app".equals(mqttDeviceConfig.topicPublish)) {
-            mqttDeviceConfig.topicPublish = "";
-        }
+        mqttDeviceConfig.debugModeEnable = mBind.cbDebugMode.isChecked();
         showLoadingProgressDialog();
         final File expertFile = new File(expertFilePath);
         try {
@@ -929,57 +1000,51 @@ public class SetDeviceMQTTActivity extends BaseActivity implements RadioGroup.On
                 row17.createCell(2).setCellValue("1-128 characters (When LWT is enabled) ");
 
                 XSSFRow row18 = sheet.createRow(18);
-                row18.createCell(0).setCellValue("Device id");
-                if (!TextUtils.isEmpty(mqttDeviceConfig.deviceId))
-                    row18.createCell(1).setCellValue(String.format("value:%s", mqttDeviceConfig.deviceId));
-                row18.createCell(2).setCellValue("1-32 characters");
-
-                XSSFRow row19 = sheet.createRow(19);
-                row19.createCell(0).setCellValue("NTP URL");
+                row18.createCell(0).setCellValue("NTP URL");
                 if (!TextUtils.isEmpty(mqttDeviceConfig.ntpUrl))
-                    row19.createCell(1).setCellValue(String.format("value:%s", mqttDeviceConfig.ntpUrl));
+                    row18.createCell(1).setCellValue(String.format("value:%s", mqttDeviceConfig.ntpUrl));
 //                else
 //                    row19.createCell(1).setCellValue("");
-                row19.createCell(2).setCellValue("0-64 characters");
+                row18.createCell(2).setCellValue("0-64 characters");
+
+                XSSFRow row19 = sheet.createRow(19);
+                row19.createCell(0).setCellValue("Timezone");
+                row19.createCell(1).setCellValue(String.format("value:%s", mqttDeviceConfig.timeZone));
+                row19.createCell(2).setCellValue("Range: -24~+28, step by half timezone 1 For example: 16- UTC+8");
 
                 XSSFRow row20 = sheet.createRow(20);
-                row20.createCell(0).setCellValue("Timezone");
-                row20.createCell(1).setCellValue(String.format("value:%s", mqttDeviceConfig.timeZone));
-                row20.createCell(2).setCellValue("Range: -24~+28, step by half timezone 1 For example: 16- UTC+8");
-
-                XSSFRow row21 = sheet.createRow(21);
-                row21.createCell(0).setCellValue("APN");
+                row20.createCell(0).setCellValue("APN");
                 if (!TextUtils.isEmpty(mqttDeviceConfig.apn))
-                    row21.createCell(1).setCellValue(String.format("value:%s", mqttDeviceConfig.apn));
+                    row20.createCell(1).setCellValue(String.format("value:%s", mqttDeviceConfig.apn));
 //                else
 //                    row21.createCell(1).setCellValue("");
-                row21.createCell(2).setCellValue("0-100 characters");
+                row20.createCell(2).setCellValue("0-100 characters");
 
-                XSSFRow row22 = sheet.createRow(22);
-                row22.createCell(0).setCellValue("APN Username");
+                XSSFRow row21 = sheet.createRow(21);
+                row21.createCell(0).setCellValue("APN Username");
                 if (!TextUtils.isEmpty(mqttDeviceConfig.apnUsername))
-                    row22.createCell(1).setCellValue(String.format("value:%s", mqttDeviceConfig.apnUsername));
+                    row21.createCell(1).setCellValue(String.format("value:%s", mqttDeviceConfig.apnUsername));
 //                else
 //                    row22.createCell(1).setCellValue("");
+                row21.createCell(2).setCellValue("0-127 characters");
+
+                XSSFRow row22 = sheet.createRow(22);
+                row22.createCell(0).setCellValue("APN Password");
+                if (!TextUtils.isEmpty(mqttDeviceConfig.apnPassword))
+                    row22.createCell(1).setCellValue(String.format("value:%s", mqttDeviceConfig.apnPassword));
+//                else
+//                    row23.createCell(1).setCellValue("");
                 row22.createCell(2).setCellValue("0-127 characters");
 
                 XSSFRow row23 = sheet.createRow(23);
-                row23.createCell(0).setCellValue("APN Password");
-                if (!TextUtils.isEmpty(mqttDeviceConfig.apnPassword))
-                    row23.createCell(1).setCellValue(String.format("value:%s", mqttDeviceConfig.apnPassword));
-//                else
-//                    row23.createCell(1).setCellValue("");
-                row23.createCell(2).setCellValue("0-127 characters");
+                row23.createCell(0).setCellValue("Network Priority");
+                row23.createCell(1).setCellValue(String.format("value:%d", mqttDeviceConfig.networkPriority));
+                row23.createCell(2).setCellValue("Range: 0-10 0:eMTC->NB-IOT->GSM 1:eMTC-> GSM -> NB-IOT 2:NB-IOT->GSM-> eMTC 3:NB-IOT-> eMTC-> GSM 4:GSM -> NB-IOT-> eMTC 5:GSM -> eMTC->NB-IOT 6:eMTC->NB-IOT 7:NB-IOT-> eMTC 8:GSM 9:NB-IOT 10:eMTC");
 
                 XSSFRow row24 = sheet.createRow(24);
-                row24.createCell(0).setCellValue("Network Priority");
-                row24.createCell(1).setCellValue(String.format("value:%d", mqttDeviceConfig.networkPriority));
-                row24.createCell(2).setCellValue("Range: 0-10 0:eMTC->NB-IOT->GSM 1:eMTC-> GSM -> NB-IOT 2:NB-IOT->GSM-> eMTC 3:NB-IOT-> eMTC-> GSM 4:GSM -> NB-IOT-> eMTC 5:GSM -> eMTC->NB-IOT 6:eMTC->NB-IOT 7:NB-IOT-> eMTC 8:GSM 9:NB-IOT 10:eMTC");
-
-                XSSFRow row25 = sheet.createRow(25);
-                row25.createCell(0).setCellValue("Debug mode");
-                row25.createCell(1).setCellValue(mqttDeviceConfig.debugModeEnable ? "value:1" : "value:0");
-                row25.createCell(2).setCellValue("Range: 0/1 0:Disable 1:Enable");
+                row24.createCell(0).setCellValue("Debug mode");
+                row24.createCell(1).setCellValue(mqttDeviceConfig.debugModeEnable ? "value:1" : "value:0");
+                row24.createCell(2).setCellValue("Range: 0/1 0:Disable 1:Enable");
 
                 Uri uri = Uri.fromFile(expertFile);
                 try {
@@ -1007,9 +1072,36 @@ public class SetDeviceMQTTActivity extends BaseActivity implements RadioGroup.On
         }
     }
 
+    public void onClearSettings(View view) {
+        //清空所有输入框信息 选项恢复到默认值
+        mBind.etMqttHost.setText("");
+        mBind.etMqttPort.setText("");
+        mBind.etMqttClientId.setText("");
+        mBind.etMqttSubscribeTopic.setText("");
+        mBind.etMqttPublishTopic.setText("");
+        generalFragment.setCleanSession(true);
+        generalFragment.setQos(1);
+        generalFragment.setKeepAlive(60);
+        userFragment.setUserName("");
+        userFragment.setPassword("");
+        sslFragment.setConnectMode(0);
+        lwtFragment.setLwtEnable(false);
+        lwtFragment.setLwtRetain(false);
+        lwtFragment.setQos(1);
+        lwtFragment.setPayload("");
+        lwtFragment.setTopic("");
+        mBind.etApn.setText("");
+        mBind.etApnUsername.setText("");
+        mBind.etApnPassword.setText("");
+        mSelectedNetworkPriority = 0;
+        mBind.tvNetworkPriority.setText(mNetworkPriority.get(0));
+        mBind.etNtpUrl.setText("");
+        mSelectedTimeZone = 0;
+        mBind.tvTimeZone.setText(mTimeZones.get(0));
+    }
+
     public void onImportSettings(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("*/*");//设置类型，我这里是任意类型，任意后缀的可以这样写。
         intent.addCategory(Intent.CATEGORY_OPENABLE);
@@ -1045,7 +1137,7 @@ public class SetDeviceMQTTActivity extends BaseActivity implements RadioGroup.On
                             int rows = sheet.getLastRowNum();
                             int columns = sheet.getRow(0).getPhysicalNumberOfCells();
                             // 从第二行开始
-                            if (rows < 25 || columns < 3) {
+                            if (rows < 24 || columns < 3) {
                                 runOnUiThread(() -> {
                                     dismissLoadingProgressDialog();
                                     ToastUtils.showToast(SetDeviceMQTTActivity.this, "Please select the correct file!");
@@ -1114,33 +1206,29 @@ public class SetDeviceMQTTActivity extends BaseActivity implements RadioGroup.On
                             if (payloadCell != null) {
                                 mqttDeviceConfig.lwtPayload = payloadCell.getStringCellValue().replaceAll("value:", "");
                             }
-                            Cell deviceIdCell = sheet.getRow(18).getCell(1);
-                            if (deviceIdCell != null) {
-                                mqttDeviceConfig.deviceId = deviceIdCell.getStringCellValue().replaceAll("value:", "");
-                            }
-                            Cell ntpUrlCell = sheet.getRow(19).getCell(1);
+                            Cell ntpUrlCell = sheet.getRow(18).getCell(1);
                             if (ntpUrlCell != null) {
                                 mqttDeviceConfig.ntpUrl = ntpUrlCell.getStringCellValue().replaceAll("value:", "");
                             }
-                            Cell timeZoneCell = sheet.getRow(20).getCell(1);
+                            Cell timeZoneCell = sheet.getRow(19).getCell(1);
                             if (timeZoneCell != null)
                                 mqttDeviceConfig.timeZone = Integer.parseInt(timeZoneCell.getStringCellValue().replaceAll("value:", ""));
-                            Cell apnCell = sheet.getRow(21).getCell(1);
+                            Cell apnCell = sheet.getRow(20).getCell(1);
                             if (apnCell != null) {
                                 mqttDeviceConfig.apn = apnCell.getStringCellValue().replaceAll("value:", "");
                             }
-                            Cell apnUsernameCell = sheet.getRow(22).getCell(1);
+                            Cell apnUsernameCell = sheet.getRow(21).getCell(1);
                             if (apnUsernameCell != null) {
                                 mqttDeviceConfig.apnUsername = apnUsernameCell.getStringCellValue().replaceAll("value:", "");
                             }
-                            Cell apnPasswordCell = sheet.getRow(23).getCell(1);
+                            Cell apnPasswordCell = sheet.getRow(22).getCell(1);
                             if (apnPasswordCell != null) {
                                 mqttDeviceConfig.apnPassword = apnPasswordCell.getStringCellValue().replaceAll("value:", "");
                             }
-                            Cell networkPriorityCell = sheet.getRow(24).getCell(1);
+                            Cell networkPriorityCell = sheet.getRow(23).getCell(1);
                             if (networkPriorityCell != null)
                                 mqttDeviceConfig.networkPriority = Integer.parseInt(networkPriorityCell.getStringCellValue().replaceAll("value:", ""));
-                            Cell debugModeEnableCell = sheet.getRow(25).getCell(1);
+                            Cell debugModeEnableCell = sheet.getRow(24).getCell(1);
                             if (debugModeEnableCell != null)
                                 mqttDeviceConfig.debugModeEnable = "1".equals(debugModeEnableCell.getStringCellValue().replaceAll("value:", ""));
                             runOnUiThread(() -> {

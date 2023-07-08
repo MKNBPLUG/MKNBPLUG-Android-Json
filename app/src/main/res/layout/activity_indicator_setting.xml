@@ -35,28 +35,16 @@
             android:textSize="17sp" />
     </RelativeLayout>
 
-    <LinearLayout
-        android:layout_width="match_parent"
+    <TextView
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:padding="12dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:text="Top Indicator"
-            android:textColor="@color/black_333333"
-            android:textSize="15sp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_marginLeft="10dp"
-            android:text="(Indicates Network status)"
-            android:textColor="@color/grey_999999"
-            android:textSize="12sp" />
-    </LinearLayout>
+        android:layout_gravity="center_vertical"
+        android:layout_marginLeft="12dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:text="Power input indicator"
+        android:textColor="@color/black_333333"
+        android:textSize="15sp" />
 
     <RelativeLayout
         android:layout_width="match_parent"
@@ -68,7 +56,103 @@
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
             android:layout_marginLeft="12dp"
-            android:text="Server connecting"
+            android:text="Indicator switch"
+            android:textColor="@color/black_333333"
+            android:textSize="15sp" />
+
+        <ImageView
+            android:id="@+id/ivPowerInputStatus"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_alignParentRight="true"
+            android:onClick="onPowerStatus"
+            android:paddingLeft="12dp"
+            android:paddingRight="12dp"
+            android:src="@drawable/checkbox_close" />
+    </RelativeLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_marginLeft="12dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:text="Power output indicator"
+        android:textColor="@color/black_333333"
+        android:textSize="15sp" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="@color/white_ffffff">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="12dp"
+            android:text="Indicator switch"
+            android:textColor="@color/black_333333"
+            android:textSize="15sp" />
+
+        <ImageView
+            android:id="@+id/ivPowerOutput"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_alignParentRight="true"
+            android:clickable="true"
+            android:onClick="onProtectionSignal"
+            android:paddingLeft="12dp"
+            android:paddingRight="12dp"
+            android:src="@drawable/checkbox_open" />
+    </RelativeLayout>
+
+    <LinearLayout
+        android:id="@+id/layoutIndicatorColor"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/white_ffffff"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <View style="@style/divider_line" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:drawableEnd="@drawable/arrow_right"
+            android:gravity="center_vertical"
+            android:onClick="onIndicatorColor"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp"
+            android:text="Indicator color"
+            android:textColor="@color/black_333333"
+            android:textSize="15sp" />
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical"
+        android:layout_marginLeft="12dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:text="Network indicator"
+        android:textColor="@color/black_333333"
+        android:textSize="15sp" />
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:background="@color/white_ffffff">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerVertical="true"
+            android:layout_marginLeft="12dp"
+            android:text="Network  connecting"
             android:textColor="@color/black_333333"
             android:textSize="15sp" />
 
@@ -98,14 +182,14 @@
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
             android:layout_marginLeft="12dp"
-            android:text="Server connected"
+            android:text="Network  connecting"
             android:textColor="@color/black_333333"
             android:textSize="15sp" />
 
         <TextView
             android:id="@+id/tv_server_connected"
             android:layout_width="wrap_content"
-            android:layout_height="30dp"
+            android:layout_height="35dp"
             android:layout_alignParentRight="true"
             android:layout_centerVertical="true"
             android:layout_marginRight="12dp"
@@ -120,109 +204,6 @@
             android:text="Solid blue"
             android:textColor="@color/white_ffffff"
             android:textSize="15sp" />
-
-        <View
-            style="@style/divider_line"
-            android:layout_alignParentBottom="true" />
-    </RelativeLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="12dp">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:text="Bottom Indicator"
-            android:textColor="@color/black_333333"
-            android:textSize="15sp" />
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_marginLeft="10dp"
-            android:text="(Indicates switch status)"
-            android:textColor="@color/grey_999999"
-            android:textSize="12sp" />
-    </LinearLayout>
-
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:background="@color/white_ffffff">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:layout_marginLeft="12dp"
-            android:text="Indicator status"
-            android:textColor="@color/black_333333"
-            android:textSize="15sp" />
-
-        <ImageView
-            android:id="@+id/iv_indicator_status"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_alignParentRight="true"
-            android:clickable="true"
-            android:onClick="onPowerStatus"
-            android:paddingLeft="12dp"
-            android:paddingRight="12dp"
-            android:src="@drawable/checkbox_close" />
-
-
-    </RelativeLayout>
-
-    <View style="@style/divider_line" />
-
-    <TextView
-        android:id="@+id/tv_indicator_color"
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:background="@color/white_ffffff"
-        android:clickable="true"
-        android:drawableRight="@drawable/arrow_right"
-        android:gravity="center_vertical"
-        android:onClick="onIndicatorStatus"
-        android:paddingLeft="12dp"
-        android:paddingRight="12dp"
-        android:text="Indicator setting"
-        android:textColor="@color/black_333333"
-        android:textSize="15sp"
-        android:visibility="gone" />
-
-    <View style="@style/divider_line" />
-
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="50dp"
-        android:background="@color/white_ffffff">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_centerVertical="true"
-            android:layout_marginLeft="12dp"
-            android:text="Protection signal"
-            android:textColor="@color/black_333333"
-            android:textSize="15sp" />
-
-        <ImageView
-            android:id="@+id/iv_protection_signal"
-            android:layout_width="wrap_content"
-            android:layout_height="match_parent"
-            android:layout_alignParentRight="true"
-            android:clickable="true"
-            android:onClick="onProtectionSignal"
-            android:paddingLeft="12dp"
-            android:paddingRight="12dp"
-            android:src="@drawable/checkbox_open" />
-
-
     </RelativeLayout>
 
 </LinearLayout>

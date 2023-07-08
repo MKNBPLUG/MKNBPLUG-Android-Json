@@ -6,63 +6,29 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
-import android.widget.EditText;
-import android.widget.LinearLayout;
-import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
 
 import com.moko.mknbplugjson.R;
-import com.moko.mknbplugjson.R2;
-import com.moko.mknbplugjson.base.BaseActivity;
+import com.moko.mknbplugjson.databinding.FragmentSslDevicePathBinding;
 import com.moko.mknbplugjson.dialog.BottomDialog;
 import com.moko.mknbplugjson.utils.ToastUtils;
 
 import java.util.ArrayList;
 
-import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.fragment.app.Fragment;
-import butterknife.BindView;
-import butterknife.ButterKnife;
-
 public class SSLDevicePathFragment extends Fragment {
-
     private static final String TAG = SSLDevicePathFragment.class.getSimpleName();
-    @BindView(R2.id.cb_ssl)
-    CheckBox cbSsl;
-    @BindView(R2.id.tv_certification)
-    TextView tvCertification;
-    @BindView(R2.id.ll_client_key)
-    LinearLayout llClientKey;
-    @BindView(R2.id.ll_client_cert)
-    LinearLayout llClientCert;
-    @BindView(R2.id.cl_certificate)
-    ConstraintLayout clCertificate;
-    @BindView(R2.id.et_mqtt_host)
-    EditText etMqttHost;
-    @BindView(R2.id.et_mqtt_port)
-    EditText etMqttPort;
-    @BindView(R2.id.et_ca_path)
-    EditText etCaPath;
-    @BindView(R2.id.et_client_key_path)
-    EditText etClientKeyPath;
-    @BindView(R2.id.et_client_cert_path)
-    EditText etClientCertPath;
-
-
-    private BaseActivity activity;
-
     private int connectMode = 0;
-
     private ArrayList<String> values;
     private int selected;
+    private FragmentSslDevicePathBinding mBind;
 
     public SSLDevicePathFragment() {
     }
 
     public static SSLDevicePathFragment newInstance() {
-        SSLDevicePathFragment fragment = new SSLDevicePathFragment();
-        return fragment;
+        return new SSLDevicePathFragment();
     }
 
     @Override
@@ -72,40 +38,34 @@ public class SSLDevicePathFragment extends Fragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         Log.i(TAG, "onCreateView: ");
-        View view = inflater.inflate(R.layout.fragment_ssl_device_path, container, false);
-        ButterKnife.bind(this, view);
-        activity = (BaseActivity) getActivity();
-        clCertificate.setVisibility(connectMode > 0 ? View.VISIBLE : View.GONE);
-        cbSsl.setChecked(connectMode > 0);
-        cbSsl.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if (!isChecked) {
-                    connectMode = 0;
-                } else {
-                    connectMode = selected + 1;
-                }
-                clCertificate.setVisibility(isChecked ? View.VISIBLE : View.GONE);
+        mBind = FragmentSslDevicePathBinding.inflate(inflater, container, false);
+        mBind.clCertificate.setVisibility(connectMode > 0 ? View.VISIBLE : View.GONE);
+        mBind.cbSsl.setChecked(connectMode > 0);
+        mBind.cbSsl.setOnCheckedChangeListener((buttonView, isChecked) -> {
+            if (!isChecked) {
+                connectMode = 0;
+            } else {
+                connectMode = selected + 1;
             }
+            mBind.clCertificate.setVisibility(isChecked ? View.VISIBLE : View.GONE);
         });
         values = new ArrayList<>();
         values.add("CA certificate file");
         values.add("Self signed certificates");
         if (connectMode > 0) {
             selected = connectMode - 1;
-            tvCertification.setText(values.get(selected));
+            mBind.tvCertification.setText(values.get(selected));
         }
-       if (selected == 0) {
-            llClientKey.setVisibility(View.GONE);
-            llClientCert.setVisibility(View.GONE);
+        if (selected == 0) {
+            mBind.llClientKey.setVisibility(View.GONE);
+            mBind.llClientCert.setVisibility(View.GONE);
         } else if (selected == 1) {
-            llClientKey.setVisibility(View.VISIBLE);
-            llClientCert.setVisibility(View.VISIBLE);
+            mBind.llClientKey.setVisibility(View.VISIBLE);
+            mBind.llClientCert.setVisibility(View.VISIBLE);
         }
-        return view;
+        return mBind.getRoot();
     }
 
     @Override
@@ -126,63 +86,61 @@ public class SSLDevicePathFragment extends Fragment {
         super.onDestroy();
     }
 
-
     public void selectCertificate() {
         BottomDialog dialog = new BottomDialog();
         dialog.setDatas(values, selected);
         dialog.setListener(value -> {
             selected = value;
-            tvCertification.setText(values.get(selected));
+            mBind.tvCertification.setText(values.get(selected));
             if (selected == 0) {
-                llClientKey.setVisibility(View.GONE);
-                llClientCert.setVisibility(View.GONE);
+                mBind.llClientKey.setVisibility(View.GONE);
+                mBind.llClientCert.setVisibility(View.GONE);
             } else if (selected == 1) {
-                llClientKey.setVisibility(View.VISIBLE);
-                llClientCert.setVisibility(View.VISIBLE);
+                mBind.llClientKey.setVisibility(View.VISIBLE);
+                mBind.llClientCert.setVisibility(View.VISIBLE);
             }
             connectMode = selected + 1;
         });
-        dialog.show(activity.getSupportFragmentManager());
+        if (null != getActivity()) dialog.show(getActivity().getSupportFragmentManager());
     }
 
-
     public boolean isValid() {
-        final String host = etMqttHost.getText().toString();
-        final String port = etMqttPort.getText().toString();
-        final String caFile = etCaPath.getText().toString();
-        final String clientKeyFile = etClientKeyPath.getText().toString();
-        final String clientCertFile = etClientCertPath.getText().toString();
+        final String host = mBind.etMqttHost.getText().toString();
+        final String port = mBind.etMqttPort.getText().toString();
+        final String caFile = mBind.etCaPath.getText().toString();
+        final String clientKeyFile = mBind.etClientKeyPath.getText().toString();
+        final String clientCertFile = mBind.etClientCertPath.getText().toString();
         if (connectMode > 0) {
             if (TextUtils.isEmpty(host)) {
-                ToastUtils.showToast(activity, "Host error");
+                ToastUtils.showToast(requireContext(), "Host error");
                 return false;
             }
             if (TextUtils.isEmpty(port)) {
-                ToastUtils.showToast(activity, "Port error");
+                ToastUtils.showToast(requireContext(), "Port error");
                 return false;
             }
             int portInt = Integer.parseInt(port);
             if (portInt < 1 || portInt > 65535) {
-                ToastUtils.showToast(activity, "Port error");
+                ToastUtils.showToast(requireContext(), "Port error");
                 return false;
             }
         }
         if (connectMode == 1) {
             if (TextUtils.isEmpty(caFile)) {
-                ToastUtils.showToast(activity, getString(R.string.mqtt_verify_ca));
+                ToastUtils.showToast(requireContext(), getString(R.string.mqtt_verify_ca));
                 return false;
             }
         } else if (connectMode == 2) {
             if (TextUtils.isEmpty(caFile)) {
-                ToastUtils.showToast(activity, getString(R.string.mqtt_verify_ca));
+                ToastUtils.showToast(requireContext(), getString(R.string.mqtt_verify_ca));
                 return false;
             }
             if (TextUtils.isEmpty(clientKeyFile)) {
-                ToastUtils.showToast(activity, getString(R.string.mqtt_verify_client_key));
+                ToastUtils.showToast(requireContext(), getString(R.string.mqtt_verify_client_key));
                 return false;
             }
             if (TextUtils.isEmpty(clientCertFile)) {
-                ToastUtils.showToast(activity, getString(R.string.mqtt_verify_client_cert));
+                ToastUtils.showToast(requireContext(), getString(R.string.mqtt_verify_client_cert));
                 return false;
             }
         }
@@ -194,28 +152,23 @@ public class SSLDevicePathFragment extends Fragment {
     }
 
     public String getSSLHost() {
-        final String host = etMqttHost.getText().toString();
-        return host;
+        return mBind.etMqttHost.getText().toString();
     }
 
     public int getSSLPort() {
-        final String port = etMqttPort.getText().toString();
-        int portInt = Integer.parseInt(port);
-        return portInt;
+        final String port = mBind.etMqttPort.getText().toString();
+        return Integer.parseInt(port);
     }
 
     public String getCAPath() {
-        final String caFile = etCaPath.getText().toString();
-        return caFile;
+        return mBind.etCaPath.getText().toString();
     }
 
     public String getClientCerPath() {
-        final String clientCertFile = etClientCertPath.getText().toString();
-        return clientCertFile;
+        return mBind.etClientCertPath.getText().toString();
     }
 
     public String getClientKeyPath() {
-        final String clientKeyFile = etClientKeyPath.getText().toString();
-        return clientKeyFile;
+        return mBind.etClientKeyPath.getText().toString();
     }
 }

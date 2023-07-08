@@ -2,15 +2,14 @@ package com.moko.mknbplugjson.activity;
 
 import android.content.Intent;
 import android.os.Build;
-import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.Message;
 import android.text.TextUtils;
 import android.view.View;
-import android.widget.RelativeLayout;
-import android.widget.TextView;
+
+import androidx.annotation.Nullable;
+import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.elvishew.xlog.XLog;
@@ -20,9 +19,9 @@ import com.google.gson.reflect.TypeToken;
 import com.moko.mknbplugjson.AppConstants;
 import com.moko.mknbplugjson.BuildConfig;
 import com.moko.mknbplugjson.R;
-import com.moko.mknbplugjson.R2;
 import com.moko.mknbplugjson.adapter.DeviceAdapter;
 import com.moko.mknbplugjson.base.BaseActivity;
+import com.moko.mknbplugjson.databinding.ActivityMainJsonBinding;
 import com.moko.mknbplugjson.db.DBTools;
 import com.moko.mknbplugjson.dialog.AlertMessageDialog;
 import com.moko.mknbplugjson.entity.MokoDevice;
@@ -42,7 +41,6 @@ import com.moko.support.json.entity.SwitchState;
 import com.moko.support.json.event.DeviceDeletedEvent;
 import com.moko.support.json.event.DeviceModifyNameEvent;
 import com.moko.support.json.event.DeviceOnlineEvent;
-import com.moko.support.json.event.DeviceUpdateEvent;
 import com.moko.support.json.event.MQTTConnectionCompleteEvent;
 import com.moko.support.json.event.MQTTConnectionFailureEvent;
 import com.moko.support.json.event.MQTTConnectionLostEvent;
@@ -62,36 +60,17 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Iterator;
 
-import androidx.annotation.Nullable;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import butterknife.BindView;
-import butterknife.ButterKnife;
-
-public class JSONMainActivity extends BaseActivity implements BaseQuickAdapter.OnItemChildClickListener,
-        BaseQuickAdapter.OnItemClickListener,
-        BaseQuickAdapter.OnItemLongClickListener {
-
-    @BindView(R2.id.rl_empty)
-    RelativeLayout rlEmpty;
-    @BindView(R2.id.rv_device_list)
-    RecyclerView rvDeviceList;
-    @BindView(R2.id.tv_title)
-    TextView tvTitle;
+public class JSONMainActivity extends BaseActivity<ActivityMainJsonBinding> implements BaseQuickAdapter.OnItemChildClickListener,
+        BaseQuickAdapter.OnItemClickListener, BaseQuickAdapter.OnItemLongClickListener {
     private ArrayList<MokoDevice> devices;
     private DeviceAdapter adapter;
     public Handler mHandler;
     public String MQTTAppConfigStr;
     private MQTTConfig appMqttConfig;
-
     public static String PATH_LOGCAT;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main_json);
-        ButterKnife.bind(this);
-
+    protected void onCreate() {
         // 初始化Xlog
         if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
             // 优先保存到SD卡中
@@ -114,22 +93,22 @@ public class JSONMainActivity extends BaseActivity implements BaseQuickAdapter.O
         adapter.setOnItemClickListener(this);
         adapter.setOnItemLongClickListener(this);
         adapter.setOnItemChildClickListener(this);
-        rvDeviceList.setLayoutManager(new LinearLayoutManager(this));
-        rvDeviceList.setAdapter(adapter);
+        mBind.rvDeviceList.setLayoutManager(new LinearLayoutManager(this));
+        mBind.rvDeviceList.setAdapter(adapter);
         if (devices.isEmpty()) {
-            rlEmpty.setVisibility(View.VISIBLE);
-            rvDeviceList.setVisibility(View.GONE);
+            mBind.rlEmpty.setVisibility(View.VISIBLE);
+            mBind.rvDeviceList.setVisibility(View.GONE);
         } else {
-            rvDeviceList.setVisibility(View.VISIBLE);
-            rlEmpty.setVisibility(View.GONE);
+            mBind.rvDeviceList.setVisibility(View.VISIBLE);
+            mBind.rlEmpty.setVisibility(View.GONE);
         }
         mHandler = new Handler(Looper.getMainLooper());
         MQTTAppConfigStr = SPUtils.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
         if (!TextUtils.isEmpty(MQTTAppConfigStr)) {
             appMqttConfig = new Gson().fromJson(MQTTAppConfigStr, MQTTConfig.class);
-            tvTitle.setText(getString(R.string.mqtt_connecting));
+            mBind.tvTitle.setText(getString(R.string.mqtt_connecting));
         }
-        StringBuffer buffer = new StringBuffer();
+        StringBuilder buffer = new StringBuilder();
         // 记录机型
         buffer.append("机型：");
         buffer.append(android.os.Build.MODEL);
@@ -153,11 +132,15 @@ public class JSONMainActivity extends BaseActivity implements BaseQuickAdapter.O
             final Writer result = new StringWriter();
             final PrintWriter printWriter = new PrintWriter(result);
             e.printStackTrace(printWriter);
-            StringBuffer errorReport = new StringBuffer();
+            StringBuilder errorReport = new StringBuilder();
             errorReport.append(result.toString());
             XLog.e(errorReport.toString());
         }
+    }
 
+    @Override
+    protected ActivityMainJsonBinding getViewBinding() {
+        return ActivityMainJsonBinding.inflate(getLayoutInflater());
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -165,19 +148,19 @@ public class JSONMainActivity extends BaseActivity implements BaseQuickAdapter.O
     ///////////////////////////////////////////////////////////////////////////
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMQTTConnectionCompleteEvent(MQTTConnectionCompleteEvent event) {
-        tvTitle.setText(getString(R.string.app_name));
+        mBind.tvTitle.setText(getString(R.string.app_name));
         // 订阅所有设备的Topic
         subscribeAllDevices();
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMQTTConnectionLostEvent(MQTTConnectionLostEvent event) {
-        tvTitle.setText(getString(R.string.mqtt_connecting));
+        mBind.tvTitle.setText(getString(R.string.mqtt_connecting));
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMQTTConnectionFailureEvent(MQTTConnectionFailureEvent event) {
-        tvTitle.setText(getString(R.string.mqtt_connect_failed));
+        mBind.tvTitle.setText(getString(R.string.mqtt_connect_failed));
     }
 
     ///////////////////////////////////////////////////////////////////////////
@@ -208,7 +191,7 @@ public class JSONMainActivity extends BaseActivity implements BaseQuickAdapter.O
         // 修改了设备名称
         if (!devices.isEmpty()) {
             for (MokoDevice device : devices) {
-                if (device.deviceId.equals(event.getDeviceId())) {
+                if (device.mac.equalsIgnoreCase(event.getMac())) {
                     device.name = event.getName();
                     break;
                 }
@@ -231,42 +214,38 @@ public class JSONMainActivity extends BaseActivity implements BaseQuickAdapter.O
         }
         adapter.replaceData(devices);
         if (devices.isEmpty()) {
-            rlEmpty.setVisibility(View.VISIBLE);
-            rvDeviceList.setVisibility(View.GONE);
+            mBind.rlEmpty.setVisibility(View.VISIBLE);
+            mBind.rvDeviceList.setVisibility(View.GONE);
         }
     }
-
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onDeviceUpdateEvent(DeviceUpdateEvent event) {
-        String deviceId = event.getDeviceId();
-        if (TextUtils.isEmpty(deviceId))
-            return;
-        MokoDevice mokoDevice = DBTools.getInstance(this).selectDevice(deviceId);
-        if (devices.isEmpty()) {
-            devices.add(mokoDevice);
-        } else {
-            Iterator<MokoDevice> iterator = devices.iterator();
-            while (iterator.hasNext()) {
-                MokoDevice device = iterator.next();
-                if (deviceId.equals(device.deviceId)) {
-                    iterator.remove();
-                    break;
-                }
-            }
-            devices.add(mokoDevice);
-        }
-    }
+    // TODO: 2023/7/7  未发现该方法有用 暂时先注释掉
+//    @Subscribe(threadMode = ThreadMode.MAIN)
+//    public void onDeviceUpdateEvent(DeviceUpdateEvent event) {
+//        String deviceId = event.getDeviceId();
+//        if (TextUtils.isEmpty(deviceId)) return;
+//        MokoDevice mokoDevice = DBTools.getInstance(this).selectDevice(deviceId);
+//        if (!devices.isEmpty()) {
+//            Iterator<MokoDevice> iterator = devices.iterator();
+//            while (iterator.hasNext()) {
+//                MokoDevice device = iterator.next();
+//                if (deviceId.equals(device.deviceId)) {
+//                    iterator.remove();
+//                    break;
+//                }
+//            }
+//        }
+//        devices.add(mokoDevice);
+//    }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onDeviceOnlineEvent(DeviceOnlineEvent event) {
-        String deviceId = event.getDeviceId();
-        if (devices == null || devices.size() == 0 || event.isOnline())
-            return;
+        String mac = event.getMac();
+        if (devices == null || devices.size() == 0 || event.isOnline()) return;
         for (MokoDevice mokoDevice : devices) {
-            if (deviceId.equals(mokoDevice.deviceId)){
+            if (mac.equalsIgnoreCase(mokoDevice.mac)) {
                 mokoDevice.isOnline = false;
                 mokoDevice.on_off = false;
-                XLog.i(mokoDevice.deviceId + "离线");
+                XLog.i(mokoDevice.mac + "离线");
                 adapter.replaceData(devices);
                 break;
             }
@@ -280,17 +259,16 @@ public class JSONMainActivity extends BaseActivity implements BaseQuickAdapter.O
         setIntent(intent);
         if (getIntent().getExtras() != null) {
             String from = getIntent().getStringExtra(AppConstants.EXTRA_KEY_FROM_ACTIVITY);
-            String deviceId = getIntent().getStringExtra(AppConstants.EXTRA_KEY_DEVICE_ID);
+            String deviceMac = getIntent().getStringExtra(AppConstants.EXTRA_KEY_DEVICE_MAC);
             if (ModifyNameActivity.TAG.equals(from)
-                    || PlugSettingActivity.TAG.equals(from)) {
+                    || PlugSettingActivity.TAG.equals(from) || AddDeviceSuccessActivity.TAG.equals(from)) {
                 devices.clear();
                 devices.addAll(DBTools.getInstance(this).selectAllDevice());
-                if (!TextUtils.isEmpty(deviceId)) {
-                    MokoDevice mokoDevice = DBTools.getInstance(this).selectDevice(deviceId);
-                    if (mokoDevice == null)
-                        return;
+                if (!TextUtils.isEmpty(deviceMac)) {
+                    MokoDevice mokoDevice = DBTools.getInstance(this).selectDeviceByMac(deviceMac);
+                    if (mokoDevice == null) return;
                     for (final MokoDevice device : devices) {
-                        if (deviceId.equals(device.deviceId)) {
+                        if (deviceMac.equals(device.mac)) {
                             device.isOnline = true;
                             break;
                         }
@@ -298,18 +276,18 @@ public class JSONMainActivity extends BaseActivity implements BaseQuickAdapter.O
                 }
                 adapter.replaceData(devices);
                 if (!devices.isEmpty()) {
-                    rvDeviceList.setVisibility(View.VISIBLE);
-                    rlEmpty.setVisibility(View.GONE);
+                    mBind.rvDeviceList.setVisibility(View.VISIBLE);
+                    mBind.rlEmpty.setVisibility(View.GONE);
                 } else {
-                    rvDeviceList.setVisibility(View.GONE);
-                    rlEmpty.setVisibility(View.VISIBLE);
+                    mBind.rvDeviceList.setVisibility(View.GONE);
+                    mBind.rlEmpty.setVisibility(View.VISIBLE);
                 }
             }
             if (ModifyMQTTSettingsActivity.TAG.equals(from)) {
-                if (!TextUtils.isEmpty(deviceId)) {
-                    MokoDevice mokoDevice = DBTools.getInstance(this).selectDevice(deviceId);
+                if (!TextUtils.isEmpty(deviceMac)) {
+                    MokoDevice mokoDevice = DBTools.getInstance(this).selectDeviceByMac(deviceMac);
                     for (final MokoDevice device : devices) {
-                        if (deviceId.equals(device.deviceId)) {
+                        if (deviceMac.equalsIgnoreCase(device.mac)) {
                             if (!device.topicPublish.equals(mokoDevice.topicPublish)) {
                                 // 取消订阅
                                 try {
@@ -331,14 +309,12 @@ public class JSONMainActivity extends BaseActivity implements BaseQuickAdapter.O
     }
 
     public void setAppMQTTConfig(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         startActivityForResult(new Intent(this, SetAppMQTTActivity.class), AppConstants.REQUEST_CODE_MQTT_CONFIG_APP);
     }
 
     public void mainAddDevices(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         if (TextUtils.isEmpty(MQTTAppConfigStr)) {
             startActivityForResult(new Intent(this, SetAppMQTTActivity.class), AppConstants.REQUEST_CODE_MQTT_CONFIG_APP);
             return;
@@ -360,6 +336,7 @@ public class JSONMainActivity extends BaseActivity implements BaseQuickAdapter.O
     @Override
     public void onItemChildClick(BaseQuickAdapter adapter, View view, int position) {
         MokoDevice device = (MokoDevice) adapter.getItem(position);
+        if (null == device) return;
         if (!MQTTSupport.getInstance().isConnected()) {
             ToastUtils.showToast(this, R.string.network_error);
             return;
@@ -404,7 +381,6 @@ public class JSONMainActivity extends BaseActivity implements BaseQuickAdapter.O
         // 设置与当前开关相反的状态
         switchState.switch_state = device.on_off ? 1 : 0;
         DeviceParams deviceParams = new DeviceParams();
-        deviceParams.device_id = device.deviceId;
         deviceParams.mac = device.mac;
         String message = MQTTMessageAssembler.assembleWriteSwitchInfo(deviceParams, switchState);
         try {
@@ -417,13 +393,12 @@ public class JSONMainActivity extends BaseActivity implements BaseQuickAdapter.O
     @Override
     public void onItemClick(BaseQuickAdapter adapter, View view, int position) {
         MokoDevice mokoDevice = (MokoDevice) adapter.getItem(position);
-        if (mokoDevice == null)
-            return;
+        if (mokoDevice == null) return;
         if (!MQTTSupport.getInstance().isConnected()) {
             ToastUtils.showToast(this, R.string.network_error);
             return;
         }
-        Intent i = new Intent(JSONMainActivity.this, PlugActivity.class);
+        Intent i = new Intent(this, PlugActivity.class);
         i.putExtra(AppConstants.EXTRA_KEY_DEVICE, mokoDevice);
         startActivity(i);
     }
@@ -431,8 +406,7 @@ public class JSONMainActivity extends BaseActivity implements BaseQuickAdapter.O
     @Override
     public boolean onItemLongClick(BaseQuickAdapter adapter, View view, int position) {
         MokoDevice mokoDevice = (MokoDevice) adapter.getItem(position);
-        if (mokoDevice == null)
-            return true;
+        if (mokoDevice == null) return true;
         AlertMessageDialog dialog = new AlertMessageDialog();
         dialog.setTitle("Remove Device");
         dialog.setMessage("Please confirm again whether to \n remove the device,the device \n will be deleted from the device list.");
@@ -478,13 +452,10 @@ public class JSONMainActivity extends BaseActivity implements BaseQuickAdapter.O
     }
 
     private void updateDeviceNetworkStatus(MQTTMessageArrivedEvent event) {
-        if (devices.isEmpty()) {
-            return;
-        }
+        if (devices.isEmpty()) return;
         final String topic = event.getTopic();
         final String message = event.getMessage();
-        if (TextUtils.isEmpty(message))
-            return;
+        if (TextUtils.isEmpty(message)) return;
         MsgCommon<JsonObject> msgCommon;
         try {
             Type type = new TypeToken<MsgCommon<JsonObject>>() {
@@ -494,7 +465,7 @@ public class JSONMainActivity extends BaseActivity implements BaseQuickAdapter.O
             return;
         }
         for (final MokoDevice device : devices) {
-            if (device.deviceId.equals(msgCommon.device_info.device_id)) {
+            if (device.mac.equalsIgnoreCase(msgCommon.device_info.mac)) {
                 device.isOnline = true;
                 if (msgCommon.msg_id == MQTTConstants.NOTIFY_MSG_ID_SWITCH_STATE
                         || msgCommon.msg_id == MQTTConstants.READ_MSG_ID_SWITCH_INFO) {
@@ -508,6 +479,7 @@ public class JSONMainActivity extends BaseActivity implements BaseQuickAdapter.O
                     device.isOverCurrent = switchInfo.overcurrent_state == 1;
                     device.isOverVoltage = switchInfo.overvoltage_state == 1;
                     device.isUnderVoltage = switchInfo.undervoltage_state == 1;
+                    device.csq = Integer.parseInt(switchInfo.CSQ);
                     break;
                 }
                 if (msgCommon.msg_id == MQTTConstants.NOTIFY_MSG_ID_OVERLOAD_OCCUR) {
@@ -557,10 +529,10 @@ public class JSONMainActivity extends BaseActivity implements BaseQuickAdapter.O
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == AppConstants.REQUEST_CODE_MQTT_CONFIG_APP && resultCode == RESULT_OK) {
+        if (requestCode == AppConstants.REQUEST_CODE_MQTT_CONFIG_APP && resultCode == RESULT_OK && null != data) {
             MQTTAppConfigStr = data.getStringExtra(AppConstants.EXTRA_KEY_MQTT_CONFIG_APP);
             appMqttConfig = new Gson().fromJson(MQTTAppConfigStr, MQTTConfig.class);
-            tvTitle.setText(getString(R.string.app_name));
+            mBind.tvTitle.setText(getString(R.string.app_name));
             // 订阅所有设备的Topic
             subscribeAllDevices();
         }
@@ -582,7 +554,7 @@ public class JSONMainActivity extends BaseActivity implements BaseQuickAdapter.O
         } else {
             AlertMessageDialog dialog = new AlertMessageDialog();
             dialog.setMessage(R.string.main_exit_tips);
-            dialog.setOnAlertConfirmListener(() -> JSONMainActivity.this.finish());
+            dialog.setOnAlertConfirmListener(JSONMainActivity.this::finish);
             dialog.show(getSupportFragmentManager());
         }
     }

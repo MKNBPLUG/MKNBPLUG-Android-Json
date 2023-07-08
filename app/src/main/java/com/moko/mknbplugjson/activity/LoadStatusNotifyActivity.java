@@ -1,19 +1,17 @@
 package com.moko.mknbplugjson.activity;
 
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
 import android.view.View;
-import android.widget.CheckBox;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.moko.mknbplugjson.AppConstants;
 import com.moko.mknbplugjson.R;
-import com.moko.mknbplugjson.R2;
 import com.moko.mknbplugjson.base.BaseActivity;
+import com.moko.mknbplugjson.databinding.ActivityLoadStatusNotifyBinding;
 import com.moko.mknbplugjson.entity.MokoDevice;
 import com.moko.mknbplugjson.utils.SPUtils;
 import com.moko.mknbplugjson.utils.ToastUtils;
@@ -33,26 +31,13 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.lang.reflect.Type;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-
-
-public class LoadStatusNotifyActivity extends BaseActivity {
-
-
-    @BindView(R2.id.cb_load_start_notify)
-    CheckBox cbLoadStartNotify;
-    @BindView(R2.id.cb_load_stop_notify)
-    CheckBox cbLoadStopNotify;
+public class LoadStatusNotifyActivity extends BaseActivity<ActivityLoadStatusNotifyBinding> {
     private MQTTConfig appMqttConfig;
     private MokoDevice mMokoDevice;
     private Handler mHandler;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_load_status_notify);
-        ButterKnife.bind(this);
+    protected void onCreate() {
         String mqttConfigAppStr = SPUtils.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
         appMqttConfig = new Gson().fromJson(mqttConfigAppStr, MQTTConfig.class);
         mMokoDevice = (MokoDevice) getIntent().getSerializableExtra(AppConstants.EXTRA_KEY_DEVICE);
@@ -65,10 +50,14 @@ public class LoadStatusNotifyActivity extends BaseActivity {
         getLoadStatusNotify();
     }
 
+    @Override
+    protected ActivityLoadStatusNotifyBinding getViewBinding() {
+        return ActivityLoadStatusNotifyBinding.inflate(getLayoutInflater());
+    }
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMQTTMessageArrivedEvent(MQTTMessageArrivedEvent event) {
         // 更新所有设备的网络状态
-        final String topic = event.getTopic();
         final String message = event.getMessage();
         if (TextUtils.isEmpty(message))
             return;
@@ -80,7 +69,7 @@ public class LoadStatusNotifyActivity extends BaseActivity {
         } catch (Exception e) {
             return;
         }
-        if (!mMokoDevice.deviceId.equals(msgCommon.device_info.device_id)) {
+        if (!mMokoDevice.mac.equalsIgnoreCase(msgCommon.device_info.mac)) {
             return;
         }
         mMokoDevice.isOnline = true;
@@ -96,8 +85,8 @@ public class LoadStatusNotifyActivity extends BaseActivity {
             LoadStatusNotify status = new Gson().fromJson(msgCommon.data, statusType);
             int remove = status.remove;
             int access = status.access;
-            cbLoadStartNotify.setChecked(access == 1);
-            cbLoadStopNotify.setChecked(remove == 1);
+            mBind.cbLoadStartNotify.setChecked(access == 1);
+            mBind.cbLoadStopNotify.setChecked(remove == 1);
         }
         if (msgCommon.msg_id == MQTTConstants.CONFIG_MSG_ID_LOAD_NOTIFY_ENABLE) {
             if (mHandler.hasMessages(0)) {
@@ -122,22 +111,9 @@ public class LoadStatusNotifyActivity extends BaseActivity {
         }
     }
 
-//    @Subscribe(threadMode = ThreadMode.MAIN)
-//    public void onDeviceOnlineEvent(DeviceOnlineEvent event) {
-//        String deviceId = event.getDeviceId();
-//        if (!mMokoDevice.deviceId.equals(deviceId)) {
-//            return;
-//        }
-//        boolean online = event.isOnline();
-//        if (!online)
-//            finish();
-//    }
-
-
     public void onBack(View view) {
         finish();
     }
-
 
     private void getLoadStatusNotify() {
         String appTopic;
@@ -147,7 +123,6 @@ public class LoadStatusNotifyActivity extends BaseActivity {
             appTopic = appMqttConfig.topicPublish;
         }
         DeviceParams deviceParams = new DeviceParams();
-        deviceParams.device_id = mMokoDevice.deviceId;
         deviceParams.mac = mMokoDevice.mac;
         String message = MQTTMessageAssembler.assembleReadLoadStatusNotify(deviceParams);
         try {
@@ -158,8 +133,7 @@ public class LoadStatusNotifyActivity extends BaseActivity {
     }
 
     public void onSave(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         if (!MQTTSupport.getInstance().isConnected()) {
             ToastUtils.showToast(this, R.string.network_error);
             return;
@@ -180,11 +154,10 @@ public class LoadStatusNotifyActivity extends BaseActivity {
             appTopic = appMqttConfig.topicPublish;
         }
         DeviceParams deviceParams = new DeviceParams();
-        deviceParams.device_id = mMokoDevice.deviceId;
         deviceParams.mac = mMokoDevice.mac;
         LoadStatusNotify notify = new LoadStatusNotify();
-        notify.access = cbLoadStartNotify.isChecked() ? 1 : 0;
-        notify.remove = cbLoadStopNotify.isChecked() ? 1 : 0;
+        notify.access = mBind.cbLoadStartNotify.isChecked() ? 1 : 0;
+        notify.remove = mBind.cbLoadStopNotify.isChecked() ? 1 : 0;
         String message = MQTTMessageAssembler.assembleWriteLoadStatusNotify(deviceParams, notify);
         try {
             MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.CONFIG_MSG_ID_LOAD_NOTIFY_ENABLE, appMqttConfig.qos);

@@ -3,6 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
     android:background="@color/grey_f2f2f2"
     android:focusable="true"
     android:focusableInTouchMode="true"
@@ -30,7 +31,6 @@
             android:textColor="@color/white_ffffff"
             android:textSize="18sp" />
 
-
         <View
             style="@style/divider_line"
             android:layout_alignParentBottom="true"
@@ -51,7 +51,6 @@
         android:text="Sync Time From NTP"
         android:textColor="@color/black_333333"
         android:textSize="15sp" />
-
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
@@ -126,16 +125,15 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-
     <TextView
         android:id="@+id/tv_device_time"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
         android:layout_marginLeft="12dp"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="50dp"
         android:layout_marginRight="12dp"
-        android:text=""
+        tools:text="Device time: 2021-7-21 16: 07 UTC+08：00"
         android:textColor="@color/grey_b3b3b3"
         android:textSize="15sp" />
 </LinearLayout>

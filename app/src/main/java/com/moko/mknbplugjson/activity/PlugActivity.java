@@ -2,15 +2,12 @@ package com.moko.mknbplugjson.activity;
 
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
 import android.view.View;
-import android.widget.ImageView;
-import android.widget.LinearLayout;
-import android.widget.RelativeLayout;
-import android.widget.TextView;
+
+import androidx.core.content.ContextCompat;
 
 import com.elvishew.xlog.XLog;
 import com.google.gson.Gson;
@@ -18,8 +15,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.moko.mknbplugjson.AppConstants;
 import com.moko.mknbplugjson.R;
-import com.moko.mknbplugjson.R2;
 import com.moko.mknbplugjson.base.BaseActivity;
+import com.moko.mknbplugjson.databinding.ActivityPlugBinding;
 import com.moko.mknbplugjson.dialog.AlertMessageDialog;
 import com.moko.mknbplugjson.dialog.TimerDialog;
 import com.moko.mknbplugjson.entity.MokoDevice;
@@ -48,43 +45,18 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.lang.reflect.Type;
 
-import androidx.core.content.ContextCompat;
-import butterknife.BindView;
-import butterknife.ButterKnife;
-
-public class PlugActivity extends BaseActivity {
-    @BindView(R2.id.rl_title)
-    RelativeLayout rlTitle;
-    @BindView(R2.id.iv_switch_state)
-    ImageView ivSwitchState;
-    @BindView(R2.id.ll_bg)
-    LinearLayout llBg;
-    @BindView(R2.id.tv_switch_state)
-    TextView tvSwitchState;
-    @BindView(R2.id.tv_timer_state)
-    TextView tvTimerState;
-    @BindView(R2.id.tv_device_timer)
-    TextView tvDeviceTimer;
-    @BindView(R2.id.tv_device_power)
-    TextView tvDevicePower;
-    @BindView(R2.id.tv_device_energy)
-    TextView tvDeviceEnergy;
-    @BindView(R2.id.tv_title)
-    TextView tvTitle;
+public class PlugActivity extends BaseActivity<ActivityPlugBinding> {
     private MokoDevice mMokoDevice;
     private MQTTConfig appMqttConfig;
     private Handler mHandler;
     private boolean mIsOver;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_plug);
-        ButterKnife.bind(this);
+    protected void onCreate() {
         String mqttConfigAppStr = SPUtils.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
         appMqttConfig = new Gson().fromJson(mqttConfigAppStr, MQTTConfig.class);
         mMokoDevice = (MokoDevice) getIntent().getSerializableExtra(AppConstants.EXTRA_KEY_DEVICE);
-        tvTitle.setText(mMokoDevice.name);
+        mBind.tvTitle.setText(mMokoDevice.name);
         mHandler = new Handler(Looper.getMainLooper());
         changeSwitchState();
         if (mMokoDevice.isOverload
@@ -96,18 +68,23 @@ public class PlugActivity extends BaseActivity {
         }
         showLoadingProgressDialog();
         mHandler.postDelayed(() -> {
-            EventBus.getDefault().post(new DeviceOnlineEvent(mMokoDevice.deviceId, false));
+            ToastUtils.showToast(this, "Read device status failed！");
+            EventBus.getDefault().post(new DeviceOnlineEvent(mMokoDevice.mac, false));
             dismissLoadingProgressDialog();
             finish();
-        }, 90 * 1000);
+        }, 30 * 1000);
         getSwitchInfo();
+    }
+
+    @Override
+    protected ActivityPlugBinding getViewBinding() {
+        return ActivityPlugBinding.inflate(getLayoutInflater());
     }
 
     String mOverStatus;
 
     private void showOverDialog() {
-        if (mIsOver)
-            return;
+        if (mIsOver) return;
         if (mMokoDevice.isOverload)
             mOverStatus = "overload";
         if (mMokoDevice.isOverVoltage)
@@ -120,12 +97,7 @@ public class PlugActivity extends BaseActivity {
         AlertMessageDialog dialog = new AlertMessageDialog();
         dialog.setTitle("Warning");
         dialog.setMessage(message);
-        dialog.setOnAlertCancelListener(() -> {
-            finish();
-        });
-        dialog.setOnAlertConfirmListener(() -> {
-            showClearOverStatusDialog();
-        });
+        dialog.setOnAlertConfirmListener(this::showClearOverStatusDialog);
         dialog.show(getSupportFragmentManager());
         mIsOver = true;
     }
@@ -135,19 +107,19 @@ public class PlugActivity extends BaseActivity {
         dialog.setTitle("Warning");
         dialog.setMessage(String.format("If YES, the socket will exit %s status, and please make sure it is within the protection threshold. If NO, you need manually reboot it to exit this status.", mOverStatus));
         dialog.setOnAlertCancelListener(() -> {
-            finish();
+            ToastUtils.showToast(PlugActivity.this, "Socket is" + mOverStatus + ",please check it!");
+            PlugActivity.this.finish();
         });
         dialog.setOnAlertConfirmListener(() -> {
             showLoadingProgressDialog();
             mHandler.postDelayed(() -> {
-                EventBus.getDefault().post(new DeviceOnlineEvent(mMokoDevice.deviceId, false));
+                EventBus.getDefault().post(new DeviceOnlineEvent(mMokoDevice.mac, false));
                 dismissLoadingProgressDialog();
                 finish();
             }, 90 * 1000);
             clearOverStatus();
         });
         dialog.show(getSupportFragmentManager());
-
     }
 
     private void clearOverStatus() {
@@ -159,7 +131,6 @@ public class PlugActivity extends BaseActivity {
             appTopic = appMqttConfig.topicPublish;
         }
         DeviceParams deviceParams = new DeviceParams();
-        deviceParams.device_id = mMokoDevice.deviceId;
         deviceParams.mac = mMokoDevice.mac;
         if (mMokoDevice.isOverload) {
             String message = MQTTMessageAssembler.assembleConfigClearOverloadStatus(deviceParams);
@@ -195,7 +166,6 @@ public class PlugActivity extends BaseActivity {
             } catch (MqttException e) {
                 e.printStackTrace();
             }
-            return;
         }
     }
 
@@ -204,8 +174,7 @@ public class PlugActivity extends BaseActivity {
         // 更新所有设备的网络状态
         final String topic = event.getTopic();
         final String message = event.getMessage();
-        if (TextUtils.isEmpty(message))
-            return;
+        if (TextUtils.isEmpty(message)) return;
         MsgCommon<JsonObject> msgCommon;
         try {
             Type type = new TypeToken<MsgCommon<JsonObject>>() {
@@ -214,7 +183,7 @@ public class PlugActivity extends BaseActivity {
         } catch (Exception e) {
             return;
         }
-        if (!mMokoDevice.deviceId.equals(msgCommon.device_info.device_id)) {
+        if (!mMokoDevice.mac.equalsIgnoreCase(msgCommon.device_info.mac)) {
             return;
         }
         mMokoDevice.isOnline = true;
@@ -233,6 +202,7 @@ public class PlugActivity extends BaseActivity {
             mMokoDevice.isOverCurrent = switchInfo.overcurrent_state == 1;
             mMokoDevice.isOverVoltage = switchInfo.overvoltage_state == 1;
             mMokoDevice.isUnderVoltage = switchInfo.undervoltage_state == 1;
+            mMokoDevice.csq = Integer.parseInt(switchInfo.CSQ);
             changeSwitchState();
             if (mMokoDevice.isOverload
                     || mMokoDevice.isOverVoltage
@@ -249,14 +219,14 @@ public class PlugActivity extends BaseActivity {
             int countdown = timerInfo.countdown;
             int switch_state = timerInfo.switch_state;
             if (countdown == 0) {
-                tvTimerState.setVisibility(View.GONE);
+                mBind.tvTimerState.setVisibility(View.GONE);
             } else {
                 int hour = countdown / 3600;
                 int minute = (countdown % 3600) / 60;
                 int second = (countdown % 3600) % 60;
-                tvTimerState.setVisibility(View.VISIBLE);
+                mBind.tvTimerState.setVisibility(View.VISIBLE);
                 String timer = String.format("Device will turn %s after %02d:%02d:%02d", switch_state == 1 ? "on" : "off", hour, minute, second);
-                tvTimerState.setText(timer);
+                mBind.tvTimerState.setText(timer);
             }
             return;
         }
@@ -347,35 +317,23 @@ public class PlugActivity extends BaseActivity {
                 if (msgCommon.msg_id == MQTTConstants.CONFIG_MSG_ID_SWITCH_STATE)
                     getSwitchInfo();
             }
-            return;
         }
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onDeviceModifyNameEvent(DeviceModifyNameEvent event) {
         // 修改了设备名称
-        String deviceId = event.getDeviceId();
-        if (deviceId.equals(mMokoDevice.deviceId)) {
+        String deviceMac = event.getMac();
+        if (deviceMac.equalsIgnoreCase(mMokoDevice.mac)) {
             mMokoDevice.name = event.getName();
-            tvTitle.setText(mMokoDevice.name);
+            mBind.tvTitle.setText(mMokoDevice.name);
         }
     }
 
-//    @Subscribe(threadMode = ThreadMode.MAIN)
-//    public void onDeviceOnlineEvent(DeviceOnlineEvent event) {
-//        String deviceId = event.getDeviceId();
-//        if (!mMokoDevice.deviceId.equals(deviceId)) {
-//            return;
-//        }
-//        boolean online = event.isOnline();
-//        if (!online)
-//            finish();
-//    }
-
     private void changeSwitchState() {
-        rlTitle.setBackgroundColor(ContextCompat.getColor(this, mMokoDevice.on_off ? R.color.blue_0188cc : R.color.black_303a4b));
-        llBg.setBackgroundColor(ContextCompat.getColor(this, mMokoDevice.on_off ? R.color.grey_f2f2f2 : R.color.black_303a4b));
-        ivSwitchState.setImageDrawable(ContextCompat.getDrawable(this, mMokoDevice.on_off ? R.drawable.plug_switch_on : R.drawable.plug_switch_off));
+        mBind.rlTitle.setBackgroundColor(ContextCompat.getColor(this, mMokoDevice.on_off ? R.color.blue_0188cc : R.color.black_303a4b));
+        mBind.llBg.setBackgroundColor(ContextCompat.getColor(this, mMokoDevice.on_off ? R.color.grey_f2f2f2 : R.color.black_303a4b));
+        mBind.ivSwitchState.setImageDrawable(ContextCompat.getDrawable(this, mMokoDevice.on_off ? R.drawable.plug_switch_on : R.drawable.plug_switch_off));
         String switchState = "";
         if (!mMokoDevice.isOnline) {
             switchState = getString(R.string.plug_switch_offline);
@@ -384,22 +342,22 @@ public class PlugActivity extends BaseActivity {
         } else {
             switchState = getString(R.string.plug_switch_off);
         }
-        tvSwitchState.setText(switchState);
-        tvSwitchState.setTextColor(ContextCompat.getColor(this, mMokoDevice.on_off ? R.color.blue_0188cc : R.color.grey_808080));
+        mBind.tvSwitchState.setText(switchState);
+        mBind.tvSwitchState.setTextColor(ContextCompat.getColor(this, mMokoDevice.on_off ? R.color.blue_0188cc : R.color.grey_808080));
 
         Drawable drawablePower = ContextCompat.getDrawable(this, mMokoDevice.on_off ? R.drawable.power_on : R.drawable.power_off);
         drawablePower.setBounds(0, 0, drawablePower.getMinimumWidth(), drawablePower.getMinimumHeight());
-        tvDevicePower.setCompoundDrawables(null, drawablePower, null, null);
-        tvDevicePower.setTextColor(ContextCompat.getColor(this, mMokoDevice.on_off ? R.color.blue_0188cc : R.color.grey_808080));
+        mBind.tvDevicePower.setCompoundDrawables(null, drawablePower, null, null);
+        mBind.tvDevicePower.setTextColor(ContextCompat.getColor(this, mMokoDevice.on_off ? R.color.blue_0188cc : R.color.grey_808080));
         Drawable drawableTimer = ContextCompat.getDrawable(this, mMokoDevice.on_off ? R.drawable.timer_on : R.drawable.timer_off);
         drawableTimer.setBounds(0, 0, drawableTimer.getMinimumWidth(), drawableTimer.getMinimumHeight());
-        tvDeviceTimer.setCompoundDrawables(null, drawableTimer, null, null);
-        tvDeviceTimer.setTextColor(ContextCompat.getColor(this, mMokoDevice.on_off ? R.color.blue_0188cc : R.color.grey_808080));
+        mBind.tvDeviceTimer.setCompoundDrawables(null, drawableTimer, null, null);
+        mBind.tvDeviceTimer.setTextColor(ContextCompat.getColor(this, mMokoDevice.on_off ? R.color.blue_0188cc : R.color.grey_808080));
         Drawable drawableEnergy = ContextCompat.getDrawable(this, mMokoDevice.on_off ? R.drawable.energy_on : R.drawable.energy_off);
         drawableEnergy.setBounds(0, 0, drawableEnergy.getMinimumWidth(), drawableEnergy.getMinimumHeight());
-        tvDeviceEnergy.setCompoundDrawables(null, drawableEnergy, null, null);
-        tvDeviceEnergy.setTextColor(ContextCompat.getColor(this, mMokoDevice.on_off ? R.color.blue_0188cc : R.color.grey_808080));
-        tvTimerState.setTextColor(ContextCompat.getColor(this, mMokoDevice.on_off ? R.color.blue_0188cc : R.color.grey_808080));
+        mBind.tvDeviceEnergy.setCompoundDrawables(null, drawableEnergy, null, null);
+        mBind.tvDeviceEnergy.setTextColor(ContextCompat.getColor(this, mMokoDevice.on_off ? R.color.blue_0188cc : R.color.grey_808080));
+        mBind.tvTimerState.setTextColor(ContextCompat.getColor(this, mMokoDevice.on_off ? R.color.blue_0188cc : R.color.grey_808080));
     }
 
     public void onBack(View view) {
@@ -407,9 +365,7 @@ public class PlugActivity extends BaseActivity {
     }
 
     public void onPlugSetting(View view) {
-        if (isWindowLocked()) {
-            return;
-        }
+        if (isWindowLocked()) return;
         // Energy
         Intent intent = new Intent(this, PlugSettingActivity.class);
         intent.putExtra(AppConstants.EXTRA_KEY_DEVICE, mMokoDevice);
@@ -417,7 +373,10 @@ public class PlugActivity extends BaseActivity {
     }
 
     public void onTimerClick(View view) {
-        if (isWindowLocked()) {
+        if (isWindowLocked()) return;
+        if (mIsOver) {
+            ToastUtils.showToast(this, "Socket is" + mOverStatus + ",please check it!");
+            finish();
             return;
         }
         if (!MQTTSupport.getInstance().isConnected()) {
@@ -430,25 +389,22 @@ public class PlugActivity extends BaseActivity {
         }
         TimerDialog timerDialog = new TimerDialog();
         timerDialog.setOnoff(mMokoDevice.on_off);
-        timerDialog.setListener(new TimerDialog.TimerListener() {
-            @Override
-            public void onConfirmClick(TimerDialog dialog) {
-                if (!MQTTSupport.getInstance().isConnected()) {
-                    ToastUtils.showToast(PlugActivity.this, R.string.network_error);
-                    return;
-                }
-                if (!mMokoDevice.isOnline) {
-                    ToastUtils.showToast(PlugActivity.this, R.string.device_offline);
-                    return;
-                }
-                mHandler.postDelayed(() -> {
-                    dismissLoadingProgressDialog();
-                    ToastUtils.showToast(PlugActivity.this, "Set up failed");
-                }, 30 * 1000);
-                showLoadingProgressDialog();
-                setTimer(dialog.getWvHour(), dialog.getWvMinute());
-                dialog.dismiss();
+        timerDialog.setListener(dialog -> {
+            if (!MQTTSupport.getInstance().isConnected()) {
+                ToastUtils.showToast(PlugActivity.this, R.string.network_error);
+                return;
             }
+            if (!mMokoDevice.isOnline) {
+                ToastUtils.showToast(PlugActivity.this, R.string.device_offline);
+                return;
+            }
+            mHandler.postDelayed(() -> {
+                dismissLoadingProgressDialog();
+                ToastUtils.showToast(PlugActivity.this, "Set up failed");
+            }, 30 * 1000);
+            showLoadingProgressDialog();
+            setTimer(dialog.getWvHour(), dialog.getWvMinute());
+            dialog.dismiss();
         });
         timerDialog.show(getSupportFragmentManager());
     }
@@ -463,7 +419,6 @@ public class PlugActivity extends BaseActivity {
         SetCountdown setCountdown = new SetCountdown();
         setCountdown.countdown = hour * 3600 + minute * 60;
         DeviceParams deviceParams = new DeviceParams();
-        deviceParams.device_id = mMokoDevice.deviceId;
         deviceParams.mac = mMokoDevice.mac;
         String message = MQTTMessageAssembler.assembleWriteTimer(deviceParams, setCountdown);
         try {
@@ -532,7 +487,6 @@ public class PlugActivity extends BaseActivity {
         SwitchState switchState = new SwitchState();
         switchState.switch_state = mMokoDevice.on_off ? 1 : 0;
         DeviceParams deviceParams = new DeviceParams();
-        deviceParams.device_id = mMokoDevice.deviceId;
         deviceParams.mac = mMokoDevice.mac;
         String message = MQTTMessageAssembler.assembleWriteSwitchInfo(deviceParams, switchState);
         try {
@@ -551,7 +505,6 @@ public class PlugActivity extends BaseActivity {
             appTopic = appMqttConfig.topicPublish;
         }
         DeviceParams deviceParams = new DeviceParams();
-        deviceParams.device_id = mMokoDevice.deviceId;
         deviceParams.mac = mMokoDevice.mac;
         String message = MQTTMessageAssembler.assembleReadSwitchInfo(deviceParams);
         try {

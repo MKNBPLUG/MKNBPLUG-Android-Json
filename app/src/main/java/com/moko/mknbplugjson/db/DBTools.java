@@ -111,8 +111,6 @@ public class DBTools {
                     .getColumnIndex(DBConstants.DEVICE_FIELD_MAC));
             mokoDevice.mqttInfo = cursor.getString(cursor
                     .getColumnIndex(DBConstants.DEVICE_FIELD_MQTT_INFO));
-            mokoDevice.deviceId = cursor.getString(cursor
-                    .getColumnIndex(DBConstants.DEVICE_FIELD_DEVICE_ID));
             mokoDevice.deviceMode = cursor.getInt(cursor
                     .getColumnIndex(DBConstants.DEVICE_FIELD_DEVICE_MODE));
             mokoDevice.deviceType = cursor.getInt(cursor

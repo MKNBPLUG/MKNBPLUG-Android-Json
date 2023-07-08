@@ -1,7 +1,5 @@
 package com.moko.mknbplugjson.dialog;
 
-
-import android.content.DialogInterface;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.KeyEvent;
@@ -11,19 +9,16 @@ import android.view.ViewGroup;
 import android.view.Window;
 import android.view.WindowManager;
 
-import com.moko.mknbplugjson.R;
-
 import androidx.annotation.LayoutRes;
 import androidx.annotation.StyleRes;
 import androidx.fragment.app.DialogFragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentTransaction;
 
+import com.moko.mknbplugjson.R;
 
 public abstract class MokoBaseDialog extends DialogFragment {
-
     private static final String TAG = "base_dialog";
-
     private static final float DEFAULT_DIM = 0.2f;
     private static final int DEFAULT_GRAVITY = Gravity.BOTTOM;
     private static final int DEFAULT_STYLE = R.style.BottomDialog;
@@ -35,18 +30,14 @@ public abstract class MokoBaseDialog extends DialogFragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         getDialog().getWindow().requestFeature(Window.FEATURE_NO_TITLE);
         getDialog().setCanceledOnTouchOutside(getCancelOutside());
-        getDialog().setOnKeyListener(new DialogInterface.OnKeyListener() {
-            @Override
-            public boolean onKey(DialogInterface dialog, int keyCode, KeyEvent event) {
-                if (keyCode == KeyEvent.KEYCODE_BACK) {
-                    return getCancellable();
-                }
-                return false;
+        getDialog().setOnKeyListener((dialog, keyCode, event) -> {
+            if (keyCode == KeyEvent.KEYCODE_BACK) {
+                return getCancellable();
             }
+            return false;
         });
         View v = inflater.inflate(getLayoutRes(), container, false);
         bindView(v);

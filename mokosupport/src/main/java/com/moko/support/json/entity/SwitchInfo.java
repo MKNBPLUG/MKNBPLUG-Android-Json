@@ -7,4 +7,6 @@ public class SwitchInfo {
     public int overcurrent_state;
     public int overvoltage_state;
     public int undervoltage_state;
+    public String network_type;
+    public String CSQ;
 }

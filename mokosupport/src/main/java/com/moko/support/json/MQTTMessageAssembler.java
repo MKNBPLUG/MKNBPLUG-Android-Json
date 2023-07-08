@@ -171,6 +171,14 @@ public class MQTTMessageAssembler {
         return message;
     }
 
+    public static String assembleReadDeviceType(DeviceParams deviceParams){
+        MsgReq msgReq = new MsgReq();
+        msgReq.device_info = deviceParams;
+        msgReq.msg_id = MQTTConstants.READ_MSG_ID_DEVICE_TYPE;
+        String message = new Gson().toJson(msgReq);
+        XLog.e("app_to_device--->" + message);
+        return message;
+    }
 
     public static String assembleWriteReset(DeviceParams deviceParams) {
         MsgReq msgReq = new MsgReq();
@@ -333,10 +341,10 @@ public class MQTTMessageAssembler {
         return message;
     }
 
-    public static String assembleReadDeviceType(DeviceParams deviceParams) {
+    public static String assembleReadDeviceStandard(DeviceParams deviceParams) {
         MsgReq msgReq = new MsgReq();
         msgReq.device_info = deviceParams;
-        msgReq.msg_id = MQTTConstants.READ_MSG_ID_DEVICE_TYPE;
+        msgReq.msg_id = MQTTConstants.READ_MSG_ID_DEVICE_STANDARD;
         String message = new Gson().toJson(msgReq);
         XLog.e("app_to_device--->" + message);
         return message;

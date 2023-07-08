@@ -7,7 +7,6 @@ import com.moko.mknbplugjson.entity.MokoDevice;
 
 import androidx.core.content.ContextCompat;
 
-
 public class DeviceAdapter extends BaseQuickAdapter<MokoDevice, BaseViewHolder> {
 
     public DeviceAdapter() {

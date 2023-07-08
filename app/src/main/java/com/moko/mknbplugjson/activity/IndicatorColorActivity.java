@@ -1,12 +1,9 @@
 package com.moko.mknbplugjson.activity;
 
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
 import android.view.View;
-import android.widget.EditText;
-import android.widget.LinearLayout;
 
 import com.elvishew.xlog.XLog;
 import com.google.gson.Gson;
@@ -14,8 +11,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.moko.mknbplugjson.AppConstants;
 import com.moko.mknbplugjson.R;
-import com.moko.mknbplugjson.R2;
 import com.moko.mknbplugjson.base.BaseActivity;
+import com.moko.mknbplugjson.databinding.ActivityIndicatorColorBinding;
 import com.moko.mknbplugjson.entity.MokoDevice;
 import com.moko.mknbplugjson.utils.SPUtils;
 import com.moko.mknbplugjson.utils.ToastUtils;
@@ -35,53 +32,30 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.lang.reflect.Type;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
 import cn.carbswang.android.numberpickerview.library.NumberPickerView;
 
-public class IndicatorStatusActivity extends BaseActivity implements NumberPickerView.OnValueChangeListener {
-
-    @BindView(R2.id.npv_color_settings)
-    NumberPickerView npvColorSettings;
-    @BindView(R2.id.et_blue)
-    EditText etBlue;
-    @BindView(R2.id.et_green)
-    EditText etGreen;
-    @BindView(R2.id.et_yellow)
-    EditText etYellow;
-    @BindView(R2.id.et_orange)
-    EditText etOrange;
-    @BindView(R2.id.et_red)
-    EditText etRed;
-    @BindView(R2.id.et_purple)
-    EditText etPurple;
-    @BindView(R2.id.ll_color_settings)
-    LinearLayout llColorSettings;
+public class IndicatorColorActivity extends BaseActivity<ActivityIndicatorColorBinding> implements NumberPickerView.OnValueChangeListener {
     private MokoDevice mMokoDevice;
     private MQTTConfig appMqttConfig;
     private Handler mHandler;
-    private int deviceType;
     private int maxValue = 4416;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_indicator_color);
-        ButterKnife.bind(this);
+    protected void onCreate() {
         if (getIntent().getExtras() != null) {
             mMokoDevice = (MokoDevice) getIntent().getSerializableExtra(AppConstants.EXTRA_KEY_DEVICE);
         }
-        deviceType = getIntent().getIntExtra(AppConstants.EXTRA_KEY_DEVICE_TYPE, 0);
+        int deviceType = getIntent().getIntExtra(AppConstants.EXTRA_KEY_DEVICE_TYPE, 0);
         if (deviceType == 1) {
             maxValue = 2160;
         }
         if (deviceType == 2) {
             maxValue = 3588;
         }
-        npvColorSettings.setMinValue(0);
-        npvColorSettings.setMaxValue(8);
-        npvColorSettings.setValue(0);
-        npvColorSettings.setOnValueChangedListener(this);
+        mBind.npvColorSettings.setMinValue(0);
+        mBind.npvColorSettings.setMaxValue(8);
+        mBind.npvColorSettings.setValue(0);
+        mBind.npvColorSettings.setOnValueChangedListener(this);
         String mqttConfigAppStr = SPUtils.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
         appMqttConfig = new Gson().fromJson(mqttConfigAppStr, MQTTConfig.class);
         mHandler = new Handler(Looper.getMainLooper());
@@ -97,14 +71,16 @@ public class IndicatorStatusActivity extends BaseActivity implements NumberPicke
         getColorSettings();
     }
 
+    @Override
+    protected ActivityIndicatorColorBinding getViewBinding() {
+        return ActivityIndicatorColorBinding.inflate(getLayoutInflater());
+    }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMQTTMessageArrivedEvent(MQTTMessageArrivedEvent event) {
         // 更新所有设备的网络状态
-        final String topic = event.getTopic();
         final String message = event.getMessage();
-        if (TextUtils.isEmpty(message))
-            return;
+        if (TextUtils.isEmpty(message)) return;
         MsgCommon<JsonObject> msgCommon;
         try {
             Type type = new TypeToken<MsgCommon<JsonObject>>() {
@@ -113,7 +89,7 @@ public class IndicatorStatusActivity extends BaseActivity implements NumberPicke
         } catch (Exception e) {
             return;
         }
-        if (!mMokoDevice.deviceId.equals(msgCommon.device_info.device_id)) {
+        if (!mMokoDevice.mac.equalsIgnoreCase(msgCommon.device_info.mac)) {
             return;
         }
         mMokoDevice.isOnline = true;
@@ -125,18 +101,24 @@ public class IndicatorStatusActivity extends BaseActivity implements NumberPicke
             Type infoType = new TypeToken<IndicatorStatus>() {
             }.getType();
             IndicatorStatus indicatorStatus = new Gson().fromJson(msgCommon.data, infoType);
-            npvColorSettings.setValue(indicatorStatus.led_state);
+            mBind.npvColorSettings.setValue(indicatorStatus.led_state);
             if (indicatorStatus.led_state > 1) {
-                llColorSettings.setVisibility(View.GONE);
+                mBind.llColorSettings.setVisibility(View.GONE);
             } else {
-                llColorSettings.setVisibility(View.VISIBLE);
+                mBind.llColorSettings.setVisibility(View.VISIBLE);
             }
-            etBlue.setText(String.valueOf(indicatorStatus.blue));
-            etGreen.setText(String.valueOf(indicatorStatus.green));
-            etYellow.setText(String.valueOf(indicatorStatus.yellow));
-            etOrange.setText(String.valueOf(indicatorStatus.orange));
-            etRed.setText(String.valueOf(indicatorStatus.red));
-            etPurple.setText(String.valueOf(indicatorStatus.purple));
+            mBind.etBlue.setText(String.valueOf(indicatorStatus.blue));
+            mBind.etGreen.setText(String.valueOf(indicatorStatus.green));
+            mBind.etYellow.setText(String.valueOf(indicatorStatus.yellow));
+            mBind.etOrange.setText(String.valueOf(indicatorStatus.orange));
+            mBind.etRed.setText(String.valueOf(indicatorStatus.red));
+            mBind.etPurple.setText(String.valueOf(indicatorStatus.purple));
+            mBind.etBlue.setSelection(mBind.etBlue.getText().length());
+            mBind.etGreen.setSelection(mBind.etGreen.getText().length());
+            mBind.etYellow.setSelection(mBind.etYellow.getText().length());
+            mBind.etOrange.setSelection(mBind.etOrange.getText().length());
+            mBind.etRed.setSelection(mBind.etRed.getText().length());
+            mBind.etPurple.setSelection(mBind.etPurple.getText().length());
         }
         if (msgCommon.msg_id == MQTTConstants.CONFIG_MSG_ID_INDICATOR_STATUS_COLOR) {
             if (mHandler.hasMessages(0)) {
@@ -156,21 +138,9 @@ public class IndicatorStatusActivity extends BaseActivity implements NumberPicke
             Type infoType = new TypeToken<OverloadOccur>() {
             }.getType();
             OverloadOccur overloadOccur = new Gson().fromJson(msgCommon.data, infoType);
-            if (overloadOccur.state == 1)
-                finish();
+            if (overloadOccur.state == 1) finish();
         }
     }
-
-//    @Subscribe(threadMode = ThreadMode.MAIN)
-//    public void onDeviceOnlineEvent(DeviceOnlineEvent event) {
-//        String deviceId = event.getDeviceId();
-//        if (!mMokoDevice.deviceId.equals(deviceId)) {
-//            return;
-//        }
-//        boolean online = event.isOnline();
-//        if (!online)
-//            finish();
-//    }
 
     public void onBack(View view) {
         finish();
@@ -185,7 +155,6 @@ public class IndicatorStatusActivity extends BaseActivity implements NumberPicke
             appTopic = appMqttConfig.topicPublish;
         }
         DeviceParams deviceParams = new DeviceParams();
-        deviceParams.device_id = mMokoDevice.deviceId;
         deviceParams.mac = mMokoDevice.mac;
         String message = MQTTMessageAssembler.assembleReadIndicatorColor(deviceParams);
         try {
@@ -198,9 +167,9 @@ public class IndicatorStatusActivity extends BaseActivity implements NumberPicke
     @Override
     public void onValueChange(NumberPickerView picker, int oldVal, int newVal) {
         if (newVal > 1) {
-            llColorSettings.setVisibility(View.GONE);
+            mBind.llColorSettings.setVisibility(View.GONE);
         } else {
-            llColorSettings.setVisibility(View.VISIBLE);
+            mBind.llColorSettings.setVisibility(View.VISIBLE);
         }
     }
 
@@ -213,12 +182,12 @@ public class IndicatorStatusActivity extends BaseActivity implements NumberPicke
     }
 
     private void setLEDColor() {
-        String blue = etBlue.getText().toString();
-        String green = etGreen.getText().toString();
-        String yellow = etYellow.getText().toString();
-        String orange = etOrange.getText().toString();
-        String red = etRed.getText().toString();
-        String purple = etPurple.getText().toString();
+        String blue = mBind.etBlue.getText().toString();
+        String green = mBind.etGreen.getText().toString();
+        String yellow = mBind.etYellow.getText().toString();
+        String orange = mBind.etOrange.getText().toString();
+        String red = mBind.etRed.getText().toString();
+        String purple = mBind.etPurple.getText().toString();
         if (TextUtils.isEmpty(blue)) {
             ToastUtils.showToast(this, "Para Error");
             return;
@@ -285,18 +254,15 @@ public class IndicatorStatusActivity extends BaseActivity implements NumberPicke
         showLoadingProgressDialog();
         XLog.i("设置颜色范围");
         DeviceParams deviceParams = new DeviceParams();
-        deviceParams.device_id = mMokoDevice.deviceId;
         deviceParams.mac = mMokoDevice.mac;
         IndicatorStatus indicatorStatus = new IndicatorStatus();
-        indicatorStatus.led_state = npvColorSettings.getValue();
-//        if (indicatorStatus.led_state < 2) {
-            indicatorStatus.blue = blueValue;
-            indicatorStatus.green = greenValue;
-            indicatorStatus.yellow = yellowValue;
-            indicatorStatus.orange = orangeValue;
-            indicatorStatus.red = redValue;
-            indicatorStatus.purple = purpleValue;
-//        }
+        indicatorStatus.led_state = mBind.npvColorSettings.getValue();
+        indicatorStatus.blue = blueValue;
+        indicatorStatus.green = greenValue;
+        indicatorStatus.yellow = yellowValue;
+        indicatorStatus.orange = orangeValue;
+        indicatorStatus.red = redValue;
+        indicatorStatus.purple = purpleValue;
         String appTopic;
         if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
             appTopic = mMokoDevice.topicSubscribe;
