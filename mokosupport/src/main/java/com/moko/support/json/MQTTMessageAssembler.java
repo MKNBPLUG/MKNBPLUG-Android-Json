@@ -649,9 +649,27 @@ public class MQTTMessageAssembler {
     }
 
     public static String assembleReadSettingsForLWT(DeviceParams deviceParams) {
-        MsgReq msgReq = new MsgReq();
+        MsgReq<LWTSettings> msgReq = new MsgReq<>();
         msgReq.device_info = deviceParams;
         msgReq.msg_id = MQTTConstants.READ_MSG_ID_LWT_SETTINGS;
+        String message = new Gson().toJson(msgReq);
+        XLog.e("app_to_device--->" + message);
+        return message;
+    }
+
+    public static String assembleReadSettingsForApn(DeviceParams deviceParams) {
+        MsgReq<APNSettings> msgReq = new MsgReq<>();
+        msgReq.device_info = deviceParams;
+        msgReq.msg_id = MQTTConstants.READ_MSG_ID_APN_SETTINGS;
+        String message = new Gson().toJson(msgReq);
+        XLog.e("app_to_device--->" + message);
+        return message;
+    }
+
+    public static String assembleReadNetworkPriority(DeviceParams deviceParams) {
+        MsgReq<NetworkSettings> msgReq = new MsgReq<>();
+        msgReq.device_info = deviceParams;
+        msgReq.msg_id = MQTTConstants.READ_MSG_ID_NETWORK_PRIORITY;
         String message = new Gson().toJson(msgReq);
         XLog.e("app_to_device--->" + message);
         return message;

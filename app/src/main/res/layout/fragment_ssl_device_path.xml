@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:background="@color/white_ffffff"
@@ -30,7 +31,8 @@
         android:visibility="gone"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/cb_ssl">
+        app:layout_constraintTop_toBottomOf="@id/cb_ssl"
+        tools:visibility="visible">
 
         <TextView
             android:layout_width="wrap_content"
@@ -49,92 +51,15 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:background="@drawable/shape_corner_btn_bg"
-            android:clickable="true"
             android:gravity="center"
             android:minWidth="70dp"
             android:onClick="onSelectCertificate"
-            android:padding="12dp"
+            android:padding="10dp"
             android:text="CA certificate file"
             android:textColor="@color/white_ffffff"
             android:textSize="15sp"
             app:layout_constraintRight_toRightOf="parent"
             app:layout_constraintTop_toTopOf="parent" />
-
-        <androidx.constraintlayout.widget.ConstraintLayout
-            android:id="@+id/cl_cert_server"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="10dp"
-            android:minHeight="110dp"
-            android:orientation="horizontal"
-            android:visibility="visible"
-            app:layout_constraintLeft_toLeftOf="parent"
-            app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/tv_certification">
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:text="Host"
-                android:textColor="@color/black_333333"
-                android:textSize="15sp"
-                app:layout_constraintBottom_toBottomOf="@id/et_mqtt_host"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toTopOf="@id/et_mqtt_host" />
-
-            <EditText
-                android:id="@+id/et_mqtt_host"
-                android:layout_width="0dp"
-                android:layout_height="50dp"
-                android:background="@drawable/shape_radius_edit_bg"
-                android:hint="1-64 Characters"
-                android:maxLength="64"
-                android:paddingLeft="5dp"
-                android:paddingRight="5dp"
-                android:singleLine="true"
-                android:text=""
-                android:textColor="@color/black_333333"
-                android:textSize="15sp"
-                app:layout_constraintHorizontal_bias="1.0"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintRight_toRightOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintWidth_percent="0.8" />
-
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:gravity="center_vertical"
-                android:text="Port"
-                android:textColor="@color/black_333333"
-                android:textSize="15sp"
-                app:layout_constraintBottom_toBottomOf="@id/et_mqtt_port"
-                app:layout_constraintLeft_toLeftOf="parent"
-                app:layout_constraintTop_toTopOf="@id/et_mqtt_port" />
-
-            <EditText
-                android:id="@+id/et_mqtt_port"
-                android:layout_width="0dp"
-                android:layout_height="50dp"
-                android:layout_marginTop="10dp"
-                android:background="@drawable/shape_radius_edit_bg"
-                android:hint="1-65535"
-                android:inputType="number"
-                android:maxLength="5"
-                android:paddingLeft="5dp"
-                android:paddingRight="5dp"
-                android:singleLine="true"
-                android:text=""
-                android:textColor="@color/black_333333"
-                android:textSize="15sp"
-                app:layout_constraintHorizontal_bias="1.0"
-                app:layout_constraintLeft_toLeftOf="@id/et_mqtt_host"
-                app:layout_constraintRight_toRightOf="@id/et_mqtt_host"
-                app:layout_constraintTop_toBottomOf="@id/et_mqtt_host" />
-
-
-        </androidx.constraintlayout.widget.ConstraintLayout>
 
         <LinearLayout
             android:id="@+id/ll_ca"
@@ -145,31 +70,31 @@
             android:orientation="horizontal"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/cl_cert_server">
+            app:layout_constraintTop_toBottomOf="@id/tv_certification">
 
             <TextView
                 android:layout_width="0dp"
-                android:layout_weight="0.5"
                 android:layout_height="match_parent"
+                android:layout_weight="0.5"
                 android:gravity="center_vertical"
-                android:text="CA File Path"
+                android:text="CA File URL"
                 android:textColor="@color/black_333333"
                 android:textSize="15sp" />
 
             <EditText
                 android:id="@+id/et_ca_path"
                 android:layout_width="0dp"
-                android:layout_weight="1.0"
                 android:layout_height="50dp"
+                android:layout_weight="1.0"
                 android:background="@drawable/shape_radius_edit_bg"
-                android:hint="1-128 Characters"
-                android:maxLength="128"
+                android:hint="1-256 Characters"
+                android:maxLength="256"
                 android:paddingLeft="5dp"
                 android:paddingRight="5dp"
                 android:singleLine="true"
                 android:text=""
                 android:textColor="@color/black_333333"
-                android:textSize="15sp"/>
+                android:textSize="15sp" />
         </LinearLayout>
 
         <LinearLayout
@@ -182,31 +107,31 @@
             android:visibility="gone"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/ll_ca">
+            app:layout_constraintTop_toBottomOf="@id/ll_ca"
+            tools:visibility="visible">
 
             <TextView
                 android:layout_width="0dp"
-                android:layout_weight="0.5"
                 android:layout_height="match_parent"
+                android:layout_weight="0.5"
                 android:gravity="center_vertical"
-                android:text="Client Key File"
+                android:text="Client Key URL"
                 android:textColor="@color/black_333333"
                 android:textSize="15sp" />
 
             <EditText
                 android:id="@+id/et_client_key_path"
                 android:layout_width="0dp"
-                android:layout_weight="1.0"
                 android:layout_height="50dp"
+                android:layout_weight="1.0"
                 android:background="@drawable/shape_radius_edit_bg"
-                android:hint="1-128 Characters"
-                android:maxLength="128"
+                android:hint="1-256 Characters"
+                android:maxLength="256"
                 android:paddingLeft="5dp"
                 android:paddingRight="5dp"
                 android:singleLine="true"
-                android:text=""
                 android:textColor="@color/black_333333"
-                android:textSize="15sp"/>
+                android:textSize="15sp" />
         </LinearLayout>
 
         <LinearLayout
@@ -219,31 +144,31 @@
             android:visibility="gone"
             app:layout_constraintLeft_toLeftOf="parent"
             app:layout_constraintRight_toRightOf="parent"
-            app:layout_constraintTop_toBottomOf="@id/ll_client_key">
+            app:layout_constraintTop_toBottomOf="@id/ll_client_key"
+            tools:visibility="visible">
 
             <TextView
                 android:layout_width="0dp"
-                android:layout_weight="0.5"
                 android:layout_height="match_parent"
+                android:layout_weight="0.5"
                 android:gravity="center_vertical"
-                android:text="Client Cert File"
+                android:text="Client Cert URL"
                 android:textColor="@color/black_333333"
                 android:textSize="15sp" />
 
             <EditText
                 android:id="@+id/et_client_cert_path"
                 android:layout_width="0dp"
-                android:layout_weight="1.0"
                 android:layout_height="50dp"
+                android:layout_weight="1.0"
                 android:background="@drawable/shape_radius_edit_bg"
-                android:hint="1-128 Characters"
-                android:maxLength="128"
+                android:hint="1-256 Characters"
+                android:maxLength="256"
                 android:paddingLeft="5dp"
                 android:paddingRight="5dp"
                 android:singleLine="true"
-                android:text=""
                 android:textColor="@color/black_333333"
-                android:textSize="15sp"/>
+                android:textSize="15sp" />
         </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
 

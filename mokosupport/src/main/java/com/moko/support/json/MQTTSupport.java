@@ -466,8 +466,7 @@ public class MQTTSupport {
     }
 
     public void publish(String topic, String message, int msgId, int qos) throws MqttException {
-        if (!isConnected())
-            return;
+        if (!isConnected()) return;
         MqttMessage messageInfo = new MqttMessage();
         messageInfo.setPayload(message.getBytes());
         messageInfo.setQos(qos);

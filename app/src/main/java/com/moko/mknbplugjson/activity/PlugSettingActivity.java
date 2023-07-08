@@ -213,8 +213,7 @@ public class PlugSettingActivity extends BaseActivity<ActivityPlugSettingBinding
                     event.setName(name);
                     EventBus.getDefault().post(event);
                     dialog12.dismiss();
-                })
-                .create();
+                }).create();
         dialog.show();
         etDeviceName.postDelayed(() -> showKeyboard(etDeviceName), 300);
     }

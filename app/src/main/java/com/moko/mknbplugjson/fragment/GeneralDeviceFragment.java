@@ -10,11 +10,8 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
-import com.moko.mknbplugjson.R;
 import com.moko.mknbplugjson.databinding.FragmentGeneralDeviceBinding;
 import com.moko.mknbplugjson.utils.ToastUtils;
-
-import butterknife.ButterKnife;
 
 public class GeneralDeviceFragment extends Fragment {
     private static final String TAG = GeneralDeviceFragment.class.getSimpleName();
@@ -39,20 +36,17 @@ public class GeneralDeviceFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         Log.i(TAG, "onCreateView: ");
-        mBind = FragmentGeneralDeviceBinding.inflate(inflater,container,false);
-        
-        View view = inflater.inflate(R.layout.fragment_general_device, container, false);
-        ButterKnife.bind(this, view);
+        mBind = FragmentGeneralDeviceBinding.inflate(inflater, container, false);
         mBind.cbCleanSession.setChecked(cleanSession);
         if (qos == 0) {
             mBind.rbQos1.setChecked(true);
         } else if (qos == 1) {
-            mBind. rbQos2.setChecked(true);
+            mBind.rbQos2.setChecked(true);
         } else if (qos == 2) {
-            mBind. rbQos3.setChecked(true);
+            mBind.rbQos3.setChecked(true);
         }
-        mBind. etKeepAlive.setText(String.valueOf(keepAlive));
-        return view;
+        mBind.etKeepAlive.setText(String.valueOf(keepAlive));
+        return mBind.getRoot();
     }
 
     @Override
@@ -81,9 +75,9 @@ public class GeneralDeviceFragment extends Fragment {
     public void setQos(int qos) {
         this.qos = qos;
         if (qos == 0) {
-            mBind. rbQos1.setChecked(true);
+            mBind.rbQos1.setChecked(true);
         } else if (qos == 1) {
-            mBind. rbQos2.setChecked(true);
+            mBind.rbQos2.setChecked(true);
         } else if (qos == 2) {
             mBind.rbQos3.setChecked(true);
         }

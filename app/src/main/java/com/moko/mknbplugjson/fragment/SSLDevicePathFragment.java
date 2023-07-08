@@ -86,6 +86,38 @@ public class SSLDevicePathFragment extends Fragment {
         super.onDestroy();
     }
 
+    public void setConnectMode(int connectMode) {
+        this.connectMode = connectMode;
+        mBind.clCertificate.setVisibility(connectMode > 0 ? View.VISIBLE : View.GONE);
+        mBind.cbSsl.setChecked(connectMode > 0);
+        if (connectMode > 0) {
+            selected = connectMode - 1;
+            mBind.tvCertification.setText(values.get(selected));
+            if (selected == 0) {
+                mBind.llClientKey.setVisibility(View.GONE);
+                mBind.llClientCert.setVisibility(View.GONE);
+            } else if (selected == 1) {
+                mBind.llClientKey.setVisibility(View.VISIBLE);
+                mBind.llClientCert.setVisibility(View.VISIBLE);
+            }
+        }
+    }
+
+    public void setCAPath(String caPath) {
+        mBind.etCaPath.setText(caPath);
+        mBind.etCaPath.setSelection(mBind.etCaPath.getText().length());
+    }
+
+    public void setClientKeyPath(String clientKeyPath) {
+        mBind.etClientKeyPath.setText(clientKeyPath);
+        mBind.etClientKeyPath.setSelection(mBind.etClientKeyPath.getText().length());
+    }
+
+    public void setClientCertPath(String clientCertPath) {
+        mBind.etClientCertPath.setText(clientCertPath);
+        mBind.etClientCertPath.setSelection(mBind.etClientCertPath.getText().length());
+    }
+
     public void selectCertificate() {
         BottomDialog dialog = new BottomDialog();
         dialog.setDatas(values, selected);
@@ -105,26 +137,9 @@ public class SSLDevicePathFragment extends Fragment {
     }
 
     public boolean isValid() {
-        final String host = mBind.etMqttHost.getText().toString();
-        final String port = mBind.etMqttPort.getText().toString();
         final String caFile = mBind.etCaPath.getText().toString();
         final String clientKeyFile = mBind.etClientKeyPath.getText().toString();
         final String clientCertFile = mBind.etClientCertPath.getText().toString();
-        if (connectMode > 0) {
-            if (TextUtils.isEmpty(host)) {
-                ToastUtils.showToast(requireContext(), "Host error");
-                return false;
-            }
-            if (TextUtils.isEmpty(port)) {
-                ToastUtils.showToast(requireContext(), "Port error");
-                return false;
-            }
-            int portInt = Integer.parseInt(port);
-            if (portInt < 1 || portInt > 65535) {
-                ToastUtils.showToast(requireContext(), "Port error");
-                return false;
-            }
-        }
         if (connectMode == 1) {
             if (TextUtils.isEmpty(caFile)) {
                 ToastUtils.showToast(requireContext(), getString(R.string.mqtt_verify_ca));
@@ -149,15 +164,6 @@ public class SSLDevicePathFragment extends Fragment {
 
     public int getConnectMode() {
         return connectMode;
-    }
-
-    public String getSSLHost() {
-        return mBind.etMqttHost.getText().toString();
-    }
-
-    public int getSSLPort() {
-        final String port = mBind.etMqttPort.getText().toString();
-        return Integer.parseInt(port);
     }
 
     public String getCAPath() {

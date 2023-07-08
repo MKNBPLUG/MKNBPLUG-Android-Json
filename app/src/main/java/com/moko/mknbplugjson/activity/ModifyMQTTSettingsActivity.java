@@ -1,23 +1,22 @@
 package com.moko.mknbplugjson.activity;
 
 import android.content.Intent;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.InputFilter;
 import android.text.TextUtils;
 import android.view.View;
-import android.widget.EditText;
-import android.widget.RadioButton;
 import android.widget.RadioGroup;
-import android.widget.TextView;
 
+import androidx.fragment.app.Fragment;
+import androidx.viewpager2.widget.ViewPager2;
+
+import com.elvishew.xlog.XLog;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.moko.mknbplugjson.AppConstants;
 import com.moko.mknbplugjson.R;
-import com.moko.mknbplugjson.R2;
 import com.moko.mknbplugjson.adapter.MQTTFragmentAdapter;
 import com.moko.mknbplugjson.base.BaseActivity;
 import com.moko.mknbplugjson.databinding.ActivityMqttDeviceModifyBinding;
@@ -52,12 +51,6 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-
-import androidx.fragment.app.Fragment;
-import androidx.viewpager2.widget.ViewPager2;
-
-import butterknife.BindView;
-import butterknife.ButterKnife;
 
 public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceModifyBinding> implements RadioGroup.OnCheckedChangeListener {
     public static String TAG = ModifyMQTTSettingsActivity.class.getSimpleName();
@@ -185,20 +178,21 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
             return;
         }
         mMokoDevice.isOnline = true;
-        if (msgCommon.msg_id == MQTTConstants.READ_MSG_ID_WORK_MODE){
+        if (msgCommon.msg_id == MQTTConstants.READ_MSG_ID_WORK_MODE) {
             //读取设备工作模式
             if (mHandler.hasMessages(0)) {
                 dismissLoadingProgressDialog();
                 mHandler.removeMessages(0);
             }
-            if (msgCommon.result_code != 0){
-                ToastUtils.showToast(this,"get work mode fail");
+            if (msgCommon.result_code != 0) {
+                ToastUtils.showToast(this, "get work mode fail");
                 finish();
                 return;
             }
-            Type infoType = new TypeToken<WorkMode>() {}.getType();
+            Type infoType = new TypeToken<WorkMode>() {
+            }.getType();
             WorkMode workMode = new Gson().fromJson(msgCommon.data, infoType);
-            if (workMode.work_mode == 1){
+            if (workMode.work_mode == 1) {
                 //debug mode
                 AlertMessageDialog dialog = new AlertMessageDialog();
                 dialog.setMessage("Device is in debug mode, \nthis function is unvailable!");
@@ -206,10 +200,79 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
                 dialog.setConfirm("OK");
                 dialog.setOnAlertConfirmListener(this::finish);
                 dialog.show(getSupportFragmentManager());
-            }else {
+            } else {
                 //读取设备参数
-
+                getMqttParams();
+                getMqttLwtParams();
+                getMqttApnParams();
+                getNetworkPriority();
             }
+        }
+        if (msgCommon.msg_id == MQTTConstants.READ_MSG_ID_DEVICE_SETTINGS) {
+            //读取mqtt基本参数
+            if (msgCommon.result_code != 0) return;
+            Type infoType = new TypeToken<MQTTSettings>() {
+            }.getType();
+            MQTTSettings params = new Gson().fromJson(msgCommon.data, infoType);
+            mMQTTSettings.host = params.host;
+            mMQTTSettings.port = params.port;
+            mMQTTSettings.client_id = params.client_id;
+            mMQTTSettings.subscribe_topic = params.subscribe_topic;
+            mMQTTSettings.publish_topic = params.publish_topic;
+            mMQTTSettings.clean_session = params.clean_session;
+            mMQTTSettings.qos = params.qos;
+            mMQTTSettings.keepalive = params.keepalive;
+            mMQTTSettings.username = params.username;
+            mMQTTSettings.password = params.password;
+            mMQTTSettings.encryption_type = params.encryption_type;
+            mMQTTSettings.ca_cert_url = params.ca_cert_url;
+            mMQTTSettings.client_cert_url = params.client_cert_url;
+            mMQTTSettings.client_key_url = params.client_key_url;
+            setMqttParams();
+        }
+        if (msgCommon.msg_id == MQTTConstants.READ_MSG_ID_LWT_SETTINGS) {
+            //获取mqtt遗嘱参数
+            if (msgCommon.result_code != 0) return;
+            Type infoType = new TypeToken<LWTSettings>() {
+            }.getType();
+            LWTSettings params = new Gson().fromJson(msgCommon.data, infoType);
+            mLWTSettings.lwt_enable = params.lwt_enable;
+            mLWTSettings.lwt_qos = params.lwt_qos;
+            mLWTSettings.lwt_retain = params.lwt_retain;
+            mLWTSettings.lwt_topic = params.lwt_topic;
+            mLWTSettings.lwt_message = params.lwt_message;
+
+            lwtFragment.setLwtEnable(mLWTSettings.lwt_enable == 1);
+            lwtFragment.setLwtRetain(mLWTSettings.lwt_retain == 1);
+            lwtFragment.setQos(mLWTSettings.lwt_qos);
+            lwtFragment.setTopic(mLWTSettings.lwt_topic);
+            lwtFragment.setPayload(mLWTSettings.lwt_message);
+        }
+        if (msgCommon.msg_id == MQTTConstants.READ_MSG_ID_APN_SETTINGS) {
+            //获取apn参数
+            if (msgCommon.result_code != 0) return;
+            Type infoType = new TypeToken<APNSettings>() {
+            }.getType();
+            APNSettings params = new Gson().fromJson(msgCommon.data, infoType);
+            mAPNSettings.apn = params.apn;
+            mAPNSettings.apn_username = params.apn_username;
+            mAPNSettings.apn_password = params.apn_password;
+            //apn信息
+            mBind.etApn.setText(mAPNSettings.apn);
+            mBind.etApn.setSelection(mBind.etApn.getText().length());
+            mBind.etApnUsername.setText(mAPNSettings.apn_username);
+            mBind.etApnUsername.setSelection(mBind.etApnUsername.getText().length());
+            mBind.etApnPassword.setText(mAPNSettings.apn_password);
+            mBind.etApnPassword.setSelection(mBind.etApnPassword.getText().length());
+        }
+        if (msgCommon.msg_id == MQTTConstants.READ_MSG_ID_NETWORK_PRIORITY) {
+            //网络制式
+            if (msgCommon.result_code != 0) return;
+            Type infoType = new TypeToken<NetworkSettings>() {
+            }.getType();
+            NetworkSettings params = new Gson().fromJson(msgCommon.data, infoType);
+            mSelectedNetworkPriority = params.network_priority;
+            mBind.tvNetworkPriority.setText(mNetworkPriority.get(mSelectedNetworkPriority));
         }
         if (msgCommon.msg_id == MQTTConstants.READ_MSG_ID_DEVICE_STATUS) {
             if (mHandler.hasMessages(0)) {
@@ -329,22 +392,111 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
             // 跳转首页，刷新数据
             Intent intent = new Intent(this, JSONMainActivity.class);
             intent.putExtra(AppConstants.EXTRA_KEY_FROM_ACTIVITY, TAG);
-            intent.putExtra(AppConstants.EXTRA_KEY_DEVICE_ID, mMokoDevice.deviceId);
+            intent.putExtra(AppConstants.EXTRA_KEY_DEVICE_MAC, mMokoDevice.mac);
             startActivity(intent);
         }
     }
 
-//    @Subscribe(threadMode = ThreadMode.MAIN)
-//    public void onDeviceOnlineEvent(DeviceOnlineEvent event) {
-//        String deviceId = event.getDeviceId();
-//        if (!mMokoDevice.deviceId.equals(deviceId)) {
-//            return;
-//        }
-//        boolean online = event.isOnline();
-//        if (!online) {
-//            finish();
-//        }
-//    }
+    //设置页面参数
+    private void setMqttParams() {
+        mBind.etMqttHost.setText(mMQTTSettings.host);
+        mBind.etMqttHost.setSelection(mBind.etMqttHost.getText().length());
+        mBind.etMqttPort.setText(String.valueOf(mMQTTSettings.port));
+        mBind.etMqttPort.setSelection(mBind.etMqttPort.getText().length());
+        mBind.etMqttClientId.setText(mMQTTSettings.client_id);
+        mBind.etMqttClientId.setSelection(mBind.etMqttClientId.getText().length());
+        mBind.etMqttSubscribeTopic.setText(mMQTTSettings.subscribe_topic);
+        mBind.etMqttSubscribeTopic.setSelection(mBind.etMqttSubscribeTopic.getText().length());
+        mBind.etMqttPublishTopic.setText(mMQTTSettings.publish_topic);
+        mBind.etMqttPublishTopic.setSelection(mBind.etMqttPublishTopic.getText().length());
+        generalFragment.setCleanSession(mMQTTSettings.clean_session == 1);
+        generalFragment.setQos(mMQTTSettings.qos);
+        generalFragment.setKeepAlive(mMQTTSettings.keepalive);
+        userFragment.setUserName(mMQTTSettings.username);
+        userFragment.setPassword(mMQTTSettings.password);
+        sslFragment.setConnectMode(mMQTTSettings.encryption_type);
+        sslFragment.setCAPath(mMQTTSettings.ca_cert_url);
+        sslFragment.setClientCertPath(mMQTTSettings.client_cert_url);
+        sslFragment.setClientKeyPath(mMQTTSettings.client_key_url);
+    }
+
+    /**
+     * 读取页面默认参数
+     */
+    private void getMqttParams() {
+        XLog.i("读取mqtt参数");
+        String appTopic;
+        if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
+            appTopic = mMokoDevice.topicSubscribe;
+        } else {
+            appTopic = appMqttConfig.topicPublish;
+        }
+        DeviceParams deviceParams = new DeviceParams();
+        deviceParams.mac = mMokoDevice.mac;
+        String message = MQTTMessageAssembler.assembleReadSettingsForDevice(deviceParams);
+        try {
+            MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.READ_MSG_ID_DEVICE_SETTINGS, appMqttConfig.qos);
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 获取mqtt遗嘱参数
+     */
+    private void getMqttLwtParams() {
+        XLog.i("读取mqtt遗嘱参数");
+        String appTopic;
+        if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
+            appTopic = mMokoDevice.topicSubscribe;
+        } else {
+            appTopic = appMqttConfig.topicPublish;
+        }
+        DeviceParams deviceParams = new DeviceParams();
+        deviceParams.mac = mMokoDevice.mac;
+        String message = MQTTMessageAssembler.assembleReadSettingsForLWT(deviceParams);
+        try {
+            MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.READ_MSG_ID_LWT_SETTINGS, appMqttConfig.qos);
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void getMqttApnParams() {
+        XLog.i("读取mqtt apn参数");
+        String appTopic;
+        if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
+            appTopic = mMokoDevice.topicSubscribe;
+        } else {
+            appTopic = appMqttConfig.topicPublish;
+        }
+        DeviceParams deviceParams = new DeviceParams();
+        deviceParams.mac = mMokoDevice.mac;
+        String message = MQTTMessageAssembler.assembleReadSettingsForApn(deviceParams);
+        try {
+            MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.READ_MSG_ID_APN_SETTINGS, appMqttConfig.qos);
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void getNetworkPriority() {
+        XLog.i("读取网络制式配置参数");
+        String appTopic;
+        if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
+            appTopic = mMokoDevice.topicSubscribe;
+        } else {
+            appTopic = appMqttConfig.topicPublish;
+        }
+        DeviceParams deviceParams = new DeviceParams();
+        deviceParams.mac = mMokoDevice.mac;
+        String message = MQTTMessageAssembler.assembleReadNetworkPriority(deviceParams);
+        try {
+            MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.READ_MSG_ID_NETWORK_PRIORITY, appMqttConfig.qos);
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
+    }
 
     public void onBack(View view) {
         finish();
@@ -362,32 +514,30 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
         }
     }
 
-
     public void onSelectCertificate(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         sslFragment.selectCertificate();
     }
 
     private void saveParams() {
-        final String host = etMqttHost.getText().toString().trim();
-        final String port = etMqttPort.getText().toString().trim();
-        final String clientId = etMqttClientId.getText().toString().trim();
-        String topicSubscribe = etMqttSubscribeTopic.getText().toString().trim();
-        String topicPublish = etMqttPublishTopic.getText().toString().trim();
-        String apn = etApn.getText().toString().trim();
-        String apnUsername = etApnUsername.getText().toString().trim();
-        String apnPassword = etApnPassword.getText().toString().trim();
+        final String host = mBind.etMqttHost.getText().toString().trim();
+        final String port = mBind.etMqttPort.getText().toString().trim();
+        final String clientId = mBind.etMqttClientId.getText().toString().trim();
+        String topicSubscribe = mBind.etMqttSubscribeTopic.getText().toString().trim();
+        String topicPublish = mBind.etMqttPublishTopic.getText().toString().trim();
+        String apn = mBind.etApn.getText().toString().trim();
+        String apnUsername = mBind.etApnUsername.getText().toString().trim();
+        String apnPassword = mBind.etApnPassword.getText().toString().trim();
 
         mMQTTSettings.host = host;
         mMQTTSettings.port = Integer.parseInt(port);
         mMQTTSettings.client_id = clientId;
-        if ("{device_name}/{device_id}/app_to_device".equals(topicSubscribe)) {
-            topicSubscribe = String.format("%s/%s/app_to_device", mMokoDevice.name, mMokoDevice.deviceId);
-        }
-        if ("{device_name}/{device_id}/device_to_app".equals(topicPublish)) {
-            topicPublish = String.format("%s/%s/device_to_app", mMokoDevice.name, mMokoDevice.deviceId);
-        }
+//        if ("{device_name}/{device_id}/app_to_device".equals(topicSubscribe)) {
+//            topicSubscribe = String.format("%s/%s/app_to_device", mMokoDevice.name, mMokoDevice.deviceId);
+//        }
+//        if ("{device_name}/{device_id}/device_to_app".equals(topicPublish)) {
+//            topicPublish = String.format("%s/%s/device_to_app", mMokoDevice.name, mMokoDevice.deviceId);
+//        }
         mMQTTSettings.subscribe_topic = topicSubscribe;
         mMQTTSettings.publish_topic = topicPublish;
 
@@ -397,26 +547,21 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
         mMQTTSettings.username = userFragment.getUsername();
         mMQTTSettings.password = userFragment.getPassword();
         mMQTTSettings.encryption_type = sslFragment.getConnectMode();
-        if (mMQTTSettings.encryption_type > 0) {
-            mMQTTSettings.cert_host = sslFragment.getSSLHost();
-            mMQTTSettings.cert_port = sslFragment.getSSLPort();
-        }
         if (mMQTTSettings.encryption_type == 1) {
-            mMQTTSettings.ca_cert_path = sslFragment.getCAPath();
+            mMQTTSettings.ca_cert_url = sslFragment.getCAPath();
         }
         if (mMQTTSettings.encryption_type == 2) {
-            mMQTTSettings.ca_cert_path = sslFragment.getCAPath();
-            mMQTTSettings.client_cert_path = sslFragment.getClientCerPath();
-            mMQTTSettings.client_key_path = sslFragment.getClientKeyPath();
+            mMQTTSettings.ca_cert_url = sslFragment.getCAPath();
+            mMQTTSettings.client_cert_url = sslFragment.getClientCerPath();
+            mMQTTSettings.client_key_url = sslFragment.getClientKeyPath();
         }
         mLWTSettings.lwt_enable = lwtFragment.getLwtEnable() ? 1 : 0;
         mLWTSettings.lwt_retain = lwtFragment.getLwtRetain() ? 1 : 0;
         mLWTSettings.lwt_qos = lwtFragment.getQos();
-        String lwtTopic = lwtFragment.getTopic();
-        if ("{device_name}/{device_id}/device_to_app".equals(lwtTopic)) {
-            lwtTopic = String.format("%s/%s/device_to_app", mMokoDevice.name, mMokoDevice.deviceId);
-        }
-        mLWTSettings.lwt_topic = lwtTopic;
+        //        if ("{device_name}/{device_id}/device_to_app".equals(lwtTopic)) {
+//            lwtTopic = String.format("%s/%s/device_to_app", mMokoDevice.name, mMokoDevice.deviceId);
+//        }
+        mLWTSettings.lwt_topic = lwtFragment.getTopic();
         mLWTSettings.lwt_message = lwtFragment.getPayload();
         mAPNSettings.apn = apn;
         mAPNSettings.apn_username = apnUsername;
@@ -424,7 +569,6 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
         mNetworkSettings.network_priority = mSelectedNetworkPriority;
 
         DeviceParams deviceParams = new DeviceParams();
-        deviceParams.device_id = mMokoDevice.deviceId;
         deviceParams.mac = mMokoDevice.mac;
         String appTopic;
         if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
@@ -440,7 +584,7 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
         }
     }
 
-    private void readDeviceStatus(){
+    private void readDeviceStatus() {
         DeviceParams deviceParams = new DeviceParams();
         deviceParams.mac = mMokoDevice.mac;
         String appTopic;
@@ -457,10 +601,8 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
         }
     }
 
-
     private void setMQTTSettings() {
         DeviceParams deviceParams = new DeviceParams();
-        deviceParams.device_id = mMokoDevice.deviceId;
         deviceParams.mac = mMokoDevice.mac;
         String appTopic;
         if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
@@ -478,7 +620,6 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
 
     private void setLWTSettings() {
         DeviceParams deviceParams = new DeviceParams();
-        deviceParams.device_id = mMokoDevice.deviceId;
         deviceParams.mac = mMokoDevice.mac;
         String appTopic;
         if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
@@ -496,7 +637,6 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
 
     private void setAPNSettings() {
         DeviceParams deviceParams = new DeviceParams();
-        deviceParams.device_id = mMokoDevice.deviceId;
         deviceParams.mac = mMokoDevice.mac;
         String appTopic;
         if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
@@ -514,7 +654,6 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
 
     private void setNetworkSettings() {
         DeviceParams deviceParams = new DeviceParams();
-        deviceParams.device_id = mMokoDevice.deviceId;
         deviceParams.mac = mMokoDevice.mac;
         String appTopic;
         if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
@@ -532,7 +671,6 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
 
     private void setMQTTConfigFinish() {
         DeviceParams deviceParams = new DeviceParams();
-        deviceParams.device_id = mMokoDevice.deviceId;
         deviceParams.mac = mMokoDevice.mac;
         String appTopic;
         if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
@@ -556,7 +694,6 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
             appTopic = appMqttConfig.topicPublish;
         }
         DeviceParams deviceParams = new DeviceParams();
-        deviceParams.device_id = mMokoDevice.deviceId;
         deviceParams.mac = mMokoDevice.mac;
         String message = MQTTMessageAssembler.assembleWriteDeviceReconnect(deviceParams);
         try {
@@ -566,13 +703,12 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
         }
     }
 
-
     private boolean isValid() {
-        String host = etMqttHost.getText().toString().trim();
-        String port = etMqttPort.getText().toString().trim();
-        String clientId = etMqttClientId.getText().toString().trim();
-        String topicSubscribe = etMqttSubscribeTopic.getText().toString().trim();
-        String topicPublish = etMqttPublishTopic.getText().toString().trim();
+        String host = mBind.etMqttHost.getText().toString().trim();
+        String port = mBind.etMqttPort.getText().toString().trim();
+        String clientId = mBind.etMqttClientId.getText().toString().trim();
+        String topicSubscribe = mBind.etMqttSubscribeTopic.getText().toString().trim();
+        String topicPublish = mBind.etMqttPublishTopic.getText().toString().trim();
         if (TextUtils.isEmpty(host)) {
             ToastUtils.showToast(this, getString(R.string.mqtt_verify_host));
             return false;
@@ -601,31 +737,28 @@ public class ModifyMQTTSettingsActivity extends BaseActivity<ActivityMqttDeviceM
             ToastUtils.showToast(this, "Subscribed and published topic can't be same !");
             return false;
         }
-        if (!generalFragment.isValid() || !sslFragment.isValid() || !lwtFragment.isValid())
-            return false;
-        return true;
+        return generalFragment.isValid() && sslFragment.isValid() && lwtFragment.isValid();
     }
 
     @Override
     public void onCheckedChanged(RadioGroup radioGroup, int checkedId) {
         if (checkedId == R.id.rb_general)
-            vpMqtt.setCurrentItem(0);
+            mBind.vpMqtt.setCurrentItem(0);
         else if (checkedId == R.id.rb_user)
-            vpMqtt.setCurrentItem(1);
+            mBind.vpMqtt.setCurrentItem(1);
         else if (checkedId == R.id.rb_ssl)
-            vpMqtt.setCurrentItem(2);
+            mBind.vpMqtt.setCurrentItem(2);
         else if (checkedId == R.id.rb_lwt)
-            vpMqtt.setCurrentItem(3);
+            mBind.vpMqtt.setCurrentItem(3);
     }
 
     public void selectNetworkPriority(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         BottomDialog dialog = new BottomDialog();
         dialog.setDatas(mNetworkPriority, mSelectedNetworkPriority);
         dialog.setListener(value -> {
             mSelectedNetworkPriority = value;
-            tvNetworkPriority.setText(mNetworkPriority.get(value));
+            mBind.tvNetworkPriority.setText(mNetworkPriority.get(value));
         });
         dialog.show(getSupportFragmentManager());
     }

@@ -62,9 +62,6 @@ public class MQTTConstants {
     public static final int READ_MSG_ID_POWER_PROTECT = 2016;
     public static final int READ_MSG_ID_CONNECTION_TIMEOUT = 2017;
     public static final int READ_MSG_ID_BUTTON_CONTROL_ENABLE = 2018;
-    public static final int READ_MSG_ID_DEVICE_SETTINGS = 2097;
-    public static final int READ_MSG_ID_LWT_SETTINGS = 2098;
-    public static final int READ_MSG_ID_APN_SETTINGS = 2099;
 
     public static final int READ_MSG_ID_SWITCH_INFO = 2038;
     public static final int READ_MSG_ID_DEVICE_STATUS = 2045;
@@ -76,6 +73,12 @@ public class MQTTConstants {
     public static final int READ_MSG_ID_DEVICE_STANDARD = 2051;
     public static final int READ_MSG_ID_SYSTEM_TIME = 2052;
     public static final int READ_MSG_ID_WORK_MODE = 2053;
+    public static final int READ_MSG_ID_DEVICE_SETTINGS = 2097;
+    public static final int READ_MSG_ID_LWT_SETTINGS = 2098;
+    public static final int READ_MSG_ID_APN_SETTINGS = 2099;
+    public static final int READ_MSG_ID_NETWORK_PRIORITY = 2100;
+
+
     // NOTIFY
     public static final int NOTIFY_MSG_ID_SWITCH_STATE = 3065;
     public static final int NOTIFY_MSG_ID_COUNTDOWN_INFO = 3066;
