@@ -41,12 +41,11 @@ public enum ParamsKeyEnum implements Serializable {
     KEY_DEBUG_EXIT(0x61),
     ;
 
-    private int paramsKey;
+    private final int paramsKey;
 
     ParamsKeyEnum(int paramsKey) {
         this.paramsKey = paramsKey;
     }
-
 
     public int getParamsKey() {
         return paramsKey;

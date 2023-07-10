@@ -22,6 +22,7 @@ import com.moko.support.json.MQTTMessageAssembler;
 import com.moko.support.json.MQTTSupport;
 import com.moko.support.json.entity.DeviceParams;
 import com.moko.support.json.entity.DeviceStandard;
+import com.moko.support.json.entity.InputPowerStatus;
 import com.moko.support.json.entity.MQTTConfig;
 import com.moko.support.json.entity.MsgCommon;
 import com.moko.support.json.entity.NetConnectedStatus;
@@ -68,7 +69,7 @@ public class IndicatorSettingActivity extends BaseActivity<ActivityIndicatorSett
         getServerConnectingLedStatus();
         //电源输出指示灯开关状态
         getPowerOutputStatus();
-        getPowerProtectStatus();
+        getPowerInputStatus();
         getDeviceType();
     }
 
@@ -131,7 +132,7 @@ public class IndicatorSettingActivity extends BaseActivity<ActivityIndicatorSett
             mBind.ivPowerOutput.setImageResource(mPowerStatus ? R.drawable.checkbox_open : R.drawable.checkbox_close);
             mBind.layoutIndicatorColor.setVisibility(mPowerStatus ? View.VISIBLE : View.GONE);
         }
-        if (msgCommon.msg_id == MQTTConstants.READ_MSG_ID_POWER_PROTECT) {
+        if (msgCommon.msg_id == MQTTConstants.READ_MSG_ID_POWER_INPUT_STATUS) {
             if (mHandler.hasMessages(0)) {
                 dismissLoadingProgressDialog();
                 mHandler.removeMessages(0);
@@ -158,7 +159,7 @@ public class IndicatorSettingActivity extends BaseActivity<ActivityIndicatorSett
         if (msgCommon.msg_id == MQTTConstants.CONFIG_MSG_ID_NET_CONNECTING_STATUS
                 || msgCommon.msg_id == MQTTConstants.CONFIG_MSG_ID_NET_CONNECTED_STATUS
                 || msgCommon.msg_id == MQTTConstants.CONFIG_MSG_ID_POWER_SWITCH_STATUS
-                || msgCommon.msg_id == MQTTConstants.CONFIG_MSG_ID_POWER_PROTECT) {
+                || msgCommon.msg_id == MQTTConstants.READ_MSG_ID_POWER_INPUT_STATUS) {
             if (mHandler.hasMessages(0)) {
                 dismissLoadingProgressDialog();
                 mHandler.removeMessages(0);
@@ -176,7 +177,7 @@ public class IndicatorSettingActivity extends BaseActivity<ActivityIndicatorSett
                 mBind.ivPowerOutput.setImageResource(mPowerStatus ? R.drawable.checkbox_open : R.drawable.checkbox_close);
                 mBind.layoutIndicatorColor.setVisibility(mPowerStatus ? View.VISIBLE : View.GONE);
             }
-            if (msgCommon.msg_id == MQTTConstants.CONFIG_MSG_ID_POWER_PROTECT)
+            if (msgCommon.msg_id == MQTTConstants.READ_MSG_ID_POWER_INPUT_STATUS)
                 mBind.ivPowerInputStatus.setImageResource(mPowerProtectStatus ? R.drawable.checkbox_open : R.drawable.checkbox_close);
         }
         if (msgCommon.msg_id == MQTTConstants.NOTIFY_MSG_ID_OVERLOAD_OCCUR
@@ -245,7 +246,7 @@ public class IndicatorSettingActivity extends BaseActivity<ActivityIndicatorSett
         }
     }
 
-    private void getPowerProtectStatus() {
+    private void getPowerInputStatus() {
         String appTopic;
         if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
             appTopic = mMokoDevice.topicSubscribe;
@@ -254,9 +255,9 @@ public class IndicatorSettingActivity extends BaseActivity<ActivityIndicatorSett
         }
         DeviceParams deviceParams = new DeviceParams();
         deviceParams.mac = mMokoDevice.mac;
-        String message = MQTTMessageAssembler.assembleReadPowerProtectStatus(deviceParams);
+        String message = MQTTMessageAssembler.assembleReadInputPowerStatus(deviceParams);
         try {
-            MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.READ_MSG_ID_POWER_PROTECT, appMqttConfig.qos);
+            MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.READ_MSG_ID_POWER_INPUT_STATUS, appMqttConfig.qos);
         } catch (MqttException e) {
             e.printStackTrace();
         }
@@ -345,11 +346,11 @@ public class IndicatorSettingActivity extends BaseActivity<ActivityIndicatorSett
         }
         DeviceParams deviceParams = new DeviceParams();
         deviceParams.mac = mMokoDevice.mac;
-        PowerProtectStatus powerProtectStatus = new PowerProtectStatus();
-        powerProtectStatus.power_protect = mPowerProtectStatus ? 1 : 0;
-        String message = MQTTMessageAssembler.assembleWritePowerProtectStatus(deviceParams, powerProtectStatus);
+        InputPowerStatus powerProtectStatus = new InputPowerStatus();
+        powerProtectStatus.input_power_switch = mPowerProtectStatus ? 1 : 0;
+        String message = MQTTMessageAssembler.assembleWriteInputPowerStatus(deviceParams, powerProtectStatus);
         try {
-            MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.CONFIG_MSG_ID_POWER_PROTECT, appMqttConfig.qos);
+            MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.CONFIG_MSG_ID_POWER_INPUT_STATUS, appMqttConfig.qos);
         } catch (MqttException e) {
             e.printStackTrace();
         }

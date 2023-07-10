@@ -40,13 +40,13 @@ public class AboutActivity extends BaseActivity<ActivityAboutBinding> {
         finish();
     }
 
-    @Subscribe(threadMode = ThreadMode.MAIN)
-    public void onMQTTConnectionCompleteEvent(MQTTConnectionCompleteEvent event) {
+    @Override
+    protected boolean registerEventBus() {
+        return false;
     }
 
     public void onFeedbackLog(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         File trackerLog = new File(BaseApplication.PATH_LOGCAT + File.separator + "MKNBPLUGJSON.txt");
         File trackerLogBak = new File(BaseApplication.PATH_LOGCAT + File.separator + "MKNBPLUGJSON.txt.bak");
         File trackerCrashLog = new File(BaseApplication.PATH_LOGCAT + File.separator + "crash_log.txt");

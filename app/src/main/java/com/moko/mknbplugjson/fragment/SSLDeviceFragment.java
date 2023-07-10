@@ -104,6 +104,7 @@ public class SSLDeviceFragment extends Fragment {
 
     public void setConnectMode(int connectMode) {
         this.connectMode = connectMode;
+        if (null == mBind) return;
         mBind.clCertificate.setVisibility(connectMode > 0 ? View.VISIBLE : View.GONE);
         mBind.cbSsl.setChecked(connectMode > 0);
         if (connectMode > 0) {
@@ -121,17 +122,17 @@ public class SSLDeviceFragment extends Fragment {
 
     public void setCAPath(String caPath) {
         this.caPath = caPath;
-        mBind.tvCaFile.setText(caPath);
+        if (null != mBind)mBind.tvCaFile.setText(caPath);
     }
 
     public void setClientKeyPath(String clientKeyPath) {
         this.clientKeyPath = clientKeyPath;
-        mBind.tvClientKeyFile.setText(clientKeyPath);
+       if (null != mBind)mBind.tvClientKeyFile.setText(clientKeyPath);
     }
 
     public void setClientCertPath(String clientCertPath) {
         this.clientCertPath = clientCertPath;
-        mBind.tvClientCertFile.setText(clientCertPath);
+        if (null != mBind)mBind.tvClientCertFile.setText(clientCertPath);
     }
 
     public void selectCertificate() {

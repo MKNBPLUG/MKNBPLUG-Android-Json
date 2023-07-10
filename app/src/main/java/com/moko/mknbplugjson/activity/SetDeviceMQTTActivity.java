@@ -104,7 +104,7 @@ public class SetDeviceMQTTActivity extends BaseActivity<ActivityMqttDeviceBindin
         String MQTTConfigStr = SPUtils.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
         mqttAppConfig = new Gson().fromJson(MQTTConfigStr, MQTTConfig.class);
         mSelectedDeviceName = getIntent().getStringExtra(AppConstants.EXTRA_KEY_SELECTED_DEVICE_NAME);
-        mSelectedDeviceMac = getIntent().getStringExtra(AppConstants.EXTRA_KEY_SELECTED_DEVICE_MAC);
+        mSelectedDeviceMac = getIntent().getStringExtra(AppConstants.EXTRA_KEY_SELECTED_DEVICE_MAC).replace(":", "");
         mSelectedDeviceType = getIntent().getIntExtra(AppConstants.EXTRA_KEY_SELECTED_DEVICE_TYPE, 0);
         mqttDeviceConfig = new MQTTConfig();
         InputFilter filter = (source, start, end, dest, dstart, dend) -> {
@@ -272,20 +272,6 @@ public class SetDeviceMQTTActivity extends BaseActivity<ActivityMqttDeviceBindin
                     if (flag == 0x00) {
                         // read
                         switch (configKeyEnum) {
-                            case KEY_DEVICE_NAME:
-                                if (length > 0) {
-                                    byte[] data = Arrays.copyOfRange(value, 4, 4 + length);
-                                    mSelectedDeviceName = new String(data);
-                                }
-                                break;
-                            case KEY_DEVICE_MAC:
-                                if (length > 0) {
-                                    byte[] data = Arrays.copyOfRange(value, 4, 4 + length);
-                                    String mac = MokoUtils.bytesToHexString(data);
-                                    mSelectedDeviceMac = mac.toUpperCase();
-                                }
-                                break;
-
                             case KEY_MQTT_HOST:
                                 if (length > 0) {
                                     String host = new String(Arrays.copyOfRange(value, 4, value.length));
@@ -576,7 +562,7 @@ public class SetDeviceMQTTActivity extends BaseActivity<ActivityMqttDeviceBindin
         orderTasks.add(OrderTaskAssembler.getMqttNetworkPriority());
         orderTasks.add(OrderTaskAssembler.getMqttNtpHost());
         orderTasks.add(OrderTaskAssembler.getMqttTimezone());
-        orderTasks.add(OrderTaskAssembler.getMqttDebugMode());
+//        orderTasks.add(OrderTaskAssembler.getMqttDebugMode());
         MokoSupport.getInstance().sendOrder(orderTasks.toArray(new OrderTask[]{}));
     }
 
@@ -687,8 +673,6 @@ public class SetDeviceMQTTActivity extends BaseActivity<ActivityMqttDeviceBindin
         try {
             showLoadingProgressDialog();
             ArrayList<OrderTask> orderTasks = new ArrayList<>();
-            orderTasks.add(OrderTaskAssembler.getDeviceMac());
-            orderTasks.add(OrderTaskAssembler.getDeviceName());
             orderTasks.add(OrderTaskAssembler.setMqttHost(mqttDeviceConfig.host));
             orderTasks.add(OrderTaskAssembler.setMqttPort(Integer.parseInt(mqttDeviceConfig.port)));
             orderTasks.add(OrderTaskAssembler.setMqttClientId(mqttDeviceConfig.clientId));

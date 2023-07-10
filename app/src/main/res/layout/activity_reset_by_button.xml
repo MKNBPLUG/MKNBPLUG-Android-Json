@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/grey_f2f2f2"
+    android:orientation="vertical">
+
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="55dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:background="@color/blue_0188cc"
+            android:gravity="center"
+            android:text="Reset by Button"
+            android:textColor="@color/white_ffffff"
+            android:textSize="17sp" />
+
+        <ImageView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:onClick="onBack"
+            android:padding="16dp"
+            android:src="@drawable/back" />
+    </RelativeLayout>
+
+    <RadioGroup
+        android:id="@+id/radio"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <RadioButton
+            android:id="@+id/btnMinute"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="12dp"
+            android:checked="true"
+            android:gravity="center_vertical"
+            android:layoutDirection="rtl"
+            android:text="Press in 1 minute after powered"
+            android:textColor="@color/black_333333"
+            android:textDirection="ltr"
+            android:textSize="16sp" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/grey_ebebeb" />
+
+        <RadioButton
+            android:id="@+id/btnAnyTime"
+            android:layout_width="match_parent"
+            android:layout_height="50dp"
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="12dp"
+            android:gravity="center_vertical"
+            android:layoutDirection="rtl"
+            android:text="Press any time"
+            android:textColor="@color/black_333333"
+            android:textDirection="ltr"
+            android:textSize="16sp" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/grey_ebebeb" />
+    </RadioGroup>
+</LinearLayout>

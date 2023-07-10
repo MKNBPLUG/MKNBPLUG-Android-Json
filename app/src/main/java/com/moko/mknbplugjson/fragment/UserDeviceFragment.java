@@ -69,12 +69,14 @@ public class UserDeviceFragment extends Fragment {
 
     public void setUserName(String username) {
         this.username = username;
+        if (null == mBind) return;
         mBind.etMqttUsername.setText(username);
         mBind.etMqttUsername.setSelection(mBind.etMqttUsername.getText().length());
     }
 
     public void setPassword(String password) {
         this.password = password;
+        if (null == mBind) return;
         mBind.etMqttPassword.setText(password);
         mBind.etMqttPassword.setSelection(mBind.etMqttPassword.getText().length());
     }

@@ -99,6 +99,7 @@ public class LWTFragment extends Fragment {
 
     public void setQos(int qos) {
         this.qos = qos;
+        if (null == mBind) return;
         if (qos == 0) {
             mBind.rbQos1.setChecked(true);
         } else if (qos == 1) {
@@ -124,7 +125,7 @@ public class LWTFragment extends Fragment {
 
     public void setLwtEnable(boolean lwtEnable) {
         this.lwtEnable = lwtEnable;
-        mBind.cbLwt.setChecked(lwtEnable);
+        if (null != mBind) mBind.cbLwt.setChecked(lwtEnable);
     }
 
     public boolean getLwtRetain() {
@@ -133,11 +134,12 @@ public class LWTFragment extends Fragment {
 
     public void setLwtRetain(boolean lwtRetain) {
         this.lwtRetain = lwtRetain;
-        mBind.cbLwtRetain.setChecked(lwtRetain);
+        if (null != mBind) mBind.cbLwtRetain.setChecked(lwtRetain);
     }
 
     public void setTopic(String topic) {
         this.topic = topic;
+        if (null == mBind) return;
         mBind.etLwtTopic.setText(topic);
         mBind.etLwtTopic.setSelection(mBind.etLwtTopic.getText().length());
     }
@@ -148,6 +150,7 @@ public class LWTFragment extends Fragment {
 
     public void setPayload(String payload) {
         this.payload = payload;
+        if (null == mBind) return;
         mBind.etLwtPayload.setText(payload);
         mBind.etLwtPayload.setSelection(mBind.etLwtPayload.getText().length());
     }

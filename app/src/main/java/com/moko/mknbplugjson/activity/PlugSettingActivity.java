@@ -361,7 +361,14 @@ public class PlugSettingActivity extends BaseActivity<ActivityPlugSettingBinding
     }
 
     public void onResetByButtonClick(View view) {
-
+        if (isWindowLocked()) return;
+        if (!MQTTSupport.getInstance().isConnected()) {
+            ToastUtils.showToast(this, R.string.network_error);
+            return;
+        }
+        Intent i = new Intent(this, ResetByButtonActivity.class);
+        i.putExtra(AppConstants.EXTRA_KEY_DEVICE, mMokoDevice);
+        startActivity(i);
     }
 
     public void onSystemTimeClick(View view) {

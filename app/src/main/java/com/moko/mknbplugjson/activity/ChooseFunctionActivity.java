@@ -47,6 +47,7 @@ public class ChooseFunctionActivity extends BaseActivity<ActivityChooseFunctionB
         mSelectedDeviceName = getIntent().getStringExtra(AppConstants.EXTRA_KEY_SELECTED_DEVICE_NAME);
         mSelectedDeviceMac = getIntent().getStringExtra(AppConstants.EXTRA_KEY_SELECTED_DEVICE_MAC);
         mSelectedDeviceType = getIntent().getIntExtra(AppConstants.EXTRA_KEY_SELECTED_DEVICE_TYPE, 0);
+        XLog.i(mSelectedDeviceMac);
     }
 
     @Override
@@ -63,10 +64,8 @@ public class ChooseFunctionActivity extends BaseActivity<ActivityChooseFunctionB
         MokoSupport.getInstance().disConnectBle();
     }
 
-
     public void onBack(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         back();
     }
 

@@ -21,7 +21,6 @@ import com.moko.mknbplugjson.databinding.ActivityGuideBinding;
 import com.moko.mknbplugjson.utils.Utils;
 
 public class GuideActivity extends BaseActivity<ActivityGuideBinding> {
-
     @Override
     protected void onCreate() {
         if ((getIntent().getFlags() & Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT) != 0) {
@@ -40,6 +39,11 @@ public class GuideActivity extends BaseActivity<ActivityGuideBinding> {
     @Override
     protected ActivityGuideBinding getViewBinding() {
         return ActivityGuideBinding.inflate(getLayoutInflater());
+    }
+
+    @Override
+    protected boolean registerEventBus() {
+        return false;
     }
 
     private void delayGotoMain() {

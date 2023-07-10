@@ -65,8 +65,7 @@ public class ProtectionSwitchActivity extends BaseActivity<ActivityProtectionSwi
     public void onMQTTMessageArrivedEvent(MQTTMessageArrivedEvent event) {
         // 更新所有设备的网络状态
         final String message = event.getMessage();
-        if (TextUtils.isEmpty(message))
-            return;
+        if (TextUtils.isEmpty(message)) return;
         MsgCommon<JsonObject> msgCommon;
         try {
             Type type = new TypeToken<MsgCommon<JsonObject>>() {

@@ -11,7 +11,6 @@ import androidx.annotation.StringRes;
 
 import com.moko.mknbplugjson.R;
 
-import butterknife.ButterKnife;
 
 public class AlertMessageDialog extends MokoBaseDialog {
     public static final String TAG = AlertMessageDialog.class.getSimpleName();
@@ -47,7 +46,6 @@ public class AlertMessageDialog extends MokoBaseDialog {
             if (null != onAlertConfirmListener) onAlertConfirmListener.onClick();
         });
 
-        ButterKnife.bind(this, v);
         if (titleId > 0) {
             title = getString(titleId);
         }

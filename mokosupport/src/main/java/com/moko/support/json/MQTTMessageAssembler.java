@@ -7,9 +7,11 @@ import com.moko.support.json.entity.ButtonControlEnable;
 import com.moko.support.json.entity.ConnectionTimeout;
 import com.moko.support.json.entity.DeviceParams;
 import com.moko.support.json.entity.DeviceTimeZone;
+import com.moko.support.json.entity.DeviceType;
 import com.moko.support.json.entity.EnergyStorageReport;
 import com.moko.support.json.entity.FirmwareOTA;
 import com.moko.support.json.entity.IndicatorStatus;
+import com.moko.support.json.entity.InputPowerStatus;
 import com.moko.support.json.entity.LWTSettings;
 import com.moko.support.json.entity.LoadStatusNotify;
 import com.moko.support.json.entity.MQTTSettings;
@@ -26,6 +28,7 @@ import com.moko.support.json.entity.PowerProtectStatus;
 import com.moko.support.json.entity.PowerReportSetting;
 import com.moko.support.json.entity.PowerStatus;
 import com.moko.support.json.entity.ReportInterval;
+import com.moko.support.json.entity.ResetByButton;
 import com.moko.support.json.entity.SetCountdown;
 import com.moko.support.json.entity.SwitchState;
 import com.moko.support.json.entity.SystemTime;
@@ -161,8 +164,35 @@ public class MQTTMessageAssembler {
         return message;
     }
 
+    public static String assembleReadDeviceType(DeviceParams deviceParams){
+        MsgReq<DeviceType> msgReq = new MsgReq<>();
+        msgReq.device_info = deviceParams;
+        msgReq.msg_id = MQTTConstants.READ_MSG_ID_DEVICE_TYPE;
+        String message = new Gson().toJson(msgReq);
+        XLog.e("app_to_device--->" + message);
+        return message;
+    }
+
+    public static String assembleReadResetByButton(DeviceParams deviceParams){
+        MsgReq<ResetByButton> msgReq = new MsgReq<>();
+        msgReq.device_info = deviceParams;
+        msgReq.msg_id = MQTTConstants.READ_MSG_ID_RESET_BY_BUTTON;
+        String message = new Gson().toJson(msgReq);
+        XLog.e("app_to_device--->" + message);
+        return message;
+    }
+
+    public static String assembleReadInputPowerStatus(DeviceParams deviceParams){
+        MsgReq<InputPowerStatus> msgReq = new MsgReq<>();
+        msgReq.device_info = deviceParams;
+        msgReq.msg_id = MQTTConstants.READ_MSG_ID_POWER_INPUT_STATUS;
+        String message = new Gson().toJson(msgReq);
+        XLog.e("app_to_device--->" + message);
+        return message;
+    }
+
     public static String assembleWriteButtonControlEnable(DeviceParams deviceParams, ButtonControlEnable data) {
-        MsgReq<ButtonControlEnable> msgReq = new MsgReq();
+        MsgReq<ButtonControlEnable> msgReq = new MsgReq<>();
         msgReq.device_info = deviceParams;
         msgReq.data = data;
         msgReq.msg_id = MQTTConstants.CONFIG_MSG_ID_BUTTON_CONTROL_ENABLE;
@@ -171,10 +201,21 @@ public class MQTTMessageAssembler {
         return message;
     }
 
-    public static String assembleReadDeviceType(DeviceParams deviceParams){
-        MsgReq msgReq = new MsgReq();
+    public static String assembleWriteResetByButton(DeviceParams deviceParams, ResetByButton data) {
+        MsgReq<ResetByButton> msgReq = new MsgReq<>();
         msgReq.device_info = deviceParams;
-        msgReq.msg_id = MQTTConstants.READ_MSG_ID_DEVICE_TYPE;
+        msgReq.data = data;
+        msgReq.msg_id = MQTTConstants.CONFIG_MSG_ID_RESET_BY_BUTTON;
+        String message = new Gson().toJson(msgReq);
+        XLog.e("app_to_device--->" + message);
+        return message;
+    }
+
+    public static String assembleWriteInputPowerStatus(DeviceParams deviceParams, InputPowerStatus data) {
+        MsgReq<InputPowerStatus> msgReq = new MsgReq<>();
+        msgReq.device_info = deviceParams;
+        msgReq.data = data;
+        msgReq.msg_id = MQTTConstants.CONFIG_MSG_ID_POWER_INPUT_STATUS;
         String message = new Gson().toJson(msgReq);
         XLog.e("app_to_device--->" + message);
         return message;

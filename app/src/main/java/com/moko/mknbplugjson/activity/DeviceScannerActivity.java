@@ -34,6 +34,7 @@ import com.moko.support.json.OrderTaskAssembler;
 import com.moko.support.json.callback.MokoScanDeviceCallback;
 import com.moko.support.json.entity.DeviceInfo;
 import com.moko.support.json.entity.OrderCHAR;
+import com.moko.support.json.entity.OrderServices;
 
 import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
@@ -42,7 +43,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 import no.nordicsemi.android.support.v18.scanner.ScanRecord;
@@ -76,6 +76,7 @@ public class DeviceScannerActivity extends BaseActivity<ActivityScannerBinding> 
         mHandler = new Handler(Looper.getMainLooper());
         mSavedPassword = SPUtils.getStringValue(this, AppConstants.SP_KEY_PASSWORD, "");
         if (animation == null) startScan();
+        mBind.btnAddDevice.setOnClickListener(v -> startActivity(new Intent(this, AddDeviceActivity.class)));
     }
 
     @Override
@@ -103,27 +104,16 @@ public class DeviceScannerActivity extends BaseActivity<ActivityScannerBinding> 
     public void onScanDevice(DeviceInfo deviceInfo) {
         ScanResult scanResult = deviceInfo.scanResult;
         ScanRecord scanRecord = scanResult.getScanRecord();
+        if (null == scanRecord) return;
         SparseArray<byte[]> manufacturer = scanRecord.getManufacturerSpecificData();
-        if (manufacturer == null || manufacturer.size() == 0)
+        if (manufacturer == null || manufacturer.size() == 0) return;
+        byte[] manufacturerSpecificDataByte = scanRecord.getManufacturerSpecificData(0xAA08);
+        if (null == manufacturerSpecificDataByte || manufacturerSpecificDataByte.length != 7)
             return;
-        byte[] manufacturerSpecificDataByte = scanRecord.getManufacturerSpecificData(manufacturer.keyAt(0));
-        assert manufacturerSpecificDataByte != null;
-        if (manufacturerSpecificDataByte.length != 13) return;
-        Map<ParcelUuid, byte[]> map = scanRecord.getServiceData();
-        if (map == null || map.isEmpty())
-            return;
-        int deviceType = -1;
-        for (ParcelUuid parcelUuid : map.keySet()) {
-            if (parcelUuid.toString().startsWith("0000aa08")) {
-                byte[] bytes = map.get(parcelUuid);
-                if (bytes != null) {
-                    deviceType = bytes[0] & 0xFF;
-                    break;
-                }
-            }
-        }
-        if (deviceType == -1) return;
-        deviceInfo.deviceMode = manufacturerSpecificDataByte[12] & 0xFF;
+        byte[] bytes = scanRecord.getServiceData(new ParcelUuid(OrderServices.SERVICE_ADV.getUuid()));
+        if (null == bytes || bytes.length != 1) return;
+        int deviceType = bytes[0] & 0xFF;
+        deviceInfo.deviceMode = manufacturerSpecificDataByte[6] & 0xFF;
         deviceInfo.deviceType = deviceType;
         mDeviceMap.put(deviceInfo.mac, deviceInfo);
     }

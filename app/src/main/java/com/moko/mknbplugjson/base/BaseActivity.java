@@ -20,6 +20,7 @@ import androidx.viewbinding.ViewBinding;
 
 public abstract class BaseActivity<VB extends ViewBinding> extends FragmentActivity {
     protected VB mBind;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,7 +33,10 @@ public abstract class BaseActivity<VB extends ViewBinding> extends FragmentActiv
         mBind = getViewBinding();
         setContentView(mBind.getRoot());
         onCreate();
-        EventBus.getDefault().register(this);
+        if (registerEventBus())EventBus.getDefault().register(this);
+    }
+    protected boolean registerEventBus(){
+        return true;
     }
 
     protected void onCreate() {
@@ -43,7 +47,8 @@ public abstract class BaseActivity<VB extends ViewBinding> extends FragmentActiv
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        EventBus.getDefault().unregister(this);
+        if (EventBus.getDefault().isRegistered(this))
+            EventBus.getDefault().unregister(this);
     }
 
     @Override

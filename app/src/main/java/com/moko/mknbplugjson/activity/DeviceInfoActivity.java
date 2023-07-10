@@ -56,10 +56,8 @@ public class DeviceInfoActivity extends BaseActivity<ActivityDeviceInfoBinding> 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMQTTMessageArrivedEvent(MQTTMessageArrivedEvent event) {
         // 更新所有设备的网络状态
-        final String topic = event.getTopic();
         final String message = event.getMessage();
-        if (TextUtils.isEmpty(message))
-            return;
+        if (TextUtils.isEmpty(message)) return;
         MsgCommon<JsonObject> msgCommon;
         try {
             Type type = new TypeToken<MsgCommon<JsonObject>>() {
@@ -77,9 +75,7 @@ public class DeviceInfoActivity extends BaseActivity<ActivityDeviceInfoBinding> 
                 dismissLoadingProgressDialog();
                 mHandler.removeMessages(0);
             }
-            if (msgCommon.result_code != 0) {
-                return;
-            }
+            if (msgCommon.result_code != 0) return;
             Type infoType = new TypeToken<SystemInfo>() {
             }.getType();
             SystemInfo systemInfo = new Gson().fromJson(msgCommon.data, infoType);

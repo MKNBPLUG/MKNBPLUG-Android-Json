@@ -159,11 +159,11 @@ public class OrderTaskAssembler {
         return task;
     }
 
-    public static OrderTask getMqttDebugMode(){
-        ParamsTask task = new ParamsTask();
-        task.setData(ParamsKeyEnum.KEY_CHANGE_MODE);
-        return task;
-    }
+//    public static OrderTask getMqttDebugMode(){
+//        ParamsTask task = new ParamsTask();
+//        task.setData(ParamsKeyEnum.KEY_CHANGE_MODE);
+//        return task;
+//    }
 
 //    public static OrderTask getProductModel() {
 //        ParamsTask task = new ParamsTask();

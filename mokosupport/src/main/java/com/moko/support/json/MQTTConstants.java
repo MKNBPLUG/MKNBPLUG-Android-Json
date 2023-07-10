@@ -20,7 +20,8 @@ public class MQTTConstants {
     public static final int CONFIG_MSG_ID_POWER_PROTECT = 1016;
     public static final int CONFIG_MSG_ID_CONNECTION_TIMEOUT = 1017;
     public static final int CONFIG_MSG_ID_BUTTON_CONTROL_ENABLE = 1018;
-    public static final int READ_MSG_ID_DEVICE_TYPE = 1021;
+    public static final int CONFIG_MSG_ID_RESET_BY_BUTTON = 1019;
+    public static final int CONFIG_MSG_ID_POWER_INPUT_STATUS = 1020;
 
 
     public static final int CONFIG_MSG_ID_MQTT_SETTINGS = 1097;
@@ -62,6 +63,9 @@ public class MQTTConstants {
     public static final int READ_MSG_ID_POWER_PROTECT = 2016;
     public static final int READ_MSG_ID_CONNECTION_TIMEOUT = 2017;
     public static final int READ_MSG_ID_BUTTON_CONTROL_ENABLE = 2018;
+    public static final int READ_MSG_ID_RESET_BY_BUTTON = 2019;
+    public static final int READ_MSG_ID_POWER_INPUT_STATUS = 2020;
+    public static final int READ_MSG_ID_DEVICE_TYPE = 2021;
 
     public static final int READ_MSG_ID_SWITCH_INFO = 2038;
     public static final int READ_MSG_ID_DEVICE_STATUS = 2045;
