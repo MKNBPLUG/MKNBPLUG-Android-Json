@@ -590,6 +590,15 @@ public class MQTTMessageAssembler {
         return message;
     }
 
+    public static String assembleReadDeviceWorkMode(DeviceParams deviceParams) {
+        MsgReq msgReq = new MsgReq();
+        msgReq.device_info = deviceParams;
+        msgReq.msg_id = MQTTConstants.READ_MSG_ID_WORK_MODE;
+        String message = new Gson().toJson(msgReq);
+        XLog.e("app_to_device--->" + message);
+        return message;
+    }
+
     public static String assembleWriteMQTTSettings(DeviceParams deviceParams, MQTTSettings data) {
         MsgReq<MQTTSettings> msgReq = new MsgReq();
         msgReq.device_info = deviceParams;

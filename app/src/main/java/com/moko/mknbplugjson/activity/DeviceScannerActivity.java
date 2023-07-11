@@ -130,16 +130,13 @@ public class DeviceScannerActivity extends BaseActivity<ActivityScannerBinding> 
         // 排序
         if (!mDevices.isEmpty()) {
             System.setProperty("java.util.Arrays.useLegacyMergeSort", "true");
-            Collections.sort(mDevices, new Comparator<DeviceInfo>() {
-                @Override
-                public int compare(DeviceInfo lhs, DeviceInfo rhs) {
-                    if (lhs.rssi > rhs.rssi) {
-                        return -1;
-                    } else if (lhs.rssi < rhs.rssi) {
-                        return 1;
-                    }
-                    return 0;
+            Collections.sort(mDevices, (lhs, rhs) -> {
+                if (lhs.rssi > rhs.rssi) {
+                    return -1;
+                } else if (lhs.rssi < rhs.rssi) {
+                    return 1;
                 }
+                return 0;
             });
         }
     }
@@ -153,12 +150,7 @@ public class DeviceScannerActivity extends BaseActivity<ActivityScannerBinding> 
         animation = AnimationUtils.loadAnimation(this, R.anim.rotate_refresh);
         mBind.ivRefresh.startAnimation(animation);
         mokoBleScanner.startScanDevice(this);
-        mHandler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                mokoBleScanner.stopScanDevice();
-            }
-        }, 1000 * 60);
+        mHandler.postDelayed(() -> mokoBleScanner.stopScanDevice(), 1000 * 60);
     }
 
     @Override
@@ -282,8 +274,7 @@ public class DeviceScannerActivity extends BaseActivity<ActivityScannerBinding> 
                     int header = value[0] & 0xFF;// 0xED
                     int flag = value[1] & 0xFF;// read or write
                     int cmd = value[2] & 0xFF;
-                    if (header != 0xED)
-                        return;
+                    if (header != 0xED) return;
                     int length = value[3] & 0xFF;
                     if (flag == 0x01 && cmd == 0x01 && length == 0x01) {
                         int result = value[4] & 0xFF;

@@ -40,6 +40,11 @@ public class ModifyNameActivity extends BaseActivity<ActivityModifyDeviceNameBin
     }
 
     @Override
+    protected boolean registerEventBus() {
+        return false;
+    }
+
+    @Override
     protected ActivityModifyDeviceNameBinding getViewBinding() {
         return ActivityModifyDeviceNameBinding.inflate(getLayoutInflater());
     }

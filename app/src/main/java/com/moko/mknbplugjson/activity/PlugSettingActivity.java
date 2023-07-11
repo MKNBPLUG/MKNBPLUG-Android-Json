@@ -427,8 +427,7 @@ public class PlugSettingActivity extends BaseActivity<ActivityPlugSettingBinding
     }
 
     public void onOTA(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         if (!MQTTSupport.getInstance().isConnected()) {
             ToastUtils.showToast(this, R.string.network_error);
             return;
@@ -439,8 +438,7 @@ public class PlugSettingActivity extends BaseActivity<ActivityPlugSettingBinding
     }
 
     public void onDeviceInfo(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         if (!MQTTSupport.getInstance().isConnected()) {
             ToastUtils.showToast(this, R.string.network_error);
             return;
@@ -451,8 +449,7 @@ public class PlugSettingActivity extends BaseActivity<ActivityPlugSettingBinding
     }
 
     public void onDebugModeClick(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         StringBuffer macSB = new StringBuffer(mMokoDevice.mac);
         macSB.insert(2, ":");
         macSB.insert(5, ":");

@@ -81,7 +81,7 @@ public class OTAActivity extends BaseActivity<ActivityOtaBinding> {
         } else {
             appTopic = appMqttConfig.topicPublish;
         }
-        String message = MQTTMessageAssembler.assembleReadDeviceStatus(deviceParams);
+        String message = MQTTMessageAssembler.assembleReadDeviceWorkMode(deviceParams);
         try {
             MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.READ_MSG_ID_WORK_MODE, appMqttConfig.qos);
         } catch (MqttException e) {
