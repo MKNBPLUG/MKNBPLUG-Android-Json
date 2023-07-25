@@ -113,29 +113,17 @@ public class PowerReportSettingActivity extends BaseActivity<ActivityPowerReport
     }
 
     private void getPowerReportSetting() {
-        String appTopic;
-        if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
-            appTopic = mMokoDevice.topicSubscribe;
-        } else {
-            appTopic = appMqttConfig.topicPublish;
-        }
         DeviceParams deviceParams = new DeviceParams();
         deviceParams.mac = mMokoDevice.mac;
         String message = MQTTMessageAssembler.assembleReadPowerReportSetting(deviceParams);
         try {
-            MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.READ_MSG_ID_POWER_REPORT_SETTING, appMqttConfig.qos);
+            MQTTSupport.getInstance().publish(getTopic(), message, MQTTConstants.READ_MSG_ID_POWER_REPORT_SETTING, appMqttConfig.qos);
         } catch (MqttException e) {
             e.printStackTrace();
         }
     }
 
     private void setPowerReportSetting(int reportInterval, int reportThreshold) {
-        String appTopic;
-        if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
-            appTopic = mMokoDevice.topicSubscribe;
-        } else {
-            appTopic = appMqttConfig.topicPublish;
-        }
         DeviceParams deviceParams = new DeviceParams();
         deviceParams.mac = mMokoDevice.mac;
         PowerReportSetting powerReportSetting = new PowerReportSetting();
@@ -143,7 +131,7 @@ public class PowerReportSettingActivity extends BaseActivity<ActivityPowerReport
         powerReportSetting.report_threshold = reportThreshold;
         String message = MQTTMessageAssembler.assembleWritePowerReportSetting(deviceParams, powerReportSetting);
         try {
-            MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.CONFIG_MSG_ID_POWER_REPORT_SETTING, appMqttConfig.qos);
+            MQTTSupport.getInstance().publish(getTopic(), message, MQTTConstants.CONFIG_MSG_ID_POWER_REPORT_SETTING, appMqttConfig.qos);
         } catch (MqttException e) {
             e.printStackTrace();
         }
@@ -182,5 +170,15 @@ public class PowerReportSettingActivity extends BaseActivity<ActivityPowerReport
             return false;
         int powerChangeThreshold = Integer.parseInt(powerChangeThresholdStr);
         return powerChangeThreshold <= 100;
+    }
+
+    private String getTopic() {
+        String appTopic;
+        if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
+            appTopic = mMokoDevice.topicSubscribe;
+        } else {
+            appTopic = appMqttConfig.topicPublish;
+        }
+        return appTopic;
     }
 }

@@ -157,7 +157,7 @@ public class ProtectionSwitchActivity extends BaseActivity<ActivityProtectionSwi
         }
         DeviceParams deviceParams = new DeviceParams();
         deviceParams.mac = mMokoDevice.mac;
-        String message = MQTTMessageAssembler.assembleReadDeviceType(deviceParams);
+        String message = MQTTMessageAssembler.assembleReadDeviceStandard(deviceParams);
         try {
             MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.READ_MSG_ID_DEVICE_STANDARD, appMqttConfig.qos);
         } catch (MqttException e) {

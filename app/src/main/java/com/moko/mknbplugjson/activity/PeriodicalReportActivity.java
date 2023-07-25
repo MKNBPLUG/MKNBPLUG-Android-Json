@@ -59,8 +59,7 @@ public class PeriodicalReportActivity extends BaseActivity<ActivityPeriodicalRep
     public void onMQTTMessageArrivedEvent(MQTTMessageArrivedEvent event) {
         // 更新所有设备的网络状态
         final String message = event.getMessage();
-        if (TextUtils.isEmpty(message))
-            return;
+        if (TextUtils.isEmpty(message)) return;
         MsgCommon<JsonObject> msgCommon;
         try {
             Type type = new TypeToken<MsgCommon<JsonObject>>() {
@@ -78,8 +77,7 @@ public class PeriodicalReportActivity extends BaseActivity<ActivityPeriodicalRep
                 dismissLoadingProgressDialog();
                 mHandler.removeMessages(0);
             }
-            if (msgCommon.result_code != 0)
-                return;
+            if (msgCommon.result_code != 0) return;
             Type type = new TypeToken<ReportInterval>() {
             }.getType();
             ReportInterval reportInterval = new Gson().fromJson(msgCommon.data, type);
@@ -184,5 +182,15 @@ public class PeriodicalReportActivity extends BaseActivity<ActivityPeriodicalRep
             return false;
         int countdownInterval = Integer.parseInt(countdownIntervalStr);
         return (countdownInterval == 0 || countdownInterval >= 30) && countdownInterval <= 86400;
+    }
+
+    private String getTopic() {
+        String appTopic;
+        if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
+            appTopic = mMokoDevice.topicSubscribe;
+        } else {
+            appTopic = appMqttConfig.topicPublish;
+        }
+        return appTopic;
     }
 }

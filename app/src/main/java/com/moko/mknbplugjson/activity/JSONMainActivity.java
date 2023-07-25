@@ -453,7 +453,6 @@ public class JSONMainActivity extends BaseActivity<ActivityMainJsonBinding> impl
 
     private void updateDeviceNetworkStatus(MQTTMessageArrivedEvent event) {
         if (devices.isEmpty()) return;
-        final String topic = event.getTopic();
         final String message = event.getMessage();
         if (TextUtils.isEmpty(message)) return;
         MsgCommon<JsonObject> msgCommon;
@@ -466,6 +465,7 @@ public class JSONMainActivity extends BaseActivity<ActivityMainJsonBinding> impl
         }
         for (final MokoDevice device : devices) {
             if (device.mac.equalsIgnoreCase(msgCommon.device_info.mac)) {
+                XLog.i("333333deviceMac=" + device.mac + "msgCommon=" + msgCommon.device_info.mac+"id="+msgCommon.msg_id);
                 device.isOnline = true;
                 if (msgCommon.msg_id == MQTTConstants.NOTIFY_MSG_ID_SWITCH_STATE
                         || msgCommon.msg_id == MQTTConstants.READ_MSG_ID_SWITCH_INFO) {

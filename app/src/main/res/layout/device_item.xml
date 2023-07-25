@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="80dp"
+    android:layout_height="wrap_content"
     android:layout_marginBottom="1dp"
     android:background="@color/white_ffffff"
     android:descendantFocusability="blocksDescendants"
@@ -12,7 +12,7 @@
 
     <RelativeLayout
         android:layout_width="0dp"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:layout_weight="1.0">
 
         <ImageView
@@ -20,7 +20,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
-            android:src="@drawable/device_moko_plug" />
+            android:src="@drawable/signal_offline" />
 
         <TextView
             android:id="@+id/tv_device_name"
@@ -34,7 +34,6 @@
             android:drawablePadding="14dp"
             android:gravity="center_vertical"
             android:singleLine="true"
-            android:text=""
             android:textColor="@color/blue_0188cc"
             android:textSize="15sp"
             tools:text="MK117NB-5678" />
@@ -43,14 +42,13 @@
             android:id="@+id/tv_device_switch"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_alignBottom="@id/iv_device"
-            android:layout_marginLeft="15dp"
             android:layout_marginBottom="5dp"
-            android:layout_toRightOf="@id/iv_device"
             android:gravity="center_vertical"
-            android:text=""
+            android:layout_alignLeft="@+id/tv_device_name"
             android:textColor="@color/blue_0188cc"
             android:textSize="15sp"
+            android:layout_marginTop="5dp"
+            android:layout_below="@+id/tv_device_name"
             tools:text="OFF" />
     </RelativeLayout>
 

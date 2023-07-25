@@ -108,8 +108,7 @@ public class DeviceScannerActivity extends BaseActivity<ActivityScannerBinding> 
         SparseArray<byte[]> manufacturer = scanRecord.getManufacturerSpecificData();
         if (manufacturer == null || manufacturer.size() == 0) return;
         byte[] manufacturerSpecificDataByte = scanRecord.getManufacturerSpecificData(0xAA08);
-        if (null == manufacturerSpecificDataByte || manufacturerSpecificDataByte.length != 7)
-            return;
+        if (null == manufacturerSpecificDataByte || manufacturerSpecificDataByte.length != 7) return;
         byte[] bytes = scanRecord.getServiceData(new ParcelUuid(OrderServices.SERVICE_ADV.getUuid()));
         if (null == bytes || bytes.length != 1) return;
         int deviceType = bytes[0] & 0xFF;
@@ -282,9 +281,10 @@ public class DeviceScannerActivity extends BaseActivity<ActivityScannerBinding> 
                             mSavedPassword = mPassword;
                             SPUtils.setStringValue(this, AppConstants.SP_KEY_PASSWORD, mSavedPassword);
                             XLog.i("Success");
-
+//                            // TODO: 2023/7/21  暂时注释
+//                            MokoSupport.getInstance().sendOrder(OrderTaskAssembler.setMode(1));
                             // 跳转配置页面
-                            Intent intent = new Intent(this, ChooseFunctionActivity.class);
+                            Intent intent = new Intent(this, SetDeviceMQTTActivity.class);
                             intent.putExtra(AppConstants.EXTRA_KEY_SELECTED_DEVICE_MAC, mSelectedMac);
                             intent.putExtra(AppConstants.EXTRA_KEY_SELECTED_DEVICE_NAME, mSelectedName);
                             intent.putExtra(AppConstants.EXTRA_KEY_SELECTED_DEVICE_TYPE, mSelectedDeviceType);

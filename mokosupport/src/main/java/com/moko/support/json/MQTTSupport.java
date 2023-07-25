@@ -97,8 +97,7 @@ public class MQTTSupport {
     }
 
     public void connectMqtt(String mqttAppConfigStr) throws FileNotFoundException {
-        if (TextUtils.isEmpty(mqttAppConfigStr))
-            return;
+        if (TextUtils.isEmpty(mqttAppConfigStr)) return;
         MQTTConfig mqttConfig = new Gson().fromJson(mqttAppConfigStr, MQTTConfig.class);
         if (!mqttConfig.isError()) {
             String uri;
@@ -166,7 +165,7 @@ public class MQTTSupport {
 //                            XLog.e(errorReport.toString());
 //                        }
 //                        break;
-                    case 1:
+                    case 2:
                         // 单向验证
                         try {
                             connOpts.setSocketFactory(getSingleSocketFactory(mqttConfig.caPath));
@@ -180,7 +179,7 @@ public class MQTTSupport {
                             XLog.e(errorReport.toString());
                         }
                         break;
-                    case 2:
+                    case 3:
                         // 双向验证
                         try {
                             connOpts.setSocketFactory(getSocketFactory(mqttConfig.caPath, mqttConfig.clientKeyPath, mqttConfig.clientCertPath));

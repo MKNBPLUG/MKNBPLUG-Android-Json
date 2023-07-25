@@ -192,7 +192,7 @@ public class PlugSettingActivity extends BaseActivity<ActivityPlugSettingBinding
 
     public void onEditName(View view) {
         if (isWindowLocked()) return;
-        View content = LayoutInflater.from(this).inflate(R.layout.modify_name, null);
+        View content = LayoutInflater.from(this).inflate(R.layout.modify_name, mBind.getRoot(), false);
         final EditText etDeviceName = content.findViewById(R.id.et_device_name);
         String deviceName = etDeviceName.getText().toString();
         etDeviceName.setText(deviceName);
@@ -220,17 +220,11 @@ public class PlugSettingActivity extends BaseActivity<ActivityPlugSettingBinding
 
     private void getButtonControlEnable() {
         XLog.i("读取按键控制功能开关");
-        String appTopic;
-        if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
-            appTopic = mMokoDevice.topicSubscribe;
-        } else {
-            appTopic = appMqttConfig.topicPublish;
-        }
         DeviceParams deviceParams = new DeviceParams();
         deviceParams.mac = mMokoDevice.mac;
         String message = MQTTMessageAssembler.assembleReadButtonControlEnable(deviceParams);
         try {
-            MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.READ_MSG_ID_BUTTON_CONTROL_ENABLE, appMqttConfig.qos);
+            MQTTSupport.getInstance().publish(getTopic(), message, MQTTConstants.READ_MSG_ID_BUTTON_CONTROL_ENABLE, appMqttConfig.qos);
         } catch (MqttException e) {
             e.printStackTrace();
         }
@@ -238,19 +232,13 @@ public class PlugSettingActivity extends BaseActivity<ActivityPlugSettingBinding
 
     private void setButtonControlEnable() {
         XLog.i("设置按键控制功能开关");
-        String appTopic;
-        if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
-            appTopic = mMokoDevice.topicSubscribe;
-        } else {
-            appTopic = appMqttConfig.topicPublish;
-        }
         DeviceParams deviceParams = new DeviceParams();
         deviceParams.mac = mMokoDevice.mac;
         ButtonControlEnable enable = new ButtonControlEnable();
         enable.key_enable = mButtonControlEnable ? 1 : 0;
         String message = MQTTMessageAssembler.assembleWriteButtonControlEnable(deviceParams, enable);
         try {
-            MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.CONFIG_MSG_ID_BUTTON_CONTROL_ENABLE, appMqttConfig.qos);
+            MQTTSupport.getInstance().publish(getTopic(), message, MQTTConstants.CONFIG_MSG_ID_BUTTON_CONTROL_ENABLE, appMqttConfig.qos);
         } catch (MqttException e) {
             e.printStackTrace();
         }
@@ -298,17 +286,11 @@ public class PlugSettingActivity extends BaseActivity<ActivityPlugSettingBinding
             }, 30 * 1000);
             showLoadingProgressDialog();
             XLog.i("重置设备");
-            String appTopic;
-            if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
-                appTopic = mMokoDevice.topicSubscribe;
-            } else {
-                appTopic = appMqttConfig.topicPublish;
-            }
             DeviceParams deviceParams = new DeviceParams();
             deviceParams.mac = mMokoDevice.mac;
             String message = MQTTMessageAssembler.assembleWriteReset(deviceParams);
             try {
-                MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.CONFIG_MSG_ID_RESET, appMqttConfig.qos);
+                MQTTSupport.getInstance().publish(getTopic(), message, MQTTConstants.CONFIG_MSG_ID_RESET, appMqttConfig.qos);
             } catch (MqttException e) {
                 e.printStackTrace();
             }
@@ -504,5 +486,15 @@ public class PlugSettingActivity extends BaseActivity<ActivityPlugSettingBinding
                 }, 500);
             }
         }
+    }
+
+    private String getTopic() {
+        String appTopic;
+        if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
+            appTopic = mMokoDevice.topicSubscribe;
+        } else {
+            appTopic = appMqttConfig.topicPublish;
+        }
+        return appTopic;
     }
 }

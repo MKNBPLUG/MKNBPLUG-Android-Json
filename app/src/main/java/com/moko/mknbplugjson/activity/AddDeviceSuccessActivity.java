@@ -147,7 +147,7 @@ public class AddDeviceSuccessActivity extends BaseActivity<ActivityAddDeviceSucc
         String mqttConfigStr = new Gson().toJson(mqttDeviceConfig, MQTTConfig.class);
         MokoDevice mokoDevice = new MokoDevice();
         mokoDevice.name = mBind.etDeviceName.getText().toString();
-        mokoDevice.mac = mac;
+        mokoDevice.mac = mac.toLowerCase();
         mokoDevice.mqttInfo = mqttConfigStr;
         mokoDevice.topicSubscribe = subscribe;
         mokoDevice.topicPublish = publish;

@@ -72,19 +72,13 @@ public class ResetByButtonActivity extends BaseActivity<ActivityResetByButtonBin
     }
 
     private void setResetByButton(int type) {
-        String appTopic;
-        if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
-            appTopic = mMokoDevice.topicSubscribe;
-        } else {
-            appTopic = appMqttConfig.topicPublish;
-        }
         DeviceParams deviceParams = new DeviceParams();
         deviceParams.mac = mMokoDevice.mac;
         ResetByButton params = new ResetByButton();
         params.key_reset_type = type;
         String message = MQTTMessageAssembler.assembleWriteResetByButton(deviceParams, params);
         try {
-            MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.CONFIG_MSG_ID_RESET_BY_BUTTON, appMqttConfig.qos);
+            MQTTSupport.getInstance().publish(getTopic(), message, MQTTConstants.CONFIG_MSG_ID_RESET_BY_BUTTON, appMqttConfig.qos);
         } catch (MqttException e) {
             e.printStackTrace();
         }
@@ -93,15 +87,9 @@ public class ResetByButtonActivity extends BaseActivity<ActivityResetByButtonBin
     private void getResetByButton() {
         DeviceParams deviceParams = new DeviceParams();
         deviceParams.mac = mMokoDevice.mac;
-        String appTopic;
-        if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
-            appTopic = mMokoDevice.topicSubscribe;
-        } else {
-            appTopic = appMqttConfig.topicPublish;
-        }
         String message = MQTTMessageAssembler.assembleReadResetByButton(deviceParams);
         try {
-            MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.READ_MSG_ID_RESET_BY_BUTTON, appMqttConfig.qos);
+            MQTTSupport.getInstance().publish(getTopic(), message, MQTTConstants.READ_MSG_ID_RESET_BY_BUTTON, appMqttConfig.qos);
         } catch (MqttException e) {
             e.printStackTrace();
         }
@@ -149,6 +137,16 @@ public class ResetByButtonActivity extends BaseActivity<ActivityResetByButtonBin
                 ToastUtils.showToast(this, "Set up failed");
             }
         }
+    }
+
+    private String getTopic() {
+        String appTopic;
+        if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
+            appTopic = mMokoDevice.topicSubscribe;
+        } else {
+            appTopic = appMqttConfig.topicPublish;
+        }
+        return appTopic;
     }
 
     public void onBack(View view) {

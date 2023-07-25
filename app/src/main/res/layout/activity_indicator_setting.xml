@@ -65,7 +65,7 @@
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:layout_alignParentRight="true"
-            android:onClick="onPowerStatus"
+            android:onClick="onPowerInputStatus"
             android:paddingLeft="12dp"
             android:paddingRight="12dp"
             android:src="@drawable/checkbox_close" />
@@ -102,7 +102,7 @@
             android:layout_height="match_parent"
             android:layout_alignParentRight="true"
             android:clickable="true"
-            android:onClick="onProtectionSignal"
+            android:onClick="onPowerOutput"
             android:paddingLeft="12dp"
             android:paddingRight="12dp"
             android:src="@drawable/checkbox_open" />

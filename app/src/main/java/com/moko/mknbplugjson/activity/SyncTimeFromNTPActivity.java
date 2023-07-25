@@ -68,8 +68,7 @@ public class SyncTimeFromNTPActivity extends BaseActivity<ActivitySyncTimeFromNt
     public void onMQTTMessageArrivedEvent(MQTTMessageArrivedEvent event) {
         // 更新所有设备的网络状态
         final String message = event.getMessage();
-        if (TextUtils.isEmpty(message))
-            return;
+        if (TextUtils.isEmpty(message)) return;
         MsgCommon<JsonObject> msgCommon;
         try {
             Type type = new TypeToken<MsgCommon<JsonObject>>() {
@@ -87,8 +86,7 @@ public class SyncTimeFromNTPActivity extends BaseActivity<ActivitySyncTimeFromNt
                 dismissLoadingProgressDialog();
                 mHandler.removeMessages(0);
             }
-            if (msgCommon.result_code != 0)
-                return;
+            if (msgCommon.result_code != 0) return;
             Type type = new TypeToken<NTPParams>() {
             }.getType();
             NTPParams ntpParams = new Gson().fromJson(msgCommon.data, type);
@@ -123,17 +121,11 @@ public class SyncTimeFromNTPActivity extends BaseActivity<ActivitySyncTimeFromNt
     }
 
     private void getSyncFromNTP() {
-        String appTopic;
-        if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
-            appTopic = mMokoDevice.topicSubscribe;
-        } else {
-            appTopic = appMqttConfig.topicPublish;
-        }
         DeviceParams deviceParams = new DeviceParams();
         deviceParams.mac = mMokoDevice.mac;
         String message = MQTTMessageAssembler.assembleReadNTPParams(deviceParams);
         try {
-            MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.READ_MSG_ID_NTP_PARAMS, appMqttConfig.qos);
+            MQTTSupport.getInstance().publish(getTopic(), message, MQTTConstants.READ_MSG_ID_NTP_PARAMS, appMqttConfig.qos);
         } catch (MqttException e) {
             e.printStackTrace();
         }
@@ -168,12 +160,6 @@ public class SyncTimeFromNTPActivity extends BaseActivity<ActivitySyncTimeFromNt
     }
 
     private void setSyncFromNTP(String ntpServer, int interval) {
-        String appTopic;
-        if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
-            appTopic = mMokoDevice.topicSubscribe;
-        } else {
-            appTopic = appMqttConfig.topicPublish;
-        }
         DeviceParams deviceParams = new DeviceParams();
         deviceParams.mac = mMokoDevice.mac;
         NTPParams ntpParams = new NTPParams();
@@ -182,9 +168,19 @@ public class SyncTimeFromNTPActivity extends BaseActivity<ActivitySyncTimeFromNt
         ntpParams.interval = interval;
         String message = MQTTMessageAssembler.assembleWriteNTPParams(deviceParams, ntpParams);
         try {
-            MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.CONFIG_MSG_ID_NTP_PARAMS, appMqttConfig.qos);
+            MQTTSupport.getInstance().publish(getTopic(), message, MQTTConstants.CONFIG_MSG_ID_NTP_PARAMS, appMqttConfig.qos);
         } catch (MqttException e) {
             e.printStackTrace();
         }
+    }
+
+    private String getTopic() {
+        String appTopic;
+        if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
+            appTopic = mMokoDevice.topicSubscribe;
+        } else {
+            appTopic = appMqttConfig.topicPublish;
+        }
+        return appTopic;
     }
 }

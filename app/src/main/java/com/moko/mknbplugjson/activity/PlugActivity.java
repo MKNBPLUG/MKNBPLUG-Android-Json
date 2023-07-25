@@ -410,19 +410,13 @@ public class PlugActivity extends BaseActivity<ActivityPlugBinding> {
     }
 
     private void setTimer(int hour, int minute) {
-        String appTopic;
-        if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
-            appTopic = mMokoDevice.topicSubscribe;
-        } else {
-            appTopic = appMqttConfig.topicPublish;
-        }
         SetCountdown setCountdown = new SetCountdown();
         setCountdown.countdown = hour * 3600 + minute * 60;
         DeviceParams deviceParams = new DeviceParams();
         deviceParams.mac = mMokoDevice.mac;
         String message = MQTTMessageAssembler.assembleWriteTimer(deviceParams, setCountdown);
         try {
-            MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.CONFIG_MSG_ID_COUNTDOWN, appMqttConfig.qos);
+            MQTTSupport.getInstance().publish(getTopic(), message, MQTTConstants.CONFIG_MSG_ID_COUNTDOWN, appMqttConfig.qos);
         } catch (MqttException e) {
             e.printStackTrace();
         }
@@ -477,12 +471,6 @@ public class PlugActivity extends BaseActivity<ActivityPlugBinding> {
     }
 
     private void changeSwitch() {
-        String appTopic;
-        if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
-            appTopic = mMokoDevice.topicSubscribe;
-        } else {
-            appTopic = appMqttConfig.topicPublish;
-        }
         mMokoDevice.on_off = !mMokoDevice.on_off;
         SwitchState switchState = new SwitchState();
         switchState.switch_state = mMokoDevice.on_off ? 1 : 0;
@@ -490,7 +478,7 @@ public class PlugActivity extends BaseActivity<ActivityPlugBinding> {
         deviceParams.mac = mMokoDevice.mac;
         String message = MQTTMessageAssembler.assembleWriteSwitchInfo(deviceParams, switchState);
         try {
-            MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.CONFIG_MSG_ID_SWITCH_STATE, appMqttConfig.qos);
+            MQTTSupport.getInstance().publish(getTopic(), message, MQTTConstants.CONFIG_MSG_ID_SWITCH_STATE, appMqttConfig.qos);
         } catch (MqttException e) {
             e.printStackTrace();
         }
@@ -498,19 +486,23 @@ public class PlugActivity extends BaseActivity<ActivityPlugBinding> {
 
     private void getSwitchInfo() {
         XLog.i("读取开关状态");
+        DeviceParams deviceParams = new DeviceParams();
+        deviceParams.mac = mMokoDevice.mac;
+        String message = MQTTMessageAssembler.assembleReadSwitchInfo(deviceParams);
+        try {
+            MQTTSupport.getInstance().publish(getTopic(), message, MQTTConstants.READ_MSG_ID_SWITCH_INFO, appMqttConfig.qos);
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private String getTopic() {
         String appTopic;
         if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
             appTopic = mMokoDevice.topicSubscribe;
         } else {
             appTopic = appMqttConfig.topicPublish;
         }
-        DeviceParams deviceParams = new DeviceParams();
-        deviceParams.mac = mMokoDevice.mac;
-        String message = MQTTMessageAssembler.assembleReadSwitchInfo(deviceParams);
-        try {
-            MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.READ_MSG_ID_SWITCH_INFO, appMqttConfig.qos);
-        } catch (MqttException e) {
-            e.printStackTrace();
-        }
+        return appTopic;
     }
 }

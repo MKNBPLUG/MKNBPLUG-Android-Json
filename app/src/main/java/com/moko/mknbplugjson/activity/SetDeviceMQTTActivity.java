@@ -15,6 +15,7 @@ import androidx.annotation.IdRes;
 import androidx.fragment.app.Fragment;
 import androidx.viewpager2.widget.ViewPager2;
 
+import com.elvishew.xlog.XLog;
 import com.github.lzyzsd.circleprogress.DonutProgress;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
@@ -98,6 +99,7 @@ public class SetDeviceMQTTActivity extends BaseActivity<ActivityMqttDeviceBindin
 
     private String expertFilePath;
     private boolean isFileError;
+
 
     @Override
     protected void onCreate() {
@@ -213,12 +215,9 @@ public class SetDeviceMQTTActivity extends BaseActivity<ActivityMqttDeviceBindin
                     int header = value[0] & 0xFF;// 0xED
                     int flag = value[1] & 0xFF;// read or write
                     int cmd = value[2] & 0xFF;
-                    if (header != 0xED)
-                        return;
+                    if (header != 0xED) return;
                     ParamsKeyEnum configKeyEnum = ParamsKeyEnum.fromParamKey(cmd);
-                    if (configKeyEnum == null) {
-                        return;
-                    }
+                    if (configKeyEnum == null) return;
                     int length = value[3] & 0xFF;
                     if (flag == 0x01) {
                         // write
@@ -453,7 +452,7 @@ public class SetDeviceMQTTActivity extends BaseActivity<ActivityMqttDeviceBindin
 
                             case KEY_NTP_TIME_ZONE:
                                 if (length == 1) {
-                                    mSelectedTimeZone = value[4] & 0xff;
+                                    mSelectedTimeZone = value[4] + 24;
                                     mBind.tvTimeZone.setText(mTimeZones.get(mSelectedTimeZone));
                                     mqttDeviceConfig.timeZone = mSelectedTimeZone;
                                 }
@@ -467,6 +466,8 @@ public class SetDeviceMQTTActivity extends BaseActivity<ActivityMqttDeviceBindin
 
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMQTTMessageArrivedEvent(MQTTMessageArrivedEvent event) {
+        XLog.i("333333*******************" + event.getTopic() + "//////" + event.getMessage());
+        //47.104.81.55
         final String topic = event.getTopic();
         final String message = event.getMessage();
         if (TextUtils.isEmpty(topic) || isDeviceConnectSuccess) {
@@ -484,10 +485,8 @@ public class SetDeviceMQTTActivity extends BaseActivity<ActivityMqttDeviceBindin
         if (!mSelectedDeviceMac.equalsIgnoreCase(msgCommon.device_info.mac)) {
             return;
         }
-        if (msgCommon.msg_id != MQTTConstants.NOTIFY_MSG_ID_SWITCH_STATE)
-            return;
-        if (donutProgress == null)
-            return;
+        if (msgCommon.msg_id != MQTTConstants.NOTIFY_MSG_ID_SWITCH_STATE) return;
+        if (donutProgress == null) return;
         if (!isDeviceConnectSuccess) {
             isDeviceConnectSuccess = true;
             donutProgress.setProgress(100);
@@ -500,7 +499,7 @@ public class SetDeviceMQTTActivity extends BaseActivity<ActivityMqttDeviceBindin
                 if (mokoDevice == null) {
                     mokoDevice = new MokoDevice();
                     mokoDevice.name = mSelectedDeviceName;
-                    mokoDevice.mac = mSelectedDeviceMac;
+                    mokoDevice.mac = mSelectedDeviceMac.toLowerCase();
                     mokoDevice.mqttInfo = mqttConfigStr;
                     mokoDevice.topicSubscribe = mqttDeviceConfig.topicSubscribe;
                     mokoDevice.topicPublish = mqttDeviceConfig.topicPublish;
@@ -509,7 +508,7 @@ public class SetDeviceMQTTActivity extends BaseActivity<ActivityMqttDeviceBindin
                     DBTools.getInstance(SetDeviceMQTTActivity.this).insertDevice(mokoDevice);
                 } else {
                     mokoDevice.name = mSelectedDeviceName;
-                    mokoDevice.mac = mSelectedDeviceMac;
+                    mokoDevice.mac = mSelectedDeviceMac.toLowerCase();
                     mokoDevice.mqttInfo = mqttConfigStr;
                     mokoDevice.topicSubscribe = mqttDeviceConfig.topicSubscribe;
                     mokoDevice.topicPublish = mqttDeviceConfig.topicPublish;
@@ -693,10 +692,10 @@ public class SetDeviceMQTTActivity extends BaseActivity<ActivityMqttDeviceBindin
                 orderTasks.add(OrderTaskAssembler.setMqttPassword(mqttDeviceConfig.password));
             }
             orderTasks.add(OrderTaskAssembler.setMqttConnectMode(mqttDeviceConfig.connectMode));
-            if (mqttDeviceConfig.connectMode == 1) {
+            if (mqttDeviceConfig.connectMode == 2) {
                 File file = new File(mqttDeviceConfig.caPath);
                 orderTasks.add(OrderTaskAssembler.setCA(file));
-            } else if (mqttDeviceConfig.connectMode == 2) {
+            } else if (mqttDeviceConfig.connectMode == 3) {
                 File caFile = new File(mqttDeviceConfig.caPath);
                 orderTasks.add(OrderTaskAssembler.setCA(caFile));
                 File clientKeyFile = new File(mqttDeviceConfig.clientKeyPath);
@@ -820,6 +819,7 @@ public class SetDeviceMQTTActivity extends BaseActivity<ActivityMqttDeviceBindin
         // 订阅
         try {
             if (TextUtils.isEmpty(mqttAppConfig.topicSubscribe)) {
+                XLog.i("333333publish=" + mqttDeviceConfig.topicPublish);
                 MQTTSupport.getInstance().subscribe(mqttDeviceConfig.topicPublish, mqttAppConfig.qos);
             }
         } catch (MqttException e) {

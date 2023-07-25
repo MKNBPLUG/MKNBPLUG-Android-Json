@@ -66,8 +66,7 @@ public class UnderVoltageProtectionActivity extends BaseActivity<ActivityUndervo
     public void onMQTTMessageArrivedEvent(MQTTMessageArrivedEvent event) {
         // 更新所有设备的网络状态
         final String message = event.getMessage();
-        if (TextUtils.isEmpty(message))
-            return;
+        if (TextUtils.isEmpty(message)) return;
         MsgCommon<JsonObject> msgCommon;
         try {
             Type type = new TypeToken<MsgCommon<JsonObject>>() {
@@ -85,8 +84,7 @@ public class UnderVoltageProtectionActivity extends BaseActivity<ActivityUndervo
                 dismissLoadingProgressDialog();
                 mHandler.removeMessages(0);
             }
-            if (msgCommon.result_code != 0)
-                return;
+            if (msgCommon.result_code != 0) return;
             Type statusType = new TypeToken<OverloadProtection>() {
             }.getType();
             OverloadProtection overloadProtection = new Gson().fromJson(msgCommon.data, statusType);
@@ -115,8 +113,7 @@ public class UnderVoltageProtectionActivity extends BaseActivity<ActivityUndervo
             Type infoType = new TypeToken<OverloadOccur>() {
             }.getType();
             OverloadOccur overloadOccur = new Gson().fromJson(msgCommon.data, infoType);
-            if (overloadOccur.state == 1)
-                finish();
+            if (overloadOccur.state == 1) finish();
         }
     }
 
@@ -125,17 +122,11 @@ public class UnderVoltageProtectionActivity extends BaseActivity<ActivityUndervo
     }
 
     private void getUnderVoltageProtection() {
-        String appTopic;
-        if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
-            appTopic = mMokoDevice.topicSubscribe;
-        } else {
-            appTopic = appMqttConfig.topicPublish;
-        }
         DeviceParams deviceParams = new DeviceParams();
         deviceParams.mac = mMokoDevice.mac;
         String message = MQTTMessageAssembler.assembleReadUnderVoltageProtection(deviceParams);
         try {
-            MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.READ_MSG_ID_UNDER_VOLTAGE_PROTECTION, appMqttConfig.qos);
+            MQTTSupport.getInstance().publish(getTopic(), message, MQTTConstants.READ_MSG_ID_UNDER_VOLTAGE_PROTECTION, appMqttConfig.qos);
         } catch (MqttException e) {
             e.printStackTrace();
         }
@@ -182,12 +173,6 @@ public class UnderVoltageProtectionActivity extends BaseActivity<ActivityUndervo
     }
 
     private void setOverloadProtection(int voltageThreshold, int timeThreshold) {
-        String appTopic;
-        if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
-            appTopic = mMokoDevice.topicSubscribe;
-        } else {
-            appTopic = appMqttConfig.topicPublish;
-        }
         DeviceParams deviceParams = new DeviceParams();
         deviceParams.mac = mMokoDevice.mac;
         OverloadProtection protection = new OverloadProtection();
@@ -196,9 +181,19 @@ public class UnderVoltageProtectionActivity extends BaseActivity<ActivityUndervo
         protection.judge_time = timeThreshold;
         String message = MQTTMessageAssembler.assembleWriteUnderVoltageProtection(deviceParams, protection);
         try {
-            MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.CONFIG_MSG_ID_UNDER_VOLTAGE_PROTECTION, appMqttConfig.qos);
+            MQTTSupport.getInstance().publish(getTopic(), message, MQTTConstants.CONFIG_MSG_ID_UNDER_VOLTAGE_PROTECTION, appMqttConfig.qos);
         } catch (MqttException e) {
             e.printStackTrace();
         }
+    }
+
+    private String getTopic() {
+        String appTopic;
+        if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
+            appTopic = mMokoDevice.topicSubscribe;
+        } else {
+            appTopic = appMqttConfig.topicPublish;
+        }
+        return appTopic;
     }
 }
