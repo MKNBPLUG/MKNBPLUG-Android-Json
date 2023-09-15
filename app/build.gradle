@@ -6,18 +6,19 @@ if (!isLibrary.toBoolean()) {
 apply plugin: 'com.jakewharton.butterknife'
 
 android {
-    compileSdkVersion 30
+    compileSdkVersion 31
     buildToolsVersion '29.0.3'
 
     defaultConfig {
         if (!isLibrary.toBoolean()) {
             applicationId "com.moko.mknbplugjson"
         }
-        minSdkVersion 18
-        targetSdkVersion 30
-        versionCode 3
-        versionName "1.0.2"
-        multiDexEnabled true
+        minSdkVersion 21
+        targetSdkVersion 31
+        versionCode 4
+        versionName "1.0.3"
+        def formatDate = new Date().format("yyyyMMddHHmm")
+        setProperty("archivesBaseName", "MKNBPLUGJSON_${versionName}_${formatDate}")
     }
 
     buildTypes {
@@ -44,6 +45,10 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
     }
 
+    lintOptions {
+        abortOnError false
+    }
+
     sourceSets {
         main {
             if (!isLibrary.toBoolean()) {
@@ -55,21 +60,7 @@ android {
     }
 
 
-    if (!isLibrary.toBoolean()) {
-        applicationVariants.all { variant ->
-            variant.outputs.all { output ->
-                def outputFile = output.outputFile
-                if (outputFile != null && outputFile.name.endsWith('.apk')) {
-                    def formatedDate = new Date().format("yyyyMMddHHmm")
-                    def apkFileName = "MKNBPLUGJSON_${defaultConfig.versionName}_${formatedDate}.apk"
-                    if (outputFile.name.contains('debug')) {
-                        apkFileName = "MKNBPLUGJSON_${defaultConfig.versionName}_${formatedDate}_debug.apk"
-                    }
-                    outputFileName = apkFileName
-                }
-            }
-        }
-    } else {
+    if (isLibrary.toBoolean())  {
         libraryVariants.all { variant ->
             if (variant.buildType.name == "release") {
                 // 修改aar名称
@@ -91,6 +82,10 @@ android {
             }
         }
     }
+
+    packagingOptions {
+        exclude 'META-INF/kotlinx_coroutines_core.version'
+    }
 }
 
 dependencies {
@@ -106,6 +101,7 @@ dependencies {
     implementation 'androidx.viewpager2:viewpager2:1.0.0'
     implementation 'com.github.GrenderG:Toasty:1.4.1'
     implementation 'cn.carbswang.android:NumberPickerView:1.1.1'
+    implementation 'com.guolindev.permissionx:permissionx:1.7.1'
     if (!isLibrary.toBoolean()) {
         implementation project(path: ':mokosupport')
         implementation files('libs/poi-3.12-android-a.jar')
@@ -116,14 +112,17 @@ dependencies {
         provided files('libs/poi-3.12-android-a.jar')
         provided files('libs/poi-ooxml-schemas-3.12-20150511-a.jar')
         implementation 'com.google.code.gson:gson:2.8.5'
-        implementation 'no.nordicsemi.android.support.v18:scanner:1.4.3'
+        implementation 'no.nordicsemi.android.support.v18:scanner:1.6.0'
         implementation 'no.nordicsemi.android:dfu:0.6.2'
         implementation 'org.greenrobot:eventbus:3.2.0'
         implementation 'com.elvishew:xlog:1.6.1'
-        implementation 'no.nordicsemi.android:ble:2.4.0'
+        implementation 'no.nordicsemi.android:ble:2.5.1'
         implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.2.2'
-        implementation 'org.eclipse.paho:org.eclipse.paho.android.service:1.1.1'
+        //new mqtt library that supports android 12
+        implementation 'androidx.legacy:legacy-support-v4:1.0.0'
+        implementation 'com.github.hannesa2:paho.mqtt.android:3.3.5'
         implementation 'org.bouncycastle:bcpkix-jdk15on:1.59'
         implementation 'androidx.core:core:1.3.1'
+        implementation 'androidx.appcompat:appcompat:1.0.0'
     }
 }

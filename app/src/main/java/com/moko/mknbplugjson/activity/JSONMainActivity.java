@@ -95,7 +95,7 @@ public class JSONMainActivity extends BaseActivity implements BaseQuickAdapter.O
         // 初始化Xlog
         if (Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)) {
             // 优先保存到SD卡中
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 PATH_LOGCAT = getExternalFilesDir(null).getAbsolutePath() + File.separator + (BuildConfig.IS_LIBRARY ? "MKNBPLUG" : "MKNBPLUGJSON");
             } else {
                 PATH_LOGCAT = Environment.getExternalStorageDirectory().getAbsolutePath() + File.separator + (BuildConfig.IS_LIBRARY ? "MKNBPLUG" : "MKNBPLUGJSON");
@@ -145,7 +145,7 @@ public class JSONMainActivity extends BaseActivity implements BaseQuickAdapter.O
         try {
             MQTTSupport.getInstance().connectMqtt(MQTTAppConfigStr);
         } catch (FileNotFoundException e) {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
                 ToastUtils.showToast(this, "Please select your SSL certificates again, otherwise the APP can't use normally.");
                 startActivityForResult(new Intent(this, SetAppMQTTActivity.class), AppConstants.REQUEST_CODE_MQTT_CONFIG_APP);
             }

@@ -2,8 +2,10 @@ package com.moko.support.json;
 
 import android.content.Context;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.SystemClock;
 import android.text.TextUtils;
-import android.util.Log;
 
 import com.elvishew.xlog.XLog;
 import com.google.gson.Gson;
@@ -13,7 +15,6 @@ import com.moko.support.json.event.MQTTConnectionFailureEvent;
 import com.moko.support.json.event.MQTTConnectionLostEvent;
 import com.moko.support.json.event.MQTTMessageArrivedEvent;
 
-import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.openssl.PEMDecryptorProvider;
 import org.bouncycastle.openssl.PEMEncryptedKeyPair;
@@ -21,7 +22,6 @@ import org.bouncycastle.openssl.PEMKeyPair;
 import org.bouncycastle.openssl.PEMParser;
 import org.bouncycastle.openssl.jcajce.JcaPEMKeyConverter;
 import org.bouncycastle.openssl.jcajce.JcePEMDecryptorProviderBuilder;
-import org.eclipse.paho.android.service.MqttAndroidClient;
 import org.eclipse.paho.client.mqttv3.IMqttActionListener;
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken;
 import org.eclipse.paho.client.mqttv3.IMqttMessageListener;
@@ -41,7 +41,6 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.security.KeyPair;
 import java.security.KeyStore;
-import java.security.PrivateKey;
 import java.security.Security;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
@@ -54,6 +53,9 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 
+import info.mqtt.android.service.Ack;
+import info.mqtt.android.service.MqttAndroidClient;
+
 public class MQTTSupport {
     private static final String TAG = "MQTTSupport";
 
@@ -63,7 +65,9 @@ public class MQTTSupport {
 
 
     private MqttAndroidClient mqttAndroidClient;
+    private String mqttConfigStr;
     private IMqttActionListener listener;
+    private Handler mHandler;
 
     private MQTTSupport() {
         //no instance
@@ -82,6 +86,7 @@ public class MQTTSupport {
 
     public void init(Context context) {
         mContext = context;
+        mHandler = new Handler(Looper.getMainLooper());
         listener = new IMqttActionListener() {
             @Override
             public void onSuccess(IMqttToken asyncActionToken) {
@@ -91,6 +96,21 @@ public class MQTTSupport {
             @Override
             public void onFailure(IMqttToken asyncActionToken, Throwable exception) {
                 XLog.w(String.format("%s:%s", TAG, "connect failure"));
+                XLog.w("onFailure--->" + exception.getMessage());
+                if (asyncActionToken != null
+                        && asyncActionToken.getException() != null
+                        && MqttException.REASON_CODE_CLIENT_CONNECTED == asyncActionToken.getException().getReasonCode()) {
+                    if (isWindowLocked()) return;
+                    XLog.w("断开当前连接，2S后重连...");
+                    disconnectMqtt();
+                    mHandler.postDelayed(() -> {
+                        try {
+                            connectMqtt(mqttConfigStr);
+                        } catch (FileNotFoundException e) {
+                            e.printStackTrace();
+                        }
+                    }, 2000);
+                }
                 EventBus.getDefault().post(new MQTTConnectionFailureEvent());
             }
         };
@@ -101,13 +121,14 @@ public class MQTTSupport {
             return;
         MQTTConfig mqttConfig = new Gson().fromJson(mqttAppConfigStr, MQTTConfig.class);
         if (!mqttConfig.isError()) {
+            this.mqttConfigStr = mqttAppConfigStr;
             String uri;
             if (mqttConfig.connectMode > 0) {
                 uri = "ssl://" + mqttConfig.host + ":" + mqttConfig.port;
             } else {
                 uri = "tcp://" + mqttConfig.host + ":" + mqttConfig.port;
             }
-            mqttAndroidClient = new MqttAndroidClient(mContext, uri, mqttConfig.clientId);
+            mqttAndroidClient = new MqttAndroidClient(mContext, uri, mqttConfig.clientId, Ack.AUTO_ACK);
             mqttAndroidClient.setCallback(new MqttCallbackExtended() {
                 @Override
                 public void connectComplete(boolean reconnect, String serverURI) {
@@ -121,6 +142,8 @@ public class MQTTSupport {
 
                 @Override
                 public void connectionLost(Throwable cause) {
+                    if (cause != null)
+                        XLog.w("connectionLost--->" + cause.getMessage());
                     EventBus.getDefault().post(new MQTTConnectionLostEvent());
                 }
 
@@ -170,6 +193,12 @@ public class MQTTSupport {
                         // 单向验证
                         try {
                             connOpts.setSocketFactory(getSingleSocketFactory(mqttConfig.caPath));
+                        } catch (FileNotFoundException fileNotFoundException) {
+                            if (mqttAndroidClient != null) {
+                                mqttAndroidClient.close();
+                                mqttAndroidClient = null;
+                            }
+                            throw fileNotFoundException;
                         } catch (Exception e) {
                             // 读取stacktrace信息
                             final Writer result = new StringWriter();
@@ -186,6 +215,10 @@ public class MQTTSupport {
                             connOpts.setSocketFactory(getSocketFactory(mqttConfig.caPath, mqttConfig.clientKeyPath, mqttConfig.clientCertPath));
                             connOpts.setHttpsHostnameVerificationEnabled(false);
                         } catch (FileNotFoundException fileNotFoundException) {
+                            if (mqttAndroidClient != null) {
+                                mqttAndroidClient.close();
+                                mqttAndroidClient = null;
+                            }
                             throw fileNotFoundException;
                         } catch (Exception e) {
                             // 读取stacktrace信息
@@ -363,19 +396,14 @@ public class MQTTSupport {
             converter = new JcaPEMKeyConverter().setProvider("BC");
         }
 
-        PrivateKey privateKey;
+        KeyPair key;
         if (object instanceof PEMEncryptedKeyPair) {
             XLog.e("Encrypted key - we will use provided password");
-            KeyPair keyPair = converter.getKeyPair(((PEMEncryptedKeyPair) object)
+            key = converter.getKeyPair(((PEMEncryptedKeyPair) object)
                     .decryptKeyPair(decProv));
-            privateKey = keyPair.getPrivate();
-        } else if (object instanceof PrivateKeyInfo) {
-            XLog.e("PrivateKeyInfo");
-            privateKey = converter.getPrivateKey((PrivateKeyInfo) object);
         } else {
             XLog.e("Unencrypted key - no password needed");
-            KeyPair keyPair = converter.getKeyPair((PEMKeyPair) object);
-            privateKey = keyPair.getPrivate();
+            key = converter.getKeyPair((PEMKeyPair) object);
         }
         pemParser.close();
 
@@ -391,7 +419,7 @@ public class MQTTSupport {
         KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
         ks.load(null, null);
         ks.setCertificateEntry("certificate", cert);
-        ks.setKeyEntry("private-key", privateKey, "".toCharArray(),
+        ks.setKeyEntry("private-key", key.getPrivate(), "".toCharArray(),
                 new java.security.cert.Certificate[]{cert});
         KeyManagerFactory kmf =
                 KeyManagerFactory.getInstance(KeyManagerFactory
@@ -407,6 +435,7 @@ public class MQTTSupport {
 
     private void connectMqtt(MqttConnectOptions options) throws MqttException {
         if (mqttAndroidClient != null && !mqttAndroidClient.isConnected()) {
+            XLog.w("start connect");
             mqttAndroidClient.connect(options, null, listener);
         }
     }
@@ -414,13 +443,11 @@ public class MQTTSupport {
     public void disconnectMqtt() {
         if (!isConnected())
             return;
-        mqttAndroidClient.close();
-        try {
+        if (mqttAndroidClient != null) {
+            mqttAndroidClient.close();
             mqttAndroidClient.disconnect();
-        } catch (MqttException e) {
-            e.printStackTrace();
+            mqttAndroidClient = null;
         }
-        mqttAndroidClient = null;
     }
 
     public void subscribe(String topic, int qos) throws MqttException {
@@ -441,7 +468,10 @@ public class MQTTSupport {
             @Override
             public void messageArrived(String topic, MqttMessage message) {
                 String messageInfo = new String(message.getPayload());
-                Log.w("MKNBPLUGJSON", String.format("Message:%s:%s", topic, messageInfo));
+                if (message.isRetained())
+                    XLog.w(String.format("Retain,Message:%s:%s", topic, messageInfo));
+                else
+                    XLog.w(String.format("Message:%s:%s", topic, messageInfo));
                 EventBus.getDefault().post(new MQTTMessageArrivedEvent(topic, new String(message.getPayload())));
             }
         });
@@ -449,8 +479,7 @@ public class MQTTSupport {
     }
 
     public void unSubscribe(String topic) throws MqttException {
-        if (!isConnected())
-            return;
+        if (!isConnected()) return;
         mqttAndroidClient.unsubscribe(topic, null, new IMqttActionListener() {
             @Override
             public void onSuccess(IMqttToken asyncActionToken) {
@@ -490,5 +519,18 @@ public class MQTTSupport {
             return mqttAndroidClient.isConnected();
         }
         return false;
+    }
+
+    // 记录上次页面控件点击时间,屏蔽无效点击事件
+    protected long mLastOnClickTime = 0;
+
+    public boolean isWindowLocked() {
+        long current = SystemClock.elapsedRealtime();
+        if (current - mLastOnClickTime > 1000) {
+            mLastOnClickTime = current;
+            return false;
+        } else {
+            return true;
+        }
     }
 }
