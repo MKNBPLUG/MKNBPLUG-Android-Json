@@ -6,7 +6,6 @@ import android.app.AlertDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
@@ -14,6 +13,7 @@ import android.provider.Settings;
 import com.elvishew.xlog.XLog;
 import com.moko.mknbplugjson.R;
 import com.moko.mknbplugjson.base.BaseActivity;
+import com.moko.mknbplugjson.databinding.ActivityGuideBinding;
 import com.moko.mknbplugjson.dialog.PermissionDialog;
 import com.moko.mknbplugjson.utils.Utils;
 import com.moko.support.json.event.MQTTConnectionCompleteEvent;
@@ -25,20 +25,21 @@ import org.greenrobot.eventbus.ThreadMode;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.core.content.ContextCompat;
-import butterknife.ButterKnife;
 
-public class GuideActivity extends BaseActivity {
+public class GuideActivity extends BaseActivity<ActivityGuideBinding> {
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_guide);
-        ButterKnife.bind(this);
+    protected void onCreate() {
         if ((getIntent().getFlags() & Intent.FLAG_ACTIVITY_BROUGHT_TO_FRONT) != 0) {
             finish();
             return;
         }
         requestPermission();
+    }
+
+    @Override
+    protected ActivityGuideBinding getViewBinding() {
+        return ActivityGuideBinding.inflate(getLayoutInflater());
     }
 
     private void requestPermission() {

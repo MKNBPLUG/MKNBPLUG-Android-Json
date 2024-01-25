@@ -8,10 +8,6 @@ import android.text.TextUtils;
 import android.view.View;
 import android.widget.RadioGroup;
 
-import androidx.annotation.IdRes;
-import androidx.fragment.app.Fragment;
-import androidx.viewpager2.widget.ViewPager2;
-
 import com.elvishew.xlog.XLog;
 import com.google.gson.Gson;
 import com.moko.mknbplugjson.AppConstants;
@@ -50,6 +46,10 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
+
+import androidx.annotation.IdRes;
+import androidx.fragment.app.Fragment;
+import androidx.viewpager2.widget.ViewPager2;
 
 public class SetAppMQTTActivity extends BaseActivity<ActivityMqttAppBinding> implements RadioGroup.OnCheckedChangeListener {
     private final String FILTER_ASCII = "[ -~]*";
@@ -124,12 +124,14 @@ public class SetAppMQTTActivity extends BaseActivity<ActivityMqttAppBinding> imp
     public void onMQTTConnectionCompleteEvent(MQTTConnectionCompleteEvent event) {
         EventBus.getDefault().cancelEventDelivery(event);
         String mqttConfigStr = new Gson().toJson(mqttConfig, MQTTConfig.class);
-        ToastUtils.showToast(SetAppMQTTActivity.this, getString(R.string.success));
-        dismissLoadingProgressDialog();
-        Intent intent = new Intent();
-        intent.putExtra(AppConstants.EXTRA_KEY_MQTT_CONFIG_APP, mqttConfigStr);
-        setResult(RESULT_OK, intent);
-        finish();
+        runOnUiThread(() -> {
+            ToastUtils.showToast(SetAppMQTTActivity.this, getString(R.string.success));
+            dismissLoadingProgressDialog();
+            Intent intent = new Intent();
+            intent.putExtra(AppConstants.EXTRA_KEY_MQTT_CONFIG_APP, mqttConfigStr);
+            setResult(RESULT_OK, intent);
+            finish();
+        });
     }
 
     @Subscribe(threadMode = ThreadMode.MAIN)
