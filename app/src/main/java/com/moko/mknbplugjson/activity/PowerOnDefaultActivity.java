@@ -1,11 +1,9 @@
 package com.moko.mknbplugjson.activity;
 
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
 import android.view.View;
-import android.widget.RadioButton;
 import android.widget.RadioGroup;
 
 import com.google.gson.Gson;
@@ -13,8 +11,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.moko.mknbplugjson.AppConstants;
 import com.moko.mknbplugjson.R;
-import com.moko.mknbplugjson.R2;
 import com.moko.mknbplugjson.base.BaseActivity;
+import com.moko.mknbplugjson.databinding.ActivityPowerOnDefaultBinding;
 import com.moko.mknbplugjson.entity.MokoDevice;
 import com.moko.mknbplugjson.utils.SPUtils;
 import com.moko.mknbplugjson.utils.ToastUtils;
@@ -34,31 +32,13 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.lang.reflect.Type;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-
-
-public class PowerOnDefaultActivity extends BaseActivity implements RadioGroup.OnCheckedChangeListener {
-
-
-    @BindView(R2.id.rb_switch_off)
-    RadioButton rbSwitchOff;
-    @BindView(R2.id.rb_switch_on)
-    RadioButton rbSwitchOn;
-    @BindView(R2.id.rb_last_status)
-    RadioButton rbLastStatus;
-    @BindView(R2.id.rg_power_status)
-    RadioGroup rgPowerStatus;
-
+public class PowerOnDefaultActivity extends BaseActivity<ActivityPowerOnDefaultBinding> implements RadioGroup.OnCheckedChangeListener {
     private MQTTConfig appMqttConfig;
     private MokoDevice mMokoDevice;
     private Handler mHandler;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_power_on_default);
-        ButterKnife.bind(this);
+    protected void onCreate() {
         String mqttConfigAppStr = SPUtils.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
         appMqttConfig = new Gson().fromJson(mqttConfigAppStr, MQTTConfig.class);
         mMokoDevice = (MokoDevice) getIntent().getSerializableExtra(AppConstants.EXTRA_KEY_DEVICE);
@@ -71,13 +51,16 @@ public class PowerOnDefaultActivity extends BaseActivity implements RadioGroup.O
         getPowerOnDefault();
     }
 
+    @Override
+    protected ActivityPowerOnDefaultBinding getViewBinding() {
+        return ActivityPowerOnDefaultBinding.inflate(getLayoutInflater());
+    }
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMQTTMessageArrivedEvent(MQTTMessageArrivedEvent event) {
         // 更新所有设备的网络状态
-        final String topic = event.getTopic();
         final String message = event.getMessage();
-        if (TextUtils.isEmpty(message))
-            return;
+        if (TextUtils.isEmpty(message)) return;
         MsgCommon<JsonObject> msgCommon;
         try {
             Type type = new TypeToken<MsgCommon<JsonObject>>() {
@@ -86,7 +69,7 @@ public class PowerOnDefaultActivity extends BaseActivity implements RadioGroup.O
         } catch (Exception e) {
             return;
         }
-        if (!mMokoDevice.deviceId.equals(msgCommon.device_info.device_id)) {
+        if (!mMokoDevice.mac.equalsIgnoreCase(msgCommon.device_info.mac)) {
             return;
         }
         mMokoDevice.isOnline = true;
@@ -95,8 +78,7 @@ public class PowerOnDefaultActivity extends BaseActivity implements RadioGroup.O
                 dismissLoadingProgressDialog();
                 mHandler.removeMessages(0);
             }
-            if (msgCommon.result_code != 0)
-                return;
+            if (msgCommon.result_code != 0) return;
             int status;
             Type statusType = new TypeToken<PowerOnDefault>() {
             }.getType();
@@ -104,16 +86,16 @@ public class PowerOnDefaultActivity extends BaseActivity implements RadioGroup.O
             status = powerOnDefault.default_status;
             switch (status) {
                 case 0:
-                    rbSwitchOff.setChecked(true);
+                    mBind.rbSwitchOff.setChecked(true);
                     break;
                 case 1:
-                    rbSwitchOn.setChecked(true);
+                    mBind.rbSwitchOn.setChecked(true);
                     break;
                 case 2:
-                    rbLastStatus.setChecked(true);
+                    mBind.rbLastStatus.setChecked(true);
                     break;
             }
-            rgPowerStatus.setOnCheckedChangeListener(this);
+            mBind.rgPowerStatus.setOnCheckedChangeListener(this);
         }
         if (msgCommon.msg_id == MQTTConstants.CONFIG_MSG_ID_POWER_ON_DEFAULT) {
             if (mHandler.hasMessages(0)) {
@@ -133,26 +115,13 @@ public class PowerOnDefaultActivity extends BaseActivity implements RadioGroup.O
             Type infoType = new TypeToken<OverloadOccur>() {
             }.getType();
             OverloadOccur overloadOccur = new Gson().fromJson(msgCommon.data, infoType);
-            if (overloadOccur.state == 1)
-                finish();
+            if (overloadOccur.state == 1) finish();
         }
     }
-
-//    @Subscribe(threadMode = ThreadMode.MAIN)
-//    public void onDeviceOnlineEvent(DeviceOnlineEvent event) {
-//        String deviceId = event.getDeviceId();
-//        if (!mMokoDevice.deviceId.equals(deviceId)) {
-//            return;
-//        }
-//        boolean online = event.isOnline();
-//        if (!online)
-//            finish();
-//    }
 
     public void onBack(View view) {
         finish();
     }
-
 
     @Override
     public void onCheckedChanged(RadioGroup group, int checkedId) {
@@ -173,42 +142,37 @@ public class PowerOnDefaultActivity extends BaseActivity implements RadioGroup.O
             setPowerStatus(2);
     }
 
-
     private void getPowerOnDefault() {
-        String appTopic;
-        if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
-            appTopic = mMokoDevice.topicSubscribe;
-        } else {
-            appTopic = appMqttConfig.topicPublish;
-        }
         DeviceParams deviceParams = new DeviceParams();
-        deviceParams.device_id = mMokoDevice.deviceId;
         deviceParams.mac = mMokoDevice.mac;
         String message = MQTTMessageAssembler.assembleReadPowerOnDefault(deviceParams);
         try {
-            MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.READ_MSG_ID_POWER_ON_DEFAULT, appMqttConfig.qos);
+            MQTTSupport.getInstance().publish(getTopic(), message, MQTTConstants.READ_MSG_ID_POWER_ON_DEFAULT, appMqttConfig.qos);
         } catch (MqttException e) {
             e.printStackTrace();
         }
     }
 
     private void setPowerStatus(int status) {
+        DeviceParams deviceParams = new DeviceParams();
+        deviceParams.mac = mMokoDevice.mac;
+        PowerOnDefault powerOnDefault = new PowerOnDefault();
+        powerOnDefault.default_status = status;
+        String message = MQTTMessageAssembler.assembleWritePowerOnDefault(deviceParams, powerOnDefault);
+        try {
+            MQTTSupport.getInstance().publish(getTopic(), message, MQTTConstants.CONFIG_MSG_ID_POWER_ON_DEFAULT, appMqttConfig.qos);
+        } catch (MqttException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private String getTopic() {
         String appTopic;
         if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
             appTopic = mMokoDevice.topicSubscribe;
         } else {
             appTopic = appMqttConfig.topicPublish;
         }
-        DeviceParams deviceParams = new DeviceParams();
-        deviceParams.device_id = mMokoDevice.deviceId;
-        deviceParams.mac = mMokoDevice.mac;
-        PowerOnDefault powerOnDefault = new PowerOnDefault();
-        powerOnDefault.default_status = status;
-        String message = MQTTMessageAssembler.assembleWritePowerOnDefault(deviceParams, powerOnDefault);
-        try {
-            MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.CONFIG_MSG_ID_POWER_ON_DEFAULT, appMqttConfig.qos);
-        } catch (MqttException e) {
-            e.printStackTrace();
-        }
+        return appTopic;
     }
 }

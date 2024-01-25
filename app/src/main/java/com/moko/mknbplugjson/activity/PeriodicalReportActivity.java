@@ -1,19 +1,17 @@
 package com.moko.mknbplugjson.activity;
 
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
 import android.view.View;
-import android.widget.EditText;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.moko.mknbplugjson.AppConstants;
 import com.moko.mknbplugjson.R;
-import com.moko.mknbplugjson.R2;
 import com.moko.mknbplugjson.base.BaseActivity;
+import com.moko.mknbplugjson.databinding.ActivityPeriodicalReportBinding;
 import com.moko.mknbplugjson.entity.MokoDevice;
 import com.moko.mknbplugjson.utils.SPUtils;
 import com.moko.mknbplugjson.utils.ToastUtils;
@@ -33,26 +31,13 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.lang.reflect.Type;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-
-
-public class PeriodicalReportActivity extends BaseActivity {
-
-
-    @BindView(R2.id.et_switch_report_interval)
-    EditText etSwitchReportInterval;
-    @BindView(R2.id.et_countdown_report_interval)
-    EditText etCountdownReportInterval;
+public class PeriodicalReportActivity extends BaseActivity<ActivityPeriodicalReportBinding> {
     private MQTTConfig appMqttConfig;
     private MokoDevice mMokoDevice;
     private Handler mHandler;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_periodical_report);
-        ButterKnife.bind(this);
+    protected void onCreate() {
         String mqttConfigAppStr = SPUtils.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
         appMqttConfig = new Gson().fromJson(mqttConfigAppStr, MQTTConfig.class);
         mMokoDevice = (MokoDevice) getIntent().getSerializableExtra(AppConstants.EXTRA_KEY_DEVICE);
@@ -65,13 +50,16 @@ public class PeriodicalReportActivity extends BaseActivity {
         getPeriodicalReport();
     }
 
+    @Override
+    protected ActivityPeriodicalReportBinding getViewBinding() {
+        return ActivityPeriodicalReportBinding.inflate(getLayoutInflater());
+    }
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMQTTMessageArrivedEvent(MQTTMessageArrivedEvent event) {
         // 更新所有设备的网络状态
-        final String topic = event.getTopic();
         final String message = event.getMessage();
-        if (TextUtils.isEmpty(message))
-            return;
+        if (TextUtils.isEmpty(message)) return;
         MsgCommon<JsonObject> msgCommon;
         try {
             Type type = new TypeToken<MsgCommon<JsonObject>>() {
@@ -80,7 +68,7 @@ public class PeriodicalReportActivity extends BaseActivity {
         } catch (Exception e) {
             return;
         }
-        if (!mMokoDevice.deviceId.equals(msgCommon.device_info.device_id)) {
+        if (!mMokoDevice.mac.equalsIgnoreCase(msgCommon.device_info.mac)) {
             return;
         }
         mMokoDevice.isOnline = true;
@@ -89,13 +77,14 @@ public class PeriodicalReportActivity extends BaseActivity {
                 dismissLoadingProgressDialog();
                 mHandler.removeMessages(0);
             }
-            if (msgCommon.result_code != 0)
-                return;
+            if (msgCommon.result_code != 0) return;
             Type type = new TypeToken<ReportInterval>() {
             }.getType();
             ReportInterval reportInterval = new Gson().fromJson(msgCommon.data, type);
-            etSwitchReportInterval.setText(String.valueOf(reportInterval.switch_interval));
-            etCountdownReportInterval.setText(String.valueOf(reportInterval.countdown_interval));
+            mBind.etSwitchReportInterval.setText(String.valueOf(reportInterval.switch_interval));
+            mBind.etCountdownReportInterval.setText(String.valueOf(reportInterval.countdown_interval));
+            mBind.etSwitchReportInterval.setSelection(mBind.etSwitchReportInterval.getText().length());
+            mBind.etCountdownReportInterval.setSelection(mBind.etCountdownReportInterval.getText().length());
         }
         if (msgCommon.msg_id == MQTTConstants.CONFIG_MSG_ID_REPORT_INTERVAL) {
             if (mHandler.hasMessages(0)) {
@@ -115,26 +104,13 @@ public class PeriodicalReportActivity extends BaseActivity {
             Type infoType = new TypeToken<OverloadOccur>() {
             }.getType();
             OverloadOccur overloadOccur = new Gson().fromJson(msgCommon.data, infoType);
-            if (overloadOccur.state == 1)
-                finish();
+            if (overloadOccur.state == 1) finish();
         }
     }
-
-//    @Subscribe(threadMode = ThreadMode.MAIN)
-//    public void onDeviceOnlineEvent(DeviceOnlineEvent event) {
-//        String deviceId = event.getDeviceId();
-//        if (!mMokoDevice.deviceId.equals(deviceId)) {
-//            return;
-//        }
-//        boolean online = event.isOnline();
-//        if (!online)
-//            finish();
-//    }
 
     public void onBack(View view) {
         finish();
     }
-
 
     private void getPeriodicalReport() {
         String appTopic;
@@ -144,7 +120,6 @@ public class PeriodicalReportActivity extends BaseActivity {
             appTopic = appMqttConfig.topicPublish;
         }
         DeviceParams deviceParams = new DeviceParams();
-        deviceParams.device_id = mMokoDevice.deviceId;
         deviceParams.mac = mMokoDevice.mac;
         String message = MQTTMessageAssembler.assembleReadReportInterval(deviceParams);
         try {
@@ -162,7 +137,6 @@ public class PeriodicalReportActivity extends BaseActivity {
             appTopic = appMqttConfig.topicPublish;
         }
         DeviceParams deviceParams = new DeviceParams();
-        deviceParams.device_id = mMokoDevice.deviceId;
         deviceParams.mac = mMokoDevice.mac;
         ReportInterval reportInterval = new ReportInterval();
         reportInterval.switch_interval = switchInterval;
@@ -176,15 +150,14 @@ public class PeriodicalReportActivity extends BaseActivity {
     }
 
     public void onSave(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         if (!MQTTSupport.getInstance().isConnected()) {
             ToastUtils.showToast(this, R.string.network_error);
             return;
         }
         if (isValid()) {
-            String switchIntervalStr = etSwitchReportInterval.getText().toString();
-            String countdownIntervalStr = etCountdownReportInterval.getText().toString();
+            String switchIntervalStr = mBind.etSwitchReportInterval.getText().toString();
+            String countdownIntervalStr = mBind.etCountdownReportInterval.getText().toString();
             int switchInterval = Integer.parseInt(switchIntervalStr);
             int countdownInterval = Integer.parseInt(countdownIntervalStr);
             showLoadingProgressDialog();
@@ -199,17 +172,25 @@ public class PeriodicalReportActivity extends BaseActivity {
     }
 
     private boolean isValid() {
-        String switchIntervalStr = etSwitchReportInterval.getText().toString();
-        String countdownIntervalStr = etCountdownReportInterval.getText().toString();
+        String switchIntervalStr = mBind.etSwitchReportInterval.getText().toString();
+        String countdownIntervalStr = mBind.etCountdownReportInterval.getText().toString();
         if (TextUtils.isEmpty(switchIntervalStr) || TextUtils.isEmpty(countdownIntervalStr)) {
             return false;
         }
         int switchInterval = Integer.parseInt(switchIntervalStr);
-        if ((switchInterval != 0 && switchInterval < 10) || switchInterval > 86400)
+        if ((switchInterval != 0 && switchInterval < 30) || switchInterval > 86400)
             return false;
         int countdownInterval = Integer.parseInt(countdownIntervalStr);
-        if ((countdownInterval != 0 && countdownInterval < 10) || countdownInterval > 86400)
-            return false;
-        return true;
+        return (countdownInterval == 0 || countdownInterval >= 30) && countdownInterval <= 86400;
+    }
+
+    private String getTopic() {
+        String appTopic;
+        if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
+            appTopic = mMokoDevice.topicSubscribe;
+        } else {
+            appTopic = appMqttConfig.topicPublish;
+        }
+        return appTopic;
     }
 }

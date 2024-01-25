@@ -14,11 +14,9 @@ import com.moko.mknbplugjson.R;
 
 
 public class CustomDialog extends Dialog {
-
     public CustomDialog(Context context) {
         super(context);
     }
-
     public CustomDialog(Context context, int theme) {
         super(context, theme);
     }

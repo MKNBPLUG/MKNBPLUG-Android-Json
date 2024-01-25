@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="50dp"
-    android:background="@color/white_ffffff">
-
+    android:background="@color/white_ffffff"
+    tools:viewBindingIgnore="true">
 
     <View style="@style/divider_line" />
 
@@ -12,9 +13,9 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_centerVertical="true"
-        android:text=""
         android:textColor="@color/grey_808080"
-        android:textSize="16sp" />
+        android:textSize="16sp"
+        tools:text="08:00" />
 
     <TextView
         android:id="@+id/tv_value"
@@ -22,7 +23,7 @@
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
         android:layout_centerVertical="true"
-        android:text=""
         android:textColor="@color/black_333333"
-        android:textSize="16sp" />
+        android:textSize="16sp"
+        tools:text="0.23" />
 </RelativeLayout>

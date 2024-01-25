@@ -4,23 +4,14 @@ import android.text.TextUtils;
 import android.view.View;
 
 import com.moko.mknbplugjson.R;
-import com.moko.mknbplugjson.R2;
 import com.moko.mknbplugjson.view.WheelView;
 
 import java.util.ArrayList;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-import butterknife.OnClick;
-
 public class BottomDialog extends MokoBaseDialog {
-
-
-    @BindView(R2.id.wv_bottom)
-    WheelView wvBottom;
+    private WheelView wvBottom;
     private ArrayList<String> mDatas;
     private int mIndex;
-
 
     @Override
     public int getLayoutRes() {
@@ -29,7 +20,18 @@ public class BottomDialog extends MokoBaseDialog {
 
     @Override
     public void bindView(View v) {
-        ButterKnife.bind(this, v);
+        wvBottom = v.findViewById(R.id.wv_bottom);
+        v.findViewById(R.id.tv_cancel).setOnClickListener(v1 -> dismiss());
+        v.findViewById(R.id.tv_confirm).setOnClickListener(v1 -> {
+            if (TextUtils.isEmpty(wvBottom.getSelectedText())) {
+                return;
+            }
+            dismiss();
+            final int selected = wvBottom.getSelected();
+            if (listener != null) {
+                listener.onValueSelected(selected);
+            }
+        });
         wvBottom.setData(mDatas);
         wvBottom.setDefault(mIndex);
     }
@@ -37,23 +39,6 @@ public class BottomDialog extends MokoBaseDialog {
     @Override
     public float getDimAmount() {
         return 0.7f;
-    }
-
-    @OnClick(R2.id.tv_cancel)
-    public void onCancel(View view) {
-        dismiss();
-    }
-
-    @OnClick(R2.id.tv_confirm)
-    public void onConfirm(View view) {
-        if (TextUtils.isEmpty(wvBottom.getSelectedText())) {
-            return;
-        }
-        dismiss();
-        final int selected = wvBottom.getSelected();
-        if (listener != null) {
-            listener.onValueSelected(selected);
-        }
     }
 
     public void setDatas(ArrayList<String> datas, int index) {

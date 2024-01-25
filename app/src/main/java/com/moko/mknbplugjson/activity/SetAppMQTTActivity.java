@@ -3,21 +3,22 @@ package com.moko.mknbplugjson.activity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Bundle;
 import android.text.InputFilter;
 import android.text.TextUtils;
 import android.view.View;
-import android.widget.EditText;
-import android.widget.RadioButton;
 import android.widget.RadioGroup;
+
+import androidx.annotation.IdRes;
+import androidx.fragment.app.Fragment;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.elvishew.xlog.XLog;
 import com.google.gson.Gson;
 import com.moko.mknbplugjson.AppConstants;
 import com.moko.mknbplugjson.R;
-import com.moko.mknbplugjson.R2;
 import com.moko.mknbplugjson.adapter.MQTTFragmentAdapter;
 import com.moko.mknbplugjson.base.BaseActivity;
+import com.moko.mknbplugjson.databinding.ActivityMqttAppBinding;
 import com.moko.mknbplugjson.dialog.AlertMessageDialog;
 import com.moko.mknbplugjson.fragment.GeneralFragment;
 import com.moko.mknbplugjson.fragment.SSLFragment;
@@ -50,53 +51,24 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.ArrayList;
 
-import androidx.annotation.IdRes;
-import androidx.fragment.app.Fragment;
-import androidx.viewpager2.widget.ViewPager2;
-import butterknife.BindView;
-import butterknife.ButterKnife;
-
-public class SetAppMQTTActivity extends BaseActivity implements RadioGroup.OnCheckedChangeListener {
+public class SetAppMQTTActivity extends BaseActivity<ActivityMqttAppBinding> implements RadioGroup.OnCheckedChangeListener {
     private final String FILTER_ASCII = "[ -~]*";
-    @BindView(R2.id.et_mqtt_host)
-    EditText etMqttHost;
-    @BindView(R2.id.et_mqtt_port)
-    EditText etMqttPort;
-    @BindView(R2.id.et_mqtt_client_id)
-    EditText etMqttClientId;
-    @BindView(R2.id.et_mqtt_subscribe_topic)
-    EditText etMqttSubscribeTopic;
-    @BindView(R2.id.et_mqtt_publish_topic)
-    EditText etMqttPublishTopic;
-    @BindView(R2.id.rb_general)
-    RadioButton rbGeneral;
-    @BindView(R2.id.rb_user)
-    RadioButton rbUser;
-    @BindView(R2.id.rb_ssl)
-    RadioButton rbSsl;
-    @BindView(R2.id.vp_mqtt)
-    ViewPager2 vpMqtt;
-    @BindView(R2.id.rg_mqtt)
-    RadioGroup rgMqtt;
     private GeneralFragment generalFragment;
     private UserFragment userFragment;
     private SSLFragment sslFragment;
-    private MQTTFragmentAdapter adapter;
     private ArrayList<Fragment> fragments;
-
     private MQTTConfig mqttConfig;
-
     private String expertFilePath;
     private boolean isFileError;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_mqtt_app);
-        ButterKnife.bind(this);
+    protected void onCreate() {
         String MQTTConfigStr = SPUtils.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
         if (TextUtils.isEmpty(MQTTConfigStr)) {
             mqttConfig = new MQTTConfig();
+            mqttConfig.host = "47.104.81.55";
+            mqttConfig.port = "1883";
+            mqttConfig.clientId = "MK_" + Utils.getRandomStr(8);
         } else {
             Gson gson = new Gson();
             mqttConfig = gson.fromJson(MQTTConfigStr, MQTTConfig.class);
@@ -107,32 +79,36 @@ public class SetAppMQTTActivity extends BaseActivity implements RadioGroup.OnChe
             }
             return null;
         };
-        etMqttHost.setFilters(new InputFilter[]{new InputFilter.LengthFilter(64), filter});
-        etMqttClientId.setFilters(new InputFilter[]{new InputFilter.LengthFilter(64), filter});
-        etMqttSubscribeTopic.setFilters(new InputFilter[]{new InputFilter.LengthFilter(128), filter});
-        etMqttPublishTopic.setFilters(new InputFilter[]{new InputFilter.LengthFilter(128), filter});
+        mBind.etMqttHost.setFilters(new InputFilter[]{new InputFilter.LengthFilter(64), filter});
+        mBind.etMqttClientId.setFilters(new InputFilter[]{new InputFilter.LengthFilter(64), filter});
+        mBind.etMqttSubscribeTopic.setFilters(new InputFilter[]{new InputFilter.LengthFilter(128), filter});
+        mBind.etMqttPublishTopic.setFilters(new InputFilter[]{new InputFilter.LengthFilter(128), filter});
         createFragment();
         initData();
-        adapter = new MQTTFragmentAdapter(this);
+        MQTTFragmentAdapter adapter = new MQTTFragmentAdapter(this);
         adapter.setFragmentList(fragments);
-        vpMqtt.setAdapter(adapter);
-        vpMqtt.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+        mBind.vpMqtt.setAdapter(adapter);
+        mBind.vpMqtt.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
             @Override
             public void onPageSelected(int position) {
                 if (position == 0) {
-                    rbGeneral.setChecked(true);
+                    mBind.rbGeneral.setChecked(true);
                 } else if (position == 1) {
-                    rbUser.setChecked(true);
+                    mBind.rbUser.setChecked(true);
                 } else if (position == 2) {
-                    rbSsl.setChecked(true);
+                    mBind.rbSsl.setChecked(true);
                 }
             }
         });
-        vpMqtt.setOffscreenPageLimit(3);
-        rgMqtt.setOnCheckedChangeListener(this);
+        mBind.vpMqtt.setOffscreenPageLimit(3);
+        mBind.rgMqtt.setOnCheckedChangeListener(this);
         expertFilePath = JSONMainActivity.PATH_LOGCAT + File.separator + "export" + File.separator + "Settings for APP.xlsx";
     }
 
+    @Override
+    protected ActivityMqttAppBinding getViewBinding() {
+        return ActivityMqttAppBinding.inflate(getLayoutInflater());
+    }
 
     private void createFragment() {
         fragments = new ArrayList<>();
@@ -164,11 +140,11 @@ public class SetAppMQTTActivity extends BaseActivity implements RadioGroup.OnChe
     }
 
     private void initData() {
-        etMqttHost.setText(mqttConfig.host);
-        etMqttPort.setText(mqttConfig.port);
-        etMqttClientId.setText(mqttConfig.clientId);
-        etMqttSubscribeTopic.setText(mqttConfig.topicSubscribe);
-        etMqttPublishTopic.setText(mqttConfig.topicPublish);
+        mBind.etMqttHost.setText(mqttConfig.host);
+        mBind.etMqttPort.setText(mqttConfig.port);
+        mBind.etMqttClientId.setText(mqttConfig.clientId);
+        mBind.etMqttSubscribeTopic.setText(mqttConfig.topicSubscribe);
+        mBind.etMqttPublishTopic.setText(mqttConfig.topicPublish);
         generalFragment.setCleanSession(mqttConfig.cleanSession);
         generalFragment.setQos(mqttConfig.qos);
         generalFragment.setKeepAlive(mqttConfig.keepAlive);
@@ -178,6 +154,9 @@ public class SetAppMQTTActivity extends BaseActivity implements RadioGroup.OnChe
         sslFragment.setCAPath(mqttConfig.caPath);
         sslFragment.setClientKeyPath(mqttConfig.clientKeyPath);
         sslFragment.setClientCertPath(mqttConfig.clientCertPath);
+        mBind.etMqttHost.setSelection(mBind.etMqttHost.getText().length());
+        mBind.etMqttPort.setSelection(mBind.etMqttPort.getText().length());
+        mBind.etMqttClientId.setSelection(mBind.etMqttClientId.getText().length());
     }
 
     public void onBack(View view) {
@@ -194,34 +173,29 @@ public class SetAppMQTTActivity extends BaseActivity implements RadioGroup.OnChe
         dialog.setMessage("Please confirm whether to save the modified parameters?");
         dialog.setConfirm("YES");
         dialog.setCancel("NO");
-        dialog.setOnAlertConfirmListener(() -> {
-            onSave(null);
-        });
-        dialog.setOnAlertCancelListener(() -> {
-            finish();
-        });
+        dialog.setOnAlertConfirmListener(() -> onSave(null));
+        dialog.setOnAlertCancelListener(this::finish);
         dialog.show(getSupportFragmentManager());
     }
 
     @Override
     public void onCheckedChanged(RadioGroup group, @IdRes int checkedId) {
         if (checkedId == R.id.rb_general)
-            vpMqtt.setCurrentItem(0);
+            mBind.vpMqtt.setCurrentItem(0);
         else if (checkedId == R.id.rb_user)
-            vpMqtt.setCurrentItem(1);
+            mBind.vpMqtt.setCurrentItem(1);
         else if (checkedId == R.id.rb_ssl)
-            vpMqtt.setCurrentItem(2);
+            mBind.vpMqtt.setCurrentItem(2);
     }
 
     public void onSave(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         if (isVerify()) return;
         String mqttConfigStr = new Gson().toJson(mqttConfig, MQTTConfig.class);
         SPUtils.setStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, mqttConfigStr);
         MQTTSupport.getInstance().disconnectMqtt();
         showLoadingProgressDialog();
-        etMqttHost.postDelayed(() -> {
+        mBind.etMqttHost.postDelayed(() -> {
             try {
                 MQTTSupport.getInstance().connectMqtt(mqttConfigStr);
             } catch (FileNotFoundException e) {
@@ -239,11 +213,11 @@ public class SetAppMQTTActivity extends BaseActivity implements RadioGroup.OnChe
     }
 
     private boolean isVerify() {
-        String host = etMqttHost.getText().toString().replaceAll(" ", "");
-        String port = etMqttPort.getText().toString();
-        String clientId = etMqttClientId.getText().toString().replaceAll(" ", "");
-        String subscribeTopic = etMqttSubscribeTopic.getText().toString().replaceAll(" ", "");
-        String publishTopic = etMqttPublishTopic.getText().toString().replaceAll(" ", "");
+        String host = mBind.etMqttHost.getText().toString().replaceAll(" ", "");
+        String port = mBind.etMqttPort.getText().toString();
+        String clientId = mBind.etMqttClientId.getText().toString().replaceAll(" ", "");
+        String subscribeTopic = mBind.etMqttSubscribeTopic.getText().toString().replaceAll(" ", "");
+        String publishTopic = mBind.etMqttPublishTopic.getText().toString().replaceAll(" ", "");
 
         if (TextUtils.isEmpty(host)) {
             ToastUtils.showToast(this, getString(R.string.mqtt_verify_host));
@@ -261,8 +235,7 @@ public class SetAppMQTTActivity extends BaseActivity implements RadioGroup.OnChe
             ToastUtils.showToast(this, getString(R.string.mqtt_verify_client_id_empty));
             return true;
         }
-        if (!generalFragment.isValid() || !sslFragment.isValid())
-            return true;
+        if (!generalFragment.isValid() || !sslFragment.isValid()) return true;
         mqttConfig.host = host;
         mqttConfig.port = port;
         mqttConfig.clientId = clientId;
@@ -287,37 +260,47 @@ public class SetAppMQTTActivity extends BaseActivity implements RadioGroup.OnChe
     }
 
     public void selectCertificate(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         sslFragment.selectCertificate();
     }
 
     public void selectCAFile(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         sslFragment.selectCAFile();
     }
 
     public void selectKeyFile(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         sslFragment.selectKeyFile();
     }
 
     public void selectCertFile(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         sslFragment.selectCertFile();
     }
 
+    public void onClearSettings(View view) {
+        //清空所有配置信息
+        mBind.etMqttHost.setText("");
+        mBind.etMqttPort.setText("");
+        mBind.etMqttClientId.setText("");
+        mBind.etMqttSubscribeTopic.setText("");
+        mBind.etMqttPublishTopic.setText("");
+        generalFragment.setCleanSession(true);
+        generalFragment.setQos(1);
+        generalFragment.setKeepAlive(60);
+        userFragment.setPassword("");
+        userFragment.setUserName("");
+        sslFragment.setConnectMode(0);
+    }
+
     public void onExportSettings(View view) {
-        if (isWindowLocked())
-            return;
-        mqttConfig.host = etMqttHost.getText().toString().replaceAll(" ", "");
-        mqttConfig.port = etMqttPort.getText().toString();
-        mqttConfig.clientId = etMqttClientId.getText().toString().replaceAll(" ", "");
-        mqttConfig.topicSubscribe = etMqttSubscribeTopic.getText().toString().replaceAll(" ", "");
-        mqttConfig.topicPublish = etMqttPublishTopic.getText().toString().replaceAll(" ", "");
+        if (isWindowLocked()) return;
+        mqttConfig.host = mBind.etMqttHost.getText().toString().replaceAll(" ", "");
+        mqttConfig.port = mBind.etMqttPort.getText().toString();
+        mqttConfig.clientId = mBind.etMqttClientId.getText().toString().replaceAll(" ", "");
+        mqttConfig.topicSubscribe = mBind.etMqttSubscribeTopic.getText().toString().replaceAll(" ", "");
+        mqttConfig.topicPublish = mBind.etMqttPublishTopic.getText().toString().replaceAll(" ", "");
         mqttConfig.cleanSession = generalFragment.isCleanSession();
         mqttConfig.qos = generalFragment.getQos();
         mqttConfig.keepAlive = generalFragment.getKeepAlive();
@@ -448,8 +431,7 @@ public class SetAppMQTTActivity extends BaseActivity implements RadioGroup.OnChe
     }
 
     public void onImportSettings(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked())return;
         Intent intent = new Intent(Intent.ACTION_GET_CONTENT);
         intent.setType("*/*");//设置类型，我这里是任意类型，任意后缀的可以这样写。
         intent.addCategory(Intent.CATEGORY_OPENABLE);
@@ -517,7 +499,7 @@ public class SetAppMQTTActivity extends BaseActivity implements RadioGroup.OnChe
                                 mqttConfig.qos = Integer.parseInt(qosCell.getStringCellValue().replaceAll("value:", ""));
                             Cell keepAliveCell = sheet.getRow(8).getCell(1);
                             if (keepAliveCell != null)
-                            mqttConfig.keepAlive = Integer.parseInt(keepAliveCell.getStringCellValue().replaceAll("value:", ""));
+                                mqttConfig.keepAlive = Integer.parseInt(keepAliveCell.getStringCellValue().replaceAll("value:", ""));
                             Cell usernameCell = sheet.getRow(9).getCell(1);
                             if (usernameCell != null) {
                                 mqttConfig.username = usernameCell.getStringCellValue().replaceAll("value:", "");
@@ -533,8 +515,8 @@ public class SetAppMQTTActivity extends BaseActivity implements RadioGroup.OnChe
                                 if (mqttConfig.connectMode > 0) {
                                     Cell cell = sheet.getRow(12).getCell(1);
                                     if (cell != null)
-                                    // 1/2
-                                    mqttConfig.connectMode = Integer.parseInt(cell.getStringCellValue().replaceAll("value:", ""));
+                                        // 1/2
+                                        mqttConfig.connectMode = Integer.parseInt(cell.getStringCellValue().replaceAll("value:", ""));
                                 }
                             }
                             runOnUiThread(() -> {

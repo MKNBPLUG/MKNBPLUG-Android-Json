@@ -1,19 +1,17 @@
 package com.moko.mknbplugjson.activity;
 
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
 import android.view.View;
-import android.widget.EditText;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.moko.mknbplugjson.AppConstants;
 import com.moko.mknbplugjson.R;
-import com.moko.mknbplugjson.R2;
 import com.moko.mknbplugjson.base.BaseActivity;
+import com.moko.mknbplugjson.databinding.ActivityEnergyStorageReportBinding;
 import com.moko.mknbplugjson.entity.MokoDevice;
 import com.moko.mknbplugjson.utils.SPUtils;
 import com.moko.mknbplugjson.utils.ToastUtils;
@@ -33,28 +31,13 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.lang.reflect.Type;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-
-
-public class EnergyStorageReportActivity extends BaseActivity {
-
-
-    @BindView(R2.id.et_energy_storage_interval)
-    EditText etEnergyStorageInterval;
-    @BindView(R2.id.et_power_change_threshold)
-    EditText etPowerChangeThreshold;
-    @BindView(R2.id.et_energy_report_interval)
-    EditText etEnergyReportInterval;
+public class EnergyStorageReportActivity extends BaseActivity<ActivityEnergyStorageReportBinding> {
     private MQTTConfig appMqttConfig;
     private MokoDevice mMokoDevice;
     private Handler mHandler;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_energy_storage_report);
-        ButterKnife.bind(this);
+    protected void onCreate() {
         String mqttConfigAppStr = SPUtils.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
         appMqttConfig = new Gson().fromJson(mqttConfigAppStr, MQTTConfig.class);
         mMokoDevice = (MokoDevice) getIntent().getSerializableExtra(AppConstants.EXTRA_KEY_DEVICE);
@@ -67,10 +50,14 @@ public class EnergyStorageReportActivity extends BaseActivity {
         getEnergyStorageReport();
     }
 
+    @Override
+    protected ActivityEnergyStorageReportBinding getViewBinding() {
+        return ActivityEnergyStorageReportBinding.inflate(getLayoutInflater());
+    }
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMQTTMessageArrivedEvent(MQTTMessageArrivedEvent event) {
         // 更新所有设备的网络状态
-        final String topic = event.getTopic();
         final String message = event.getMessage();
         if (TextUtils.isEmpty(message))
             return;
@@ -82,7 +69,7 @@ public class EnergyStorageReportActivity extends BaseActivity {
         } catch (Exception e) {
             return;
         }
-        if (!mMokoDevice.deviceId.equals(msgCommon.device_info.device_id)) {
+        if (!mMokoDevice.mac.equalsIgnoreCase(msgCommon.device_info.mac)) {
             return;
         }
         mMokoDevice.isOnline = true;
@@ -96,9 +83,9 @@ public class EnergyStorageReportActivity extends BaseActivity {
             Type type = new TypeToken<EnergyStorageReport>() {
             }.getType();
             EnergyStorageReport energyStorageReport = new Gson().fromJson(msgCommon.data, type);
-            etEnergyStorageInterval.setText(String.valueOf(energyStorageReport.storage_interval));
-            etPowerChangeThreshold.setText(String.valueOf(energyStorageReport.storage_threshold));
-            etEnergyReportInterval.setText(String.valueOf(energyStorageReport.report_interval));
+            mBind.etEnergyStorageInterval.setText(String.valueOf(energyStorageReport.storage_interval));
+            mBind.etPowerChangeThreshold.setText(String.valueOf(energyStorageReport.storage_threshold));
+            mBind.etEnergyReportInterval.setText(String.valueOf(energyStorageReport.report_interval));
         }
         if (msgCommon.msg_id == MQTTConstants.CONFIG_MSG_ID_ENERGY_REPORT_PARAMS) {
             if (mHandler.hasMessages(0)) {
@@ -123,21 +110,9 @@ public class EnergyStorageReportActivity extends BaseActivity {
         }
     }
 
-//    @Subscribe(threadMode = ThreadMode.MAIN)
-//    public void onDeviceOnlineEvent(DeviceOnlineEvent event) {
-//        String deviceId = event.getDeviceId();
-//        if (!mMokoDevice.deviceId.equals(deviceId)) {
-//            return;
-//        }
-//        boolean online = event.isOnline();
-//        if (!online)
-//            finish();
-//    }
-
     public void onBack(View view) {
         finish();
     }
-
 
     private void getEnergyStorageReport() {
         String appTopic;
@@ -147,7 +122,6 @@ public class EnergyStorageReportActivity extends BaseActivity {
             appTopic = appMqttConfig.topicPublish;
         }
         DeviceParams deviceParams = new DeviceParams();
-        deviceParams.device_id = mMokoDevice.deviceId;
         deviceParams.mac = mMokoDevice.mac;
         String message = MQTTMessageAssembler.assembleReadEnergyReportParams(deviceParams);
         try {
@@ -165,7 +139,6 @@ public class EnergyStorageReportActivity extends BaseActivity {
             appTopic = appMqttConfig.topicPublish;
         }
         DeviceParams deviceParams = new DeviceParams();
-        deviceParams.device_id = mMokoDevice.deviceId;
         deviceParams.mac = mMokoDevice.mac;
         EnergyStorageReport energyStorageReport = new EnergyStorageReport();
         energyStorageReport.storage_interval = storageInterval;
@@ -180,16 +153,15 @@ public class EnergyStorageReportActivity extends BaseActivity {
     }
 
     public void onSave(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         if (!MQTTSupport.getInstance().isConnected()) {
             ToastUtils.showToast(this, R.string.network_error);
             return;
         }
         if (isValid()) {
-            String energyStorageIntervalStr = etEnergyStorageInterval.getText().toString();
-            String powerChangeThresholdStr = etPowerChangeThreshold.getText().toString();
-            String energyReportIntervalStr = etEnergyReportInterval.getText().toString();
+            String energyStorageIntervalStr = mBind.etEnergyStorageInterval.getText().toString();
+            String powerChangeThresholdStr = mBind.etPowerChangeThreshold.getText().toString();
+            String energyReportIntervalStr = mBind.etEnergyReportInterval.getText().toString();
             int energyStorageInterval = Integer.parseInt(energyStorageIntervalStr);
             int powerChangeThreshold = Integer.parseInt(powerChangeThresholdStr);
             int energyReportInterval = Integer.parseInt(energyReportIntervalStr);
@@ -205,23 +177,19 @@ public class EnergyStorageReportActivity extends BaseActivity {
     }
 
     private boolean isValid() {
-        String energyStorageIntervalStr = etEnergyStorageInterval.getText().toString();
-        String powerChangeThresholdStr = etPowerChangeThreshold.getText().toString();
-        String energyReportIntervalStr = etEnergyReportInterval.getText().toString();
+        String energyStorageIntervalStr = mBind.etEnergyStorageInterval.getText().toString();
+        String powerChangeThresholdStr = mBind.etPowerChangeThreshold.getText().toString();
+        String energyReportIntervalStr = mBind.etEnergyReportInterval.getText().toString();
         if (TextUtils.isEmpty(energyStorageIntervalStr)
                 || TextUtils.isEmpty(powerChangeThresholdStr)
                 || TextUtils.isEmpty(energyReportIntervalStr)) {
             return false;
         }
         int energyStorageInterval = Integer.parseInt(energyStorageIntervalStr);
-        if (energyStorageInterval < 1 || energyStorageInterval > 60)
-            return false;
+        if (energyStorageInterval < 1 || energyStorageInterval > 60) return false;
         int powerChangeThreshold = Integer.parseInt(powerChangeThresholdStr);
-        if (powerChangeThreshold < 1 || powerChangeThreshold > 100)
-            return false;
+        if (powerChangeThreshold > 100) return false;
         int energyReportInterval = Integer.parseInt(energyReportIntervalStr);
-        if (energyReportInterval > 43200)
-            return false;
-        return true;
+        return energyReportInterval <= 1440;
     }
 }

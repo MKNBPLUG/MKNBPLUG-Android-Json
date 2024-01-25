@@ -1,19 +1,17 @@
 package com.moko.mknbplugjson.activity;
 
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
 import android.view.View;
-import android.widget.EditText;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.moko.mknbplugjson.AppConstants;
 import com.moko.mknbplugjson.R;
-import com.moko.mknbplugjson.R2;
 import com.moko.mknbplugjson.base.BaseActivity;
+import com.moko.mknbplugjson.databinding.ActivityPowerReportBinding;
 import com.moko.mknbplugjson.entity.MokoDevice;
 import com.moko.mknbplugjson.utils.SPUtils;
 import com.moko.mknbplugjson.utils.ToastUtils;
@@ -33,26 +31,13 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.lang.reflect.Type;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-
-
-public class PowerReportSettingActivity extends BaseActivity {
-
-
-    @BindView(R2.id.et_power_report_interval)
-    EditText etPowerReportInterval;
-    @BindView(R2.id.et_power_change_threshold)
-    EditText etPowerChangeThreshold;
+public class PowerReportSettingActivity extends BaseActivity<ActivityPowerReportBinding> {
     private MQTTConfig appMqttConfig;
     private MokoDevice mMokoDevice;
     private Handler mHandler;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_power_report);
-        ButterKnife.bind(this);
+    protected void onCreate() {
         String mqttConfigAppStr = SPUtils.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
         appMqttConfig = new Gson().fromJson(mqttConfigAppStr, MQTTConfig.class);
         mMokoDevice = (MokoDevice) getIntent().getSerializableExtra(AppConstants.EXTRA_KEY_DEVICE);
@@ -65,13 +50,16 @@ public class PowerReportSettingActivity extends BaseActivity {
         getPowerReportSetting();
     }
 
+    @Override
+    protected ActivityPowerReportBinding getViewBinding() {
+        return ActivityPowerReportBinding.inflate(getLayoutInflater());
+    }
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMQTTMessageArrivedEvent(MQTTMessageArrivedEvent event) {
         // 更新所有设备的网络状态
-        final String topic = event.getTopic();
         final String message = event.getMessage();
-        if (TextUtils.isEmpty(message))
-            return;
+        if (TextUtils.isEmpty(message)) return;
         MsgCommon<JsonObject> msgCommon;
         try {
             Type type = new TypeToken<MsgCommon<JsonObject>>() {
@@ -80,7 +68,7 @@ public class PowerReportSettingActivity extends BaseActivity {
         } catch (Exception e) {
             return;
         }
-        if (!mMokoDevice.deviceId.equals(msgCommon.device_info.device_id)) {
+        if (!mMokoDevice.mac.equalsIgnoreCase(msgCommon.device_info.mac)) {
             return;
         }
         mMokoDevice.isOnline = true;
@@ -89,13 +77,14 @@ public class PowerReportSettingActivity extends BaseActivity {
                 dismissLoadingProgressDialog();
                 mHandler.removeMessages(0);
             }
-            if (msgCommon.result_code != 0)
-                return;
+            if (msgCommon.result_code != 0) return;
             Type type = new TypeToken<PowerReportSetting>() {
             }.getType();
             PowerReportSetting powerReportSetting = new Gson().fromJson(msgCommon.data, type);
-            etPowerReportInterval.setText(String.valueOf(powerReportSetting.report_interval));
-            etPowerChangeThreshold.setText(String.valueOf(powerReportSetting.report_threshold));
+            mBind.etPowerReportInterval.setText(String.valueOf(powerReportSetting.report_interval));
+            mBind.etPowerChangeThreshold.setText(String.valueOf(powerReportSetting.report_threshold));
+            mBind.etPowerReportInterval.setSelection(mBind.etPowerReportInterval.getText().length());
+            mBind.etPowerChangeThreshold.setSelection(mBind.etPowerChangeThreshold.getText().length());
         }
         if (msgCommon.msg_id == MQTTConstants.CONFIG_MSG_ID_POWER_REPORT_SETTING) {
             if (mHandler.hasMessages(0)) {
@@ -115,76 +104,48 @@ public class PowerReportSettingActivity extends BaseActivity {
             Type infoType = new TypeToken<OverloadOccur>() {
             }.getType();
             OverloadOccur overloadOccur = new Gson().fromJson(msgCommon.data, infoType);
-            if (overloadOccur.state == 1)
-                finish();
+            if (overloadOccur.state == 1) finish();
         }
     }
-
-//    @Subscribe(threadMode = ThreadMode.MAIN)
-//    public void onDeviceOnlineEvent(DeviceOnlineEvent event) {
-//        String deviceId = event.getDeviceId();
-//        if (!mMokoDevice.deviceId.equals(deviceId)) {
-//            return;
-//        }
-//        boolean online = event.isOnline();
-//        if (!online)
-//            finish();
-//    }
 
     public void onBack(View view) {
         finish();
     }
 
-
     private void getPowerReportSetting() {
-        String appTopic;
-        if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
-            appTopic = mMokoDevice.topicSubscribe;
-        } else {
-            appTopic = appMqttConfig.topicPublish;
-        }
         DeviceParams deviceParams = new DeviceParams();
-        deviceParams.device_id = mMokoDevice.deviceId;
         deviceParams.mac = mMokoDevice.mac;
         String message = MQTTMessageAssembler.assembleReadPowerReportSetting(deviceParams);
         try {
-            MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.READ_MSG_ID_POWER_REPORT_SETTING, appMqttConfig.qos);
+            MQTTSupport.getInstance().publish(getTopic(), message, MQTTConstants.READ_MSG_ID_POWER_REPORT_SETTING, appMqttConfig.qos);
         } catch (MqttException e) {
             e.printStackTrace();
         }
     }
 
     private void setPowerReportSetting(int reportInterval, int reportThreshold) {
-        String appTopic;
-        if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
-            appTopic = mMokoDevice.topicSubscribe;
-        } else {
-            appTopic = appMqttConfig.topicPublish;
-        }
         DeviceParams deviceParams = new DeviceParams();
-        deviceParams.device_id = mMokoDevice.deviceId;
         deviceParams.mac = mMokoDevice.mac;
         PowerReportSetting powerReportSetting = new PowerReportSetting();
         powerReportSetting.report_interval = reportInterval;
         powerReportSetting.report_threshold = reportThreshold;
         String message = MQTTMessageAssembler.assembleWritePowerReportSetting(deviceParams, powerReportSetting);
         try {
-            MQTTSupport.getInstance().publish(appTopic, message, MQTTConstants.CONFIG_MSG_ID_POWER_REPORT_SETTING, appMqttConfig.qos);
+            MQTTSupport.getInstance().publish(getTopic(), message, MQTTConstants.CONFIG_MSG_ID_POWER_REPORT_SETTING, appMqttConfig.qos);
         } catch (MqttException e) {
             e.printStackTrace();
         }
     }
 
     public void onSave(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         if (!MQTTSupport.getInstance().isConnected()) {
             ToastUtils.showToast(this, R.string.network_error);
             return;
         }
         if (isValid()) {
-            String powerReportIntervalStr = etPowerReportInterval.getText().toString();
-            String powerChangeThresholdStr = etPowerChangeThreshold.getText().toString();
+            String powerReportIntervalStr = mBind.etPowerReportInterval.getText().toString();
+            String powerChangeThresholdStr = mBind.etPowerChangeThreshold.getText().toString();
             int powerReportInterval = Integer.parseInt(powerReportIntervalStr);
             int powerChangeThreshold = Integer.parseInt(powerChangeThresholdStr);
             showLoadingProgressDialog();
@@ -199,17 +160,25 @@ public class PowerReportSettingActivity extends BaseActivity {
     }
 
     private boolean isValid() {
-        String powerReportIntervalStr = etPowerReportInterval.getText().toString();
-        String powerChangeThresholdStr = etPowerChangeThreshold.getText().toString();
+        String powerReportIntervalStr = mBind.etPowerReportInterval.getText().toString();
+        String powerChangeThresholdStr = mBind.etPowerChangeThreshold.getText().toString();
         if (TextUtils.isEmpty(powerReportIntervalStr) || TextUtils.isEmpty(powerChangeThresholdStr)) {
             return false;
         }
         int powerReportInterval = Integer.parseInt(powerReportIntervalStr);
-        if ((powerReportInterval != 0 && powerReportInterval < 10) || powerReportInterval > 86400)
+        if ((powerReportInterval != 0 && powerReportInterval < 1) || powerReportInterval > 86400)
             return false;
         int powerChangeThreshold = Integer.parseInt(powerChangeThresholdStr);
-        if (powerChangeThreshold > 100)
-            return false;
-        return true;
+        return powerChangeThreshold <= 100;
+    }
+
+    private String getTopic() {
+        String appTopic;
+        if (TextUtils.isEmpty(appMqttConfig.topicPublish)) {
+            appTopic = mMokoDevice.topicSubscribe;
+        } else {
+            appTopic = appMqttConfig.topicPublish;
+        }
+        return appTopic;
     }
 }

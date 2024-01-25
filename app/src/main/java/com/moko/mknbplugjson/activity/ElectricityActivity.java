@@ -1,20 +1,17 @@
 package com.moko.mknbplugjson.activity;
 
-import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.TextUtils;
 import android.view.View;
-import android.widget.TextView;
 
 import com.elvishew.xlog.XLog;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import com.moko.mknbplugjson.AppConstants;
-import com.moko.mknbplugjson.R;
-import com.moko.mknbplugjson.R2;
 import com.moko.mknbplugjson.base.BaseActivity;
+import com.moko.mknbplugjson.databinding.ActivityElectricityManagerBinding;
 import com.moko.mknbplugjson.entity.MokoDevice;
 import com.moko.mknbplugjson.utils.SPUtils;
 import com.moko.mknbplugjson.utils.Utils;
@@ -34,31 +31,13 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.lang.reflect.Type;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-
-public class ElectricityActivity extends BaseActivity {
-
-    @BindView(R2.id.tv_current)
-    TextView tvCurrent;
-    @BindView(R2.id.tv_voltage)
-    TextView tvVoltage;
-    @BindView(R2.id.tv_power)
-    TextView tvPower;
-    @BindView(R2.id.tv_power_factor)
-    TextView tvPowerFactor;
-    @BindView(R2.id.tv_frequency)
-    TextView tvFrequency;
-
+public class ElectricityActivity extends BaseActivity<ActivityElectricityManagerBinding> {
     private MokoDevice mMokoDevice;
     private MQTTConfig appMqttConfig;
     private Handler mHandler;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_electricity_manager);
-        ButterKnife.bind(this);
+    protected void onCreate() {
         String mqttConfigAppStr = SPUtils.getStringValue(this, AppConstants.SP_KEY_MQTT_CONFIG_APP, "");
         appMqttConfig = new Gson().fromJson(mqttConfigAppStr, MQTTConfig.class);
         mMokoDevice = (MokoDevice) getIntent().getSerializableExtra(AppConstants.EXTRA_KEY_DEVICE);
@@ -71,13 +50,16 @@ public class ElectricityActivity extends BaseActivity {
         getElectricity();
     }
 
+    @Override
+    protected ActivityElectricityManagerBinding getViewBinding() {
+        return ActivityElectricityManagerBinding.inflate(getLayoutInflater());
+    }
+
     @Subscribe(threadMode = ThreadMode.MAIN)
     public void onMQTTMessageArrivedEvent(MQTTMessageArrivedEvent event) {
         // 更新所有设备的网络状态
-        final String topic = event.getTopic();
         final String message = event.getMessage();
-        if (TextUtils.isEmpty(message))
-            return;
+        if (TextUtils.isEmpty(message)) return;
         MsgCommon<JsonObject> msgCommon;
         try {
             Type type = new TypeToken<MsgCommon<JsonObject>>() {
@@ -86,7 +68,7 @@ public class ElectricityActivity extends BaseActivity {
         } catch (Exception e) {
             return;
         }
-        if (!mMokoDevice.deviceId.equals(msgCommon.device_info.device_id)) {
+        if (!mMokoDevice.mac.equalsIgnoreCase(msgCommon.device_info.mac)) {
             return;
         }
         mMokoDevice.isOnline = true;
@@ -104,11 +86,11 @@ public class ElectricityActivity extends BaseActivity {
             float power = powerInfo.power * 0.1f;
             float power_factor = powerInfo.power_factor * 0.01f;
             float frequency = powerInfo.frequency * 0.01f;
-            tvCurrent.setText(String.valueOf(current));
-            tvVoltage.setText(Utils.getDecimalFormat("0.#").format(voltage));
-            tvPower.setText(Utils.getDecimalFormat("0.#").format(power));
-            tvPowerFactor.setText(Utils.getDecimalFormat("0.##").format(power_factor));
-            tvFrequency.setText(Utils.getDecimalFormat("0.##").format(frequency));
+            mBind.tvCurrent.setText(String.valueOf(current));
+            mBind.tvVoltage.setText(Utils.getDecimalFormat("0.#").format(voltage));
+            mBind.tvPower.setText(Utils.getDecimalFormat("0.#").format(power));
+            mBind.tvPowerFactor.setText(Utils.getDecimalFormat("0.##").format(power_factor));
+            mBind.tvFrequency.setText(Utils.getDecimalFormat("0.##").format(frequency));
         }
         if (msgCommon.msg_id == MQTTConstants.NOTIFY_MSG_ID_OVERLOAD_OCCUR
                 || msgCommon.msg_id == MQTTConstants.NOTIFY_MSG_ID_OVER_VOLTAGE_OCCUR
@@ -117,21 +99,9 @@ public class ElectricityActivity extends BaseActivity {
             Type infoType = new TypeToken<OverloadOccur>() {
             }.getType();
             OverloadOccur overloadOccur = new Gson().fromJson(msgCommon.data, infoType);
-            if (overloadOccur.state == 1)
-                finish();
+            if (overloadOccur.state == 1) finish();
         }
     }
-
-//    @Subscribe(threadMode = ThreadMode.MAIN)
-//    public void onDeviceOnlineEvent(DeviceOnlineEvent event) {
-//        String deviceId = event.getDeviceId();
-//        if (!mMokoDevice.deviceId.equals(deviceId)) {
-//            return;
-//        }
-//        boolean online = event.isOnline();
-//        if (!online)
-//            finish();
-//    }
 
     public void onBack(View view) {
         finish();
@@ -146,7 +116,6 @@ public class ElectricityActivity extends BaseActivity {
             appTopic = appMqttConfig.topicPublish;
         }
         DeviceParams deviceParams = new DeviceParams();
-        deviceParams.device_id = mMokoDevice.deviceId;
         deviceParams.mac = mMokoDevice.mac;
         String message = MQTTMessageAssembler.assembleReadPowerInfo(deviceParams);
         try {

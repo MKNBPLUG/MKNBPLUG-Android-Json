@@ -1,7 +1,6 @@
 package com.moko.support.json.entity;
 
 public class MQTTSettings {
-
     public String host;
     public int port;
     public String username;
@@ -13,9 +12,7 @@ public class MQTTSettings {
     public String subscribe_topic;
     public String publish_topic;
     public int encryption_type;
-    public String cert_host = "";
-    public int cert_port;
-    public String ca_cert_path = "";
-    public String client_cert_path = "";
-    public String client_key_path = "";
+    public String ca_cert_url = "";
+    public String client_cert_url = "";
+    public String client_key_url = "";
 }

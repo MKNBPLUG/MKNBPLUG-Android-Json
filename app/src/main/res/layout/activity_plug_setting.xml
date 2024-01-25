@@ -2,6 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:tools="http://schemas.android.com/tools"
     android:background="@color/grey_f2f2f2"
     android:orientation="vertical">
 
@@ -153,31 +154,6 @@
                 android:layout_height="50dp"
                 android:background="@color/white_ffffff"
                 android:clickable="true"
-                android:onClick="onConnTimeoutSettingClick">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_centerVertical="true"
-                    android:layout_marginLeft="12dp"
-                    android:layout_marginRight="12dp"
-                    android:drawableRight="@drawable/arrow_right"
-                    android:text="Connection Timeout Setting"
-                    android:textColor="@color/black_333333"
-                    android:textSize="15sp" />
-
-
-                <View
-                    style="@style/divider_line"
-                    android:layout_alignParentBottom="true"
-                    android:background="@color/grey_d9d9d9" />
-            </RelativeLayout>
-
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:background="@color/white_ffffff"
-                android:clickable="true"
                 android:onClick="onSystemTimeClick">
 
                 <TextView
@@ -190,7 +166,6 @@
                     android:text="System Time"
                     android:textColor="@color/black_333333"
                     android:textSize="15sp" />
-
 
                 <View
                     style="@style/divider_line"
@@ -305,6 +280,31 @@
                     android:background="@color/grey_d9d9d9" />
             </RelativeLayout>
 
+            <RelativeLayout
+                android:id="@+id/layoutResetByButton"
+                android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:background="@color/white_ffffff"
+                android:clickable="true"
+                android:onClick="onResetByButtonClick">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_centerVertical="true"
+                    android:layout_marginLeft="12dp"
+                    android:layout_marginRight="12dp"
+                    android:drawableRight="@drawable/arrow_right"
+                    android:text="Reset by Button"
+                    android:textColor="@color/black_333333"
+                    android:textSize="15sp" />
+
+                <View
+                    style="@style/divider_line"
+                    android:layout_alignParentBottom="true"
+                    android:background="@color/grey_d9d9d9" />
+            </RelativeLayout>
+
             <View
                 style="@style/divider_line"
                 android:layout_height="12dp"
@@ -329,7 +329,6 @@
                     android:text="Modify Network and MQTT"
                     android:textColor="@color/black_333333"
                     android:textSize="15sp" />
-
 
                 <View
                     style="@style/divider_line"
@@ -357,7 +356,6 @@
                     android:textColor="@color/black_333333"
                     android:textSize="15sp" />
 
-
                 <View
                     style="@style/divider_line"
                     android:layout_alignParentBottom="true"
@@ -369,31 +367,7 @@
                 android:layout_height="50dp"
                 android:background="@color/white_ffffff"
                 android:clickable="true"
-                android:onClick="onMQTTSettingForDevice">
-
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_centerVertical="true"
-                    android:layout_marginLeft="12dp"
-                    android:layout_marginRight="12dp"
-                    android:drawableRight="@drawable/arrow_right"
-                    android:text="MQTT Settings for Device"
-                    android:textColor="@color/black_333333"
-                    android:textSize="15sp" />
-
-
-                <View
-                    style="@style/divider_line"
-                    android:layout_alignParentBottom="true"
-                    android:background="@color/grey_d9d9d9" />
-            </RelativeLayout>
-
-            <RelativeLayout
-                android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:background="@color/white_ffffff"
-                android:clickable="true"
+                android:layout_marginTop="12dp"
                 android:onClick="onDeviceInfo">
 
                 <TextView
@@ -406,7 +380,6 @@
                     android:text="Device Information"
                     android:textColor="@color/black_333333"
                     android:textSize="15sp" />
-
 
                 <View
                     style="@style/divider_line"
@@ -421,6 +394,7 @@
                 android:layout_marginTop="12dp"
                 android:background="@color/white_ffffff"
                 android:clickable="true"
+                tools:visibility="visible"
                 android:onClick="onDebugModeClick"
                 android:visibility="gone">
 
@@ -442,36 +416,20 @@
                     android:background="@color/grey_d9d9d9" />
             </RelativeLayout>
 
-
             <View
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1.0" />
 
             <TextView
-                android:layout_width="match_parent"
+                android:layout_width="150dp"
                 android:layout_height="50dp"
-                android:layout_marginLeft="53dp"
                 android:layout_marginTop="30dp"
-                android:layout_marginRight="53dp"
-                android:background="@drawable/shape_corner_btn_bg"
-                android:clickable="true"
-                android:gravity="center"
-                android:onClick="onRemove"
-                android:text="Remove Device"
-                android:textColor="@color/white_ffffff"
-                android:textSize="18sp" />
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="50dp"
-                android:layout_marginLeft="53dp"
-                android:layout_marginTop="30dp"
-                android:layout_marginRight="53dp"
                 android:background="@drawable/shape_corner_btn_bg"
                 android:clickable="true"
                 android:gravity="center"
                 android:onClick="onReset"
+                android:layout_gravity="center_horizontal"
                 android:text="Reset"
                 android:textColor="@color/white_ffffff"
                 android:textSize="18sp" />

@@ -7,54 +7,28 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CheckBox;
-import android.widget.EditText;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
 
-import com.moko.mknbplugjson.R;
-import com.moko.mknbplugjson.R2;
-import com.moko.mknbplugjson.base.BaseActivity;
-import com.moko.mknbplugjson.utils.ToastUtils;
-
+import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
-import butterknife.BindView;
-import butterknife.ButterKnife;
+
+import com.moko.mknbplugjson.databinding.FragmentLwtBinding;
+import com.moko.mknbplugjson.utils.ToastUtils;
 
 public class LWTFragment extends Fragment {
     private static final String TAG = LWTFragment.class.getSimpleName();
     private final String FILTER_ASCII = "[ -~]*";
-    @BindView(R2.id.rb_qos_1)
-    RadioButton rbQos1;
-    @BindView(R2.id.rb_qos_2)
-    RadioButton rbQos2;
-    @BindView(R2.id.rb_qos_3)
-    RadioButton rbQos3;
-    @BindView(R2.id.rg_qos)
-    RadioGroup rgQos;
-    @BindView(R2.id.cb_lwt)
-    CheckBox cbLwt;
-    @BindView(R2.id.cb_lwt_retain)
-    CheckBox cbLwtRetain;
-    @BindView(R2.id.et_lwt_topic)
-    EditText etLwtTopic;
-    @BindView(R2.id.et_lwt_payload)
-    EditText etLwtPayload;
-
-    private BaseActivity activity;
-
     private boolean lwtEnable;
     private boolean lwtRetain;
     private int qos;
     private String topic;
     private String payload;
+    private FragmentLwtBinding mBind;
 
     public LWTFragment() {
     }
 
     public static LWTFragment newInstance() {
-        LWTFragment fragment = new LWTFragment();
-        return fragment;
+        return new LWTFragment();
     }
 
     @Override
@@ -64,33 +38,29 @@ public class LWTFragment extends Fragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         Log.i(TAG, "onCreateView: ");
-        View view = inflater.inflate(R.layout.fragment_lwt, container, false);
-        ButterKnife.bind(this, view);
-        activity = (BaseActivity) getActivity();
+        mBind = FragmentLwtBinding.inflate(inflater, container, false);
         InputFilter filter = (source, start, end, dest, dstart, dend) -> {
             if (!(source + "").matches(FILTER_ASCII)) {
                 return "";
             }
-
             return null;
         };
-        etLwtTopic.setFilters(new InputFilter[]{new InputFilter.LengthFilter(128), filter});
-        etLwtPayload.setFilters(new InputFilter[]{new InputFilter.LengthFilter(128), filter});
-        etLwtTopic.setText(topic);
-        etLwtPayload.setText(payload);
-        cbLwt.setChecked(lwtEnable);
-        cbLwtRetain.setChecked(lwtRetain);
+        mBind.etLwtTopic.setFilters(new InputFilter[]{new InputFilter.LengthFilter(128), filter});
+        mBind.etLwtPayload.setFilters(new InputFilter[]{new InputFilter.LengthFilter(128), filter});
+        mBind.etLwtTopic.setText(topic);
+        mBind.etLwtPayload.setText(payload);
+        mBind.cbLwt.setChecked(lwtEnable);
+        mBind.cbLwtRetain.setChecked(lwtRetain);
         if (qos == 0) {
-            rbQos1.setChecked(true);
+            mBind.rbQos1.setChecked(true);
         } else if (qos == 1) {
-            rbQos2.setChecked(true);
+            mBind.rbQos2.setChecked(true);
         } else if (qos == 2) {
-            rbQos3.setChecked(true);
+            mBind.rbQos3.setChecked(true);
         }
-        return view;
+        return mBind.getRoot();
     }
 
     @Override
@@ -112,13 +82,13 @@ public class LWTFragment extends Fragment {
     }
 
     public boolean isValid() {
-        final String topicStr = etLwtTopic.getText().toString();
+        final String topicStr = mBind.etLwtTopic.getText().toString();
         if (TextUtils.isEmpty(topicStr)) {
             ToastUtils.showToast(getActivity(), "LWT Topic Error");
             return false;
         }
         topic = topicStr;
-        final String payloadStr = etLwtPayload.getText().toString();
+        final String payloadStr = mBind.etLwtPayload.getText().toString();
         if (TextUtils.isEmpty(payloadStr)) {
             ToastUtils.showToast(getActivity(), "LWT Payload Error");
             return false;
@@ -129,68 +99,63 @@ public class LWTFragment extends Fragment {
 
     public void setQos(int qos) {
         this.qos = qos;
-        if (rgQos == null)
-            return;
+        if (null == mBind) return;
         if (qos == 0) {
-            rbQos1.setChecked(true);
+            mBind.rbQos1.setChecked(true);
         } else if (qos == 1) {
-            rbQos2.setChecked(true);
+            mBind.rbQos2.setChecked(true);
         } else if (qos == 2) {
-            rbQos3.setChecked(true);
+            mBind.rbQos3.setChecked(true);
         }
     }
 
     public int getQos() {
         int qos = 0;
-        if (rbQos2.isChecked()) {
+        if (mBind.rbQos2.isChecked()) {
             qos = 1;
-        } else if (rbQos3.isChecked()) {
+        } else if (mBind.rbQos3.isChecked()) {
             qos = 2;
         }
         return qos;
     }
 
     public boolean getLwtEnable() {
-        return cbLwt.isChecked();
+        return mBind.cbLwt.isChecked();
     }
 
     public void setLwtEnable(boolean lwtEnable) {
         this.lwtEnable = lwtEnable;
-        if (cbLwt == null)
-            return;
-        cbLwt.setChecked(lwtEnable);
+        if (null != mBind) mBind.cbLwt.setChecked(lwtEnable);
     }
 
     public boolean getLwtRetain() {
-        return cbLwtRetain.isChecked();
+        return mBind.cbLwtRetain.isChecked();
     }
 
     public void setLwtRetain(boolean lwtRetain) {
         this.lwtRetain = lwtRetain;
-        if (cbLwtRetain == null)
-            return;
-        cbLwtRetain.setChecked(lwtRetain);
+        if (null != mBind) mBind.cbLwtRetain.setChecked(lwtRetain);
     }
 
     public void setTopic(String topic) {
         this.topic = topic;
-        if (etLwtTopic == null)
-            return;
-        etLwtTopic.setText(topic);
+        if (null == mBind) return;
+        mBind.etLwtTopic.setText(topic);
+        mBind.etLwtTopic.setSelection(mBind.etLwtTopic.getText().length());
     }
 
     public String getTopic() {
-        return etLwtTopic.getText().toString();
+        return mBind.etLwtTopic.getText().toString();
     }
 
     public void setPayload(String payload) {
         this.payload = payload;
-        if (etLwtPayload == null)
-            return;
-        etLwtPayload.setText(payload);
+        if (null == mBind) return;
+        mBind.etLwtPayload.setText(payload);
+        mBind.etLwtPayload.setSelection(mBind.etLwtPayload.getText().length());
     }
 
     public String getPayload() {
-        return etLwtPayload.getText().toString();
+        return mBind.etLwtPayload.getText().toString();
     }
 }

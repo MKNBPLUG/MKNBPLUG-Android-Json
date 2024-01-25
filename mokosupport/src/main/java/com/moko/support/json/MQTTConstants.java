@@ -20,6 +20,10 @@ public class MQTTConstants {
     public static final int CONFIG_MSG_ID_POWER_PROTECT = 1016;
     public static final int CONFIG_MSG_ID_CONNECTION_TIMEOUT = 1017;
     public static final int CONFIG_MSG_ID_BUTTON_CONTROL_ENABLE = 1018;
+    public static final int CONFIG_MSG_ID_RESET_BY_BUTTON = 1019;
+    public static final int CONFIG_MSG_ID_POWER_INPUT_STATUS = 1020;
+
+
     public static final int CONFIG_MSG_ID_MQTT_SETTINGS = 1097;
     public static final int CONFIG_MSG_ID_LWT_SETTINGS = 1098;
     public static final int CONFIG_MSG_ID_APN_SETTINGS = 1099;
@@ -59,9 +63,9 @@ public class MQTTConstants {
     public static final int READ_MSG_ID_POWER_PROTECT = 2016;
     public static final int READ_MSG_ID_CONNECTION_TIMEOUT = 2017;
     public static final int READ_MSG_ID_BUTTON_CONTROL_ENABLE = 2018;
-    public static final int READ_MSG_ID_DEVICE_SETTINGS = 2097;
-    public static final int READ_MSG_ID_LWT_SETTINGS = 2098;
-    public static final int READ_MSG_ID_APN_SETTINGS = 2099;
+    public static final int READ_MSG_ID_RESET_BY_BUTTON = 2019;
+    public static final int READ_MSG_ID_POWER_INPUT_STATUS = 2020;
+    public static final int READ_MSG_ID_DEVICE_TYPE = 2021;
 
     public static final int READ_MSG_ID_SWITCH_INFO = 2038;
     public static final int READ_MSG_ID_DEVICE_STATUS = 2045;
@@ -70,9 +74,15 @@ public class MQTTConstants {
     public static final int READ_MSG_ID_ENERGY_DAILY = 2048;
     public static final int READ_MSG_ID_ENERGY_HOURLY = 2049;
     public static final int READ_MSG_ID_DEVICE_INFO = 2050;
-    public static final int READ_MSG_ID_DEVICE_TYPE = 2051;
+    public static final int READ_MSG_ID_DEVICE_STANDARD = 2051;
     public static final int READ_MSG_ID_SYSTEM_TIME = 2052;
     public static final int READ_MSG_ID_WORK_MODE = 2053;
+    public static final int READ_MSG_ID_DEVICE_SETTINGS = 2097;
+    public static final int READ_MSG_ID_LWT_SETTINGS = 2098;
+    public static final int READ_MSG_ID_APN_SETTINGS = 2099;
+    public static final int READ_MSG_ID_NETWORK_PRIORITY = 2100;
+
+
     // NOTIFY
     public static final int NOTIFY_MSG_ID_SWITCH_STATE = 3065;
     public static final int NOTIFY_MSG_ID_COUNTDOWN_INFO = 3066;

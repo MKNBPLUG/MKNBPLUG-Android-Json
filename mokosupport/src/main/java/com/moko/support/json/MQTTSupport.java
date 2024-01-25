@@ -117,8 +117,7 @@ public class MQTTSupport {
     }
 
     public void connectMqtt(String mqttAppConfigStr) throws FileNotFoundException {
-        if (TextUtils.isEmpty(mqttAppConfigStr))
-            return;
+        if (TextUtils.isEmpty(mqttAppConfigStr)) return;
         MQTTConfig mqttConfig = new Gson().fromJson(mqttAppConfigStr, MQTTConfig.class);
         if (!mqttConfig.isError()) {
             this.mqttConfigStr = mqttAppConfigStr;
@@ -189,7 +188,7 @@ public class MQTTSupport {
 //                            XLog.e(errorReport.toString());
 //                        }
 //                        break;
-                    case 1:
+                    case 2:
                         // 单向验证
                         try {
                             connOpts.setSocketFactory(getSingleSocketFactory(mqttConfig.caPath));
@@ -209,7 +208,7 @@ public class MQTTSupport {
                             XLog.e(errorReport.toString());
                         }
                         break;
-                    case 2:
+                    case 3:
                         // 双向验证
                         try {
                             connOpts.setSocketFactory(getSocketFactory(mqttConfig.caPath, mqttConfig.clientKeyPath, mqttConfig.clientCertPath));
@@ -495,8 +494,7 @@ public class MQTTSupport {
     }
 
     public void publish(String topic, String message, int msgId, int qos) throws MqttException {
-        if (!isConnected())
-            return;
+        if (!isConnected()) return;
         MqttMessage messageInfo = new MqttMessage();
         messageInfo.setPayload(message.getBytes());
         messageInfo.setQos(qos);

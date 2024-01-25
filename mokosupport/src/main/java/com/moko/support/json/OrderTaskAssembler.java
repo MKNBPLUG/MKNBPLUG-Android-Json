@@ -27,6 +27,144 @@ public class OrderTaskAssembler {
         return task;
     }
 
+    public static OrderTask getMqttServer(){
+        ParamsTask task = new ParamsTask();
+        task.setData(ParamsKeyEnum.KEY_MQTT_HOST);
+        return task;
+    }
+
+    public static OrderTask getMqttPort(){
+        ParamsTask task = new ParamsTask();
+        task.setData(ParamsKeyEnum.KEY_MQTT_PORT);
+        return task;
+    }
+
+    public static OrderTask getMqttClientId(){
+        ParamsTask task = new ParamsTask();
+        task.setData(ParamsKeyEnum.KEY_MQTT_CLIENT_ID);
+        return task;
+    }
+
+    public static OrderTask getMqttSubscribe(){
+        ParamsTask task = new ParamsTask();
+        task.setData(ParamsKeyEnum.KEY_MQTT_SUBSCRIBE_TOPIC);
+        return task;
+    }
+
+    public static OrderTask getMqttPublish(){
+        ParamsTask task = new ParamsTask();
+        task.setData(ParamsKeyEnum.KEY_MQTT_PUBLISH_TOPIC);
+        return task;
+    }
+
+    public static OrderTask getMqttCleanSession(){
+        ParamsTask task = new ParamsTask();
+        task.setData(ParamsKeyEnum.KEY_MQTT_CLEAN_SESSION);
+        return task;
+    }
+
+    public static OrderTask getMqttQos(){
+        ParamsTask task = new ParamsTask();
+        task.setData(ParamsKeyEnum.KEY_MQTT_QOS);
+        return task;
+    }
+
+    public static OrderTask getMqttKeepAlive(){
+        ParamsTask task = new ParamsTask();
+        task.setData(ParamsKeyEnum.KEY_MQTT_KEEP_ALIVE);
+        return task;
+    }
+
+    public static OrderTask getMqttUserName(){
+        ParamsTask task = new ParamsTask();
+        task.setData(ParamsKeyEnum.KEY_MQTT_USERNAME);
+        return task;
+    }
+
+    public static OrderTask getMqttPassword(){
+        ParamsTask task = new ParamsTask();
+        task.setData(ParamsKeyEnum.KEY_MQTT_PASSWORD);
+        return task;
+    }
+
+    public static OrderTask getMqttSSlMode(){
+        ParamsTask task = new ParamsTask();
+        task.setData(ParamsKeyEnum.KEY_MQTT_CONNECT_MODE);
+        return task;
+    }
+
+    public static OrderTask getMqttLwtEnable(){
+        ParamsTask task = new ParamsTask();
+        task.setData(ParamsKeyEnum.KEY_MQTT_LWT_ENABLE);
+        return task;
+    }
+
+    public static OrderTask getMqttLwtRetainEnable(){
+        ParamsTask task = new ParamsTask();
+        task.setData(ParamsKeyEnum.KEY_MQTT_LWT_RETAIN);
+        return task;
+    }
+
+    public static OrderTask getMqttLwtQos(){
+        ParamsTask task = new ParamsTask();
+        task.setData(ParamsKeyEnum.KEY_MQTT_LWT_QOS);
+        return task;
+    }
+
+    public static OrderTask getMqttLwtTopic(){
+        ParamsTask task = new ParamsTask();
+        task.setData(ParamsKeyEnum.KEY_MQTT_LWT_TOPIC);
+        return task;
+    }
+
+    public static OrderTask getMqttLwtMsg(){
+        ParamsTask task = new ParamsTask();
+        task.setData(ParamsKeyEnum.KEY_MQTT_LWT_PAYLOAD);
+        return task;
+    }
+
+    public static OrderTask getMqttApn(){
+        ParamsTask task = new ParamsTask();
+        task.setData(ParamsKeyEnum.KEY_APN);
+        return task;
+    }
+
+    public static OrderTask getMqttApnUsername(){
+        ParamsTask task = new ParamsTask();
+        task.setData(ParamsKeyEnum.KEY_APN_USERNAME);
+        return task;
+    }
+
+    public static OrderTask getMqttApnPassword(){
+        ParamsTask task = new ParamsTask();
+        task.setData(ParamsKeyEnum.KEY_APN_PASSWORD);
+        return task;
+    }
+
+    public static OrderTask getMqttNetworkPriority(){
+        ParamsTask task = new ParamsTask();
+        task.setData(ParamsKeyEnum.KEY_NETWORK_PRIORITY);
+        return task;
+    }
+
+    public static OrderTask getMqttNtpHost(){
+        ParamsTask task = new ParamsTask();
+        task.setData(ParamsKeyEnum.KEY_NTP_URL);
+        return task;
+    }
+
+    public static OrderTask getMqttTimezone(){
+        ParamsTask task = new ParamsTask();
+        task.setData(ParamsKeyEnum.KEY_NTP_TIME_ZONE);
+        return task;
+    }
+
+//    public static OrderTask getMqttDebugMode(){
+//        ParamsTask task = new ParamsTask();
+//        task.setData(ParamsKeyEnum.KEY_CHANGE_MODE);
+//        return task;
+//    }
+
 //    public static OrderTask getProductModel() {
 //        ParamsTask task = new ParamsTask();
 //        task.setData(ParamsKeyEnum.KEY_PRODUCT_MODEL);
@@ -253,4 +391,6 @@ public class OrderTaskAssembler {
         task.exitDebugMode();
         return task;
     }
+
+
 }

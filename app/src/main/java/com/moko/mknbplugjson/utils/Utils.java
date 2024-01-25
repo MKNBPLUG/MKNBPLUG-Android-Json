@@ -22,6 +22,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Locale;
+import java.util.Random;
 import java.util.TimeZone;
 
 import androidx.core.content.FileProvider;
@@ -173,4 +174,16 @@ public class Utils {
         sdf.setTimeZone(TimeZone.getTimeZone(timeZoneId));
         return sdf.format(calendar.getTime());
     }
+
+    public static String getRandomStr(int length) {
+        String str = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+        Random random = new Random();
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < length; i++) {
+            int number = random.nextInt(str.length());
+            builder.append(str.charAt(number));
+        }
+        return builder.toString();
+    }
+
 }

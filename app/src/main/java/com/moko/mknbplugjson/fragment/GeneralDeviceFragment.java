@@ -6,48 +6,25 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CheckBox;
-import android.widget.EditText;
-import android.widget.RadioButton;
-import android.widget.RadioGroup;
 
-import com.moko.mknbplugjson.R;
-import com.moko.mknbplugjson.R2;
-import com.moko.mknbplugjson.base.BaseActivity;
+import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
+
+import com.moko.mknbplugjson.databinding.FragmentGeneralDeviceBinding;
 import com.moko.mknbplugjson.utils.ToastUtils;
 
-import androidx.fragment.app.Fragment;
-import butterknife.BindView;
-import butterknife.ButterKnife;
-
 public class GeneralDeviceFragment extends Fragment {
-
     private static final String TAG = GeneralDeviceFragment.class.getSimpleName();
-    @BindView(R2.id.cb_clean_session)
-    CheckBox cbCleanSession;
-    @BindView(R2.id.rb_qos_1)
-    RadioButton rbQos1;
-    @BindView(R2.id.rb_qos_2)
-    RadioButton rbQos2;
-    @BindView(R2.id.rb_qos_3)
-    RadioButton rbQos3;
-    @BindView(R2.id.rg_qos)
-    RadioGroup rgQos;
-    @BindView(R2.id.et_keep_alive)
-    EditText etKeepAlive;
-
-    private BaseActivity activity;
-
     private boolean cleanSession;
     private int qos;
     private int keepAlive;
+    private FragmentGeneralDeviceBinding mBind;
 
     public GeneralDeviceFragment() {
     }
 
     public static GeneralDeviceFragment newInstance() {
-        GeneralDeviceFragment fragment = new GeneralDeviceFragment();
-        return fragment;
+        return new GeneralDeviceFragment();
     }
 
     @Override
@@ -57,22 +34,19 @@ public class GeneralDeviceFragment extends Fragment {
     }
 
     @Override
-    public View onCreateView(LayoutInflater inflater, ViewGroup container,
-                             Bundle savedInstanceState) {
+    public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         Log.i(TAG, "onCreateView: ");
-        View view = inflater.inflate(R.layout.fragment_general_device, container, false);
-        ButterKnife.bind(this, view);
-        activity = (BaseActivity) getActivity();
-        cbCleanSession.setChecked(cleanSession);
+        mBind = FragmentGeneralDeviceBinding.inflate(inflater, container, false);
+        mBind.cbCleanSession.setChecked(cleanSession);
         if (qos == 0) {
-            rbQos1.setChecked(true);
+            mBind.rbQos1.setChecked(true);
         } else if (qos == 1) {
-            rbQos2.setChecked(true);
+            mBind.rbQos2.setChecked(true);
         } else if (qos == 2) {
-            rbQos3.setChecked(true);
+            mBind.rbQos3.setChecked(true);
         }
-        etKeepAlive.setText(String.valueOf(keepAlive));
-        return view;
+        mBind.etKeepAlive.setText(String.valueOf(keepAlive));
+        return mBind.getRoot();
     }
 
     @Override
@@ -95,33 +69,30 @@ public class GeneralDeviceFragment extends Fragment {
 
     public void setCleanSession(boolean cleanSession) {
         this.cleanSession = cleanSession;
-        if (cbCleanSession == null)
-            return;
-        cbCleanSession.setChecked(cleanSession);
+        if (null != mBind)mBind.cbCleanSession.setChecked(cleanSession);
     }
 
     public void setQos(int qos) {
         this.qos = qos;
-        if (rgQos == null)
-            return;
+        if (null == mBind) return;
         if (qos == 0) {
-            rbQos1.setChecked(true);
+            mBind.rbQos1.setChecked(true);
         } else if (qos == 1) {
-            rbQos2.setChecked(true);
+            mBind.rbQos2.setChecked(true);
         } else if (qos == 2) {
-            rbQos3.setChecked(true);
+            mBind.rbQos3.setChecked(true);
         }
     }
 
     public void setKeepAlive(int keepAlive) {
         this.keepAlive = keepAlive;
-        if (etKeepAlive == null)
-            return;
-        etKeepAlive.setText(String.valueOf(keepAlive));
+        if (null == mBind) return;
+        mBind.etKeepAlive.setText(String.valueOf(keepAlive));
+        mBind.etKeepAlive.setSelection(mBind.etKeepAlive.getText().length());
     }
 
     public boolean isValid() {
-        final String keepAliveStr = etKeepAlive.getText().toString();
+        final String keepAliveStr = mBind.etKeepAlive.getText().toString();
         if (TextUtils.isEmpty(keepAliveStr)) {
             ToastUtils.showToast(getActivity(), "Error");
             return false;
@@ -135,22 +106,21 @@ public class GeneralDeviceFragment extends Fragment {
     }
 
     public boolean isCleanSession() {
-        return cbCleanSession.isChecked();
+        return mBind.cbCleanSession.isChecked();
     }
 
     public int getQos() {
         int qos = 0;
-        if (rbQos2.isChecked()) {
+        if (mBind.rbQos2.isChecked()) {
             qos = 1;
-        } else if (rbQos3.isChecked()) {
+        } else if (mBind.rbQos3.isChecked()) {
             qos = 2;
         }
         return qos;
     }
 
     public int getKeepAlive() {
-        String keepAliveStr = etKeepAlive.getText().toString();
-        int keepAlive = Integer.parseInt(keepAliveStr);
-        return keepAlive;
+        String keepAliveStr = mBind.etKeepAlive.getText().toString();
+        return Integer.parseInt(keepAliveStr);
     }
 }

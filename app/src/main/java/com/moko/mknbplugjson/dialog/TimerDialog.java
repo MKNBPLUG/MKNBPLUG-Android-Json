@@ -4,24 +4,14 @@ import android.view.View;
 import android.widget.TextView;
 
 import com.moko.mknbplugjson.R;
-import com.moko.mknbplugjson.R2;
 import com.moko.mknbplugjson.view.WheelView;
 
 import java.util.ArrayList;
 
-import butterknife.BindView;
-import butterknife.ButterKnife;
-import butterknife.OnClick;
-
 public class TimerDialog extends MokoBaseDialog {
     public static final String TAG = TimerDialog.class.getSimpleName();
-
-    @BindView(R2.id.tv_switch_state)
-    TextView tvSwitchState;
-    @BindView(R2.id.wv_hour)
-    WheelView wvHour;
-    @BindView(R2.id.wv_minute)
-    WheelView wvMinute;
+    private WheelView wvHour;
+    private WheelView wvMinute;
     private boolean on_off;
 
     @Override
@@ -31,9 +21,15 @@ public class TimerDialog extends MokoBaseDialog {
 
     @Override
     public void bindView(View v) {
-        ButterKnife.bind(this, v);
+        TextView tvSwitchState = v.findViewById(R.id.tv_switch_state);
+        wvHour = v.findViewById(R.id.wv_hour);
+        wvMinute = v.findViewById(R.id.wv_minute);
         tvSwitchState.setText(on_off ? R.string.countdown_timer_off : R.string.countdown_timer_on);
         initWheelView();
+        v.findViewById(R.id.tv_back).setOnClickListener(V1 -> dismiss());
+        v.findViewById(R.id.tv_confirm).setOnClickListener(v1 -> {
+            if (null != listener) listener.onConfirmClick(this);
+        });
     }
 
     private void initWheelView() {
@@ -53,7 +49,6 @@ public class TimerDialog extends MokoBaseDialog {
                 minute.add(i + " mins");
             } else {
                 minute.add(i + " min");
-
             }
         }
         wvMinute.setData(minute);
@@ -66,17 +61,6 @@ public class TimerDialog extends MokoBaseDialog {
 
     public int getWvMinute() {
         return wvMinute.getSelected();
-    }
-
-
-    @OnClick(R2.id.tv_back)
-    public void onBack(View view) {
-        dismiss();
-    }
-
-    @OnClick(R2.id.tv_confirm)
-    public void onConfirm(View view) {
-        listener.onConfirmClick(this);
     }
 
     private TimerListener listener;
@@ -92,7 +76,6 @@ public class TimerDialog extends MokoBaseDialog {
     public void setOnoff(boolean on_off) {
         this.on_off = on_off;
     }
-
 
     @Override
     public String getFragmentTag() {

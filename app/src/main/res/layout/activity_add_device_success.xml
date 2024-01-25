@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white_ffffff">
+
+    <RelativeLayout
+        android:id="@+id/layoutTop"
+        android:layout_width="match_parent"
+        android:layout_height="53dp"
+        android:background="@color/blue_0188cc"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_centerInParent="true"
+            android:text="Add Device"
+            android:textColor="@color/white_ffffff"
+            android:textSize="17sp" />
+    </RelativeLayout>
+
+    <EditText
+        android:id="@+id/etDeviceName"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_marginStart="50dp"
+        android:layout_marginTop="120dp"
+        android:layout_marginEnd="50dp"
+        android:background="@drawable/shape_radius_edit_bg"
+        android:maxLength="20"
+        android:paddingStart="10dp"
+        android:textColor="@color/black_333333"
+        android:textSize="16sp"
+        app:layout_constraintTop_toBottomOf="@+id/layoutTop"
+        tools:text="MK117NB-63AD" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="30dp"
+        android:text="Connection succesful!"
+        android:textColor="@color/blue_0188cc"
+        android:textSize="18sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toTopOf="@+id/etDeviceName"
+        app:layout_constraintLeft_toLeftOf="@+id/etDeviceName" />
+
+    <Button
+        android:id="@+id/btnDone"
+        android:layout_width="130dp"
+        android:layout_height="45dp"
+        android:background="@drawable/shape_radius_blue_btn_bg"
+        android:text="Done"
+        android:textColor="@color/white_ffffff"
+        android:textSize="16sp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/etDeviceName" />
+</androidx.constraintlayout.widget.ConstraintLayout>

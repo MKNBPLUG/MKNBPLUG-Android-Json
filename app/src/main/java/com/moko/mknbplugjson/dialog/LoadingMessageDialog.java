@@ -7,25 +7,17 @@ import android.view.View;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.moko.mknbplugjson.R;
-import com.moko.mknbplugjson.R2;
-import com.moko.mknbplugjson.view.ProgressDrawable;
-
 import androidx.annotation.StringRes;
 import androidx.core.content.ContextCompat;
-import butterknife.BindView;
-import butterknife.ButterKnife;
+
+import com.moko.mknbplugjson.R;
+import com.moko.mknbplugjson.view.ProgressDrawable;
 
 public class LoadingMessageDialog extends MokoBaseDialog {
     private static final int DIALOG_DISMISS_DELAY_TIME = 190000;
     public static final String TAG = LoadingMessageDialog.class.getSimpleName();
-    @BindView(R2.id.iv_loading)
-    ImageView ivLoading;
-    @BindView(R2.id.tv_loading_message)
-    TextView tvLoadingMessage;
-
+    private ImageView ivLoading;
     private String message;
-
     private int messageId = -1;
 
     @Override
@@ -35,7 +27,8 @@ public class LoadingMessageDialog extends MokoBaseDialog {
 
     @Override
     public void bindView(View v) {
-        ButterKnife.bind(this, v);
+        ivLoading = v.findViewById(R.id.iv_loading);
+        TextView tvLoadingMessage = v.findViewById(R.id.tv_loading_message);
         ProgressDrawable progressDrawable = new ProgressDrawable();
         progressDrawable.setColor(ContextCompat.getColor(getContext(), R.color.black_333333));
         ivLoading.setImageDrawable(progressDrawable);
@@ -44,17 +37,14 @@ public class LoadingMessageDialog extends MokoBaseDialog {
             message = getString(messageId);
         }
         if (TextUtils.isEmpty(message)) {
-            message  = getString(R.string.setting_syncing);
+            message = getString(R.string.setting_syncing);
         }
         tvLoadingMessage.setText(message);
-        tvLoadingMessage.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (isVisible()) {
-                    dismissAllowingStateLoss();
-                    if (callback != null) {
-                        callback.onOvertimeDismiss();
-                    }
+        tvLoadingMessage.postDelayed(() -> {
+            if (isVisible()) {
+                dismissAllowingStateLoss();
+                if (callback != null) {
+                    callback.onOvertimeDismiss();
                 }
             }
         }, DIALOG_DISMISS_DELAY_TIME);
@@ -103,8 +93,6 @@ public class LoadingMessageDialog extends MokoBaseDialog {
         super.onDestroyView();
         ((ProgressDrawable) ivLoading.getDrawable()).stop();
     }
-
-
 
     public void setMessage(String message) {
         this.message = message;

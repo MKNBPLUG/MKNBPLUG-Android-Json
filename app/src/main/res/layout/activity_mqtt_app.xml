@@ -293,6 +293,21 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content" />
 
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/shape_radius_blue_btn_bg"
+                android:clickable="true"
+                android:onClick="onClearSettings"
+                android:padding="10dp"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
+                android:gravity="center"
+                android:layout_marginTop="50dp"
+                android:text="Clear All Configuration"
+                android:textColor="@color/white_ffffff"
+                android:textSize="15sp" />
+
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
@@ -304,7 +319,7 @@
                     android:background="@drawable/shape_radius_blue_btn_bg"
                     android:clickable="true"
                     android:onClick="onExportSettings"
-                    android:padding="12dp"
+                    android:padding="10dp"
                     android:text="Export Demo File"
                     android:textColor="@color/white_ffffff"
                     android:textSize="15sp" />
@@ -320,7 +335,7 @@
                     android:background="@drawable/shape_radius_blue_btn_bg"
                     android:clickable="true"
                     android:onClick="onImportSettings"
-                    android:padding="12dp"
+                    android:padding="10dp"
                     android:text="Import Config File"
                     android:textColor="@color/white_ffffff"
                     android:textSize="15sp" />

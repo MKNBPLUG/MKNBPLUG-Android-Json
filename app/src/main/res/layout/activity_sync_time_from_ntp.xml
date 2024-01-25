@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:background="@color/white_ffffff"
     android:orientation="vertical">
 
@@ -106,12 +106,13 @@
                     android:layout_toRightOf="@id/ntp_url"
                     android:hint="0-64 Characters"
                     android:maxLength="64"
+                    android:paddingStart="10dp"
                     android:paddingLeft="5dp"
-                    android:textColorHint="@color/grey_ebebeb"
                     android:paddingRight="5dp"
                     android:singleLine="true"
                     android:text=""
                     android:textColor="@color/black_333333"
+                    android:textColorHint="@color/grey_ebebeb"
                     android:textSize="15sp" />
             </RelativeLayout>
 
@@ -139,6 +140,7 @@
                     android:hint="1-720"
                     android:inputType="number"
                     android:maxLength="3"
+                    android:paddingStart="10dp"
                     android:text=""
                     android:textColor="@color/black_333333"
                     android:textColorHint="@color/grey_ebebeb"

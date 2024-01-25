@@ -1,15 +1,12 @@
 package com.moko.mknbplugjson.activity;
 
-
 import android.content.Intent;
-import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
-import android.widget.EditText;
-import android.widget.ImageView;
-import android.widget.TextView;
+
+import androidx.recyclerview.widget.LinearLayoutManager;
 
 import com.chad.library.adapter.base.BaseQuickAdapter;
 import com.elvishew.xlog.XLog;
@@ -21,9 +18,9 @@ import com.moko.ble.lib.task.OrderTaskResponse;
 import com.moko.ble.lib.utils.MokoUtils;
 import com.moko.mknbplugjson.AppConstants;
 import com.moko.mknbplugjson.R;
-import com.moko.mknbplugjson.R2;
 import com.moko.mknbplugjson.adapter.LogDataListAdapter;
 import com.moko.mknbplugjson.base.BaseActivity;
+import com.moko.mknbplugjson.databinding.ActivityLogDataBinding;
 import com.moko.mknbplugjson.db.DBTools;
 import com.moko.mknbplugjson.dialog.AlertMessageDialog;
 import com.moko.mknbplugjson.entity.LogData;
@@ -51,32 +48,13 @@ import java.util.Calendar;
 import java.util.Comparator;
 import java.util.Iterator;
 
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-import butterknife.BindView;
-import butterknife.ButterKnife;
-
-public class LogDataActivity extends BaseActivity implements BaseQuickAdapter.OnItemClickListener {
-
+public class LogDataActivity extends BaseActivity<ActivityLogDataBinding> implements BaseQuickAdapter.OnItemClickListener {
     public static String TAG = LogDataActivity.class.getSimpleName();
-    @BindView(R2.id.tv_sync_switch)
-    TextView tvSyncSwitch;
-    @BindView(R2.id.iv_sync)
-    ImageView ivSync;
-    @BindView(R2.id.tv_export)
-    TextView tvExport;
-    @BindView(R2.id.tv_empty)
-    TextView tvEmpty;
-    @BindView(R2.id.rv_export_data)
-    RecyclerView rvLogData;
-    @BindView(R2.id.et_log_info)
-    EditText etLogInfo;
     private StringBuilder storeString;
     private ArrayList<LogData> LogDatas;
     private boolean isSync;
     private LogDataListAdapter adapter;
     private String logDirPath;
-    private String mDeviceMac;
     private int selectedCount;
     private String syncTime;
     private Animation animation = null;
@@ -87,19 +65,16 @@ public class LogDataActivity extends BaseActivity implements BaseQuickAdapter.On
     private MQTTConfig appMqttConfig;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_log_data);
-        ButterKnife.bind(this);
-        mDeviceMac = getIntent().getStringExtra(AppConstants.EXTRA_KEY_DEVICE_MAC).replaceAll(":", "");
+    protected void onCreate() {
+        String mDeviceMac = getIntent().getStringExtra(AppConstants.EXTRA_KEY_DEVICE_MAC).replaceAll(":", "");
         logDirPath = JSONMainActivity.PATH_LOGCAT + File.separator + mDeviceMac;
         LogDatas = new ArrayList<>();
         adapter = new LogDataListAdapter();
         adapter.openLoadAnimation();
         adapter.replaceData(LogDatas);
         adapter.setOnItemClickListener(this);
-        rvLogData.setLayoutManager(new LinearLayoutManager(this));
-        rvLogData.setAdapter(adapter);
+        mBind.rvExportData.setLayoutManager(new LinearLayoutManager(this));
+        mBind.rvExportData.setAdapter(adapter);
         File file = new File(logDirPath);
         if (file.exists()) {
             File[] logFiles = file.listFiles();
@@ -117,7 +92,6 @@ public class LogDataActivity extends BaseActivity implements BaseQuickAdapter.On
                 public boolean equals(Object obj) {
                     return true;
                 }
-
             });
             for (int i = 0, l = logFiles.length; i < l; i++) {
                 File logFile = logFiles[i];
@@ -136,6 +110,11 @@ public class LogDataActivity extends BaseActivity implements BaseQuickAdapter.On
         appMqttConfig = new Gson().fromJson(mqttConfigAppStr, MQTTConfig.class);
     }
 
+    @Override
+    protected ActivityLogDataBinding getViewBinding() {
+        return ActivityLogDataBinding.inflate(getLayoutInflater());
+    }
+
     @Subscribe(threadMode = ThreadMode.POSTING, priority = 100)
     public void onConnectStatusEvent(ConnectStatusEvent event) {
         final String action = event.getAction();
@@ -145,7 +124,7 @@ public class LogDataActivity extends BaseActivity implements BaseQuickAdapter.On
                 dismissLoadingProgressDialog();
                 isDisconnected = true;
                 // 中途断开，要先保存数据
-                tvSyncSwitch.setEnabled(false);
+                mBind.tvSyncSwitch.setEnabled(false);
                 if (isSync)
                     stopSync();
                 else {
@@ -167,32 +146,29 @@ public class LogDataActivity extends BaseActivity implements BaseQuickAdapter.On
                 OrderCHAR orderCHAR = (OrderCHAR) response.orderCHAR;
                 int responseType = response.responseType;
                 byte[] value = response.responseValue;
-                switch (orderCHAR) {
-                    case CHAR_DEBUG_EXIT:
-                        isExitFinish = true;
-                        if (mMokoDevice == null)
-                            return;
-                        dismissLoadingProgressDialog();
-                        if (TextUtils.isEmpty(appMqttConfig.topicSubscribe)) {
-                            // 取消订阅
-                            try {
-                                MQTTSupport.getInstance().unSubscribe(mMokoDevice.topicPublish);
-                            } catch (MqttException e) {
-                                e.printStackTrace();
-                            }
+                if (orderCHAR == OrderCHAR.CHAR_DEBUG_EXIT) {
+                    isExitFinish = true;
+                    if (mMokoDevice == null) return;
+                    dismissLoadingProgressDialog();
+                    if (TextUtils.isEmpty(appMqttConfig.topicSubscribe)) {
+                        // 取消订阅
+                        try {
+                            MQTTSupport.getInstance().unSubscribe(mMokoDevice.topicPublish);
+                        } catch (MqttException e) {
+                            e.printStackTrace();
                         }
-                        XLog.i(String.format("删除设备:%s", mMokoDevice.name));
-                        DBTools.getInstance(this).deleteDevice(mMokoDevice);
-                        EventBus.getDefault().post(new DeviceDeletedEvent(mMokoDevice.id));
-                        tvSyncSwitch.postDelayed(() -> {
-                            dismissLoadingProgressDialog();
-                            // 跳转首页，刷新数据
-                            Intent intent = new Intent(this, JSONMainActivity.class);
-                            intent.putExtra(AppConstants.EXTRA_KEY_FROM_ACTIVITY, TAG);
-                            intent.putExtra(AppConstants.EXTRA_KEY_DEVICE_ID, mMokoDevice.deviceId);
-                            startActivity(intent);
-                        }, 500);
-                        break;
+                    }
+                    XLog.i(String.format("删除设备:%s", mMokoDevice.name));
+                    DBTools.getInstance(this).deleteDevice(mMokoDevice);
+                    EventBus.getDefault().post(new DeviceDeletedEvent(mMokoDevice.id));
+                    mBind.tvSyncSwitch.postDelayed(() -> {
+                        dismissLoadingProgressDialog();
+                        // 跳转首页，刷新数据
+                        Intent intent = new Intent(this, JSONMainActivity.class);
+                        intent.putExtra(AppConstants.EXTRA_KEY_FROM_ACTIVITY, TAG);
+                        intent.putExtra(AppConstants.EXTRA_KEY_DEVICE_MAC, mMokoDevice.mac);
+                        startActivity(intent);
+                    }, 500);
                 }
             }
             if (MokoConstants.ACTION_CURRENT_DATA.equals(action)) {
@@ -206,17 +182,15 @@ public class LogDataActivity extends BaseActivity implements BaseQuickAdapter.On
                     case CHAR_DEBUG_LOG:
                         String log = new String(value);
                         storeString.append(log);
-                        etLogInfo.append(log);
+                        mBind.etLogInfo.append(log);
                         break;
                 }
             }
         });
     }
 
-
     public void onSyncSwitch(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         int size = LogDatas.size();
         if (size >= 10) {
             AlertMessageDialog dialog = new AlertMessageDialog();
@@ -229,11 +203,11 @@ public class LogDataActivity extends BaseActivity implements BaseQuickAdapter.On
         }
         if (animation == null) {
             storeString = new StringBuilder();
-            etLogInfo.setText("");
-            tvSyncSwitch.setText("Stop");
+            mBind.etLogInfo.setText("");
+            mBind.tvSyncSwitch.setText("Stop");
             isSync = true;
             animation = AnimationUtils.loadAnimation(this, R.anim.rotate_refresh);
-            ivSync.startAnimation(animation);
+            mBind.ivSync.startAnimation(animation);
             MokoSupport.getInstance().enableDebugLogNotify();
             Calendar calendar = Calendar.getInstance();
             syncTime = MokoUtils.calendar2strDate(calendar, "yyyy-MM-dd HH-mm-ss");
@@ -260,8 +234,7 @@ public class LogDataActivity extends BaseActivity implements BaseQuickAdapter.On
     }
 
     public void onEmpty(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         AlertMessageDialog dialog = new AlertMessageDialog();
         dialog.setTitle("Warning!");
         dialog.setMessage("Are you sure to empty the saved debugger log?");
@@ -278,11 +251,11 @@ public class LogDataActivity extends BaseActivity implements BaseQuickAdapter.On
                 selectedCount--;
             }
             if (selectedCount > 0) {
-                tvEmpty.setEnabled(true);
-                tvExport.setEnabled(true);
+                mBind.tvEmpty.setEnabled(true);
+                mBind.tvExport.setEnabled(true);
             } else {
-                tvEmpty.setEnabled(false);
-                tvExport.setEnabled(false);
+                mBind.tvEmpty.setEnabled(false);
+                mBind.tvExport.setEnabled(false);
             }
             adapter.replaceData(LogDatas);
         });
@@ -290,8 +263,7 @@ public class LogDataActivity extends BaseActivity implements BaseQuickAdapter.On
     }
 
     public void onExport(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         ArrayList<File> selectedFiles = new ArrayList<>();
         for (LogData LogData : LogDatas) {
             if (LogData.isSelected) {
@@ -307,6 +279,7 @@ public class LogDataActivity extends BaseActivity implements BaseQuickAdapter.On
             Utils.sendEmail(LogDataActivity.this, address, content, title, "Choose Email Client", files);
         }
     }
+
     private void backHome() {
         if (isSync) {
             MokoSupport.getInstance().disableDebugLogNotify();
@@ -321,10 +294,10 @@ public class LogDataActivity extends BaseActivity implements BaseQuickAdapter.On
     }
 
     private void stopSync() {
-        tvSyncSwitch.setText("Start");
+        mBind.tvSyncSwitch.setText("Start");
         isSync = false;
         // 关闭通知
-        ivSync.clearAnimation();
+        mBind.ivSync.clearAnimation();
         animation = null;
         if (storeString.length() == 0) {
             AlertMessageDialog dialog = new AlertMessageDialog();
@@ -349,8 +322,7 @@ public class LogDataActivity extends BaseActivity implements BaseQuickAdapter.On
         LogData.filePath = logFilePath;
         LogDatas.add(0, LogData);
         adapter.replaceData(LogDatas);
-        if (isBack)
-            finish();
+        if (isBack) finish();
     }
 
     @Override
@@ -370,26 +342,24 @@ public class LogDataActivity extends BaseActivity implements BaseQuickAdapter.On
                 selectedCount--;
             }
             if (selectedCount > 0) {
-                tvEmpty.setEnabled(true);
-                tvExport.setEnabled(true);
+                mBind.tvEmpty.setEnabled(true);
+                mBind.tvExport.setEnabled(true);
             } else {
-                tvEmpty.setEnabled(false);
-                tvExport.setEnabled(false);
+                mBind.tvEmpty.setEnabled(false);
+                mBind.tvExport.setEnabled(false);
             }
             adapter.notifyItemChanged(position);
         }
     }
 
     public void onBack(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         isBack = true;
         backHome();
     }
 
     public void onExitDebugMode(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         showLoadingProgressDialog();
         MokoSupport.getInstance().sendOrder(OrderTaskAssembler.exitDebugMode());
     }

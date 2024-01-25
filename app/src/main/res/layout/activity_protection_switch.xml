@@ -29,13 +29,11 @@
             android:textColor="@color/white_ffffff"
             android:textSize="18sp" />
 
-
         <View
             style="@style/divider_line"
             android:layout_alignParentBottom="true"
             android:background="@color/grey_999999" />
     </RelativeLayout>
-
 
     <TextView
         android:layout_width="match_parent"

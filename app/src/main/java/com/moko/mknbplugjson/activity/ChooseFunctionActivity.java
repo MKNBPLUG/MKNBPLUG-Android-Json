@@ -4,17 +4,18 @@ import android.app.ProgressDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Bundle;
 import android.text.TextUtils;
 import android.view.View;
 import android.view.Window;
+
+import androidx.localbroadcastmanager.content.LocalBroadcastManager;
 
 import com.elvishew.xlog.XLog;
 import com.moko.ble.lib.MokoConstants;
 import com.moko.ble.lib.event.ConnectStatusEvent;
 import com.moko.mknbplugjson.AppConstants;
-import com.moko.mknbplugjson.R;
 import com.moko.mknbplugjson.base.BaseActivity;
+import com.moko.mknbplugjson.databinding.ActivityChooseFunctionBinding;
 import com.moko.mknbplugjson.dialog.AlertMessageDialog;
 import com.moko.mknbplugjson.service.DfuService;
 import com.moko.mknbplugjson.utils.FileUtils;
@@ -27,29 +28,31 @@ import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.File;
 
-import androidx.localbroadcastmanager.content.LocalBroadcastManager;
-import butterknife.ButterKnife;
 import no.nordicsemi.android.dfu.DfuProgressListener;
 import no.nordicsemi.android.dfu.DfuProgressListenerAdapter;
 import no.nordicsemi.android.dfu.DfuServiceInitiator;
 import no.nordicsemi.android.dfu.DfuServiceListenerHelper;
 
-
-public class ChooseFunctionActivity extends BaseActivity {
+public class ChooseFunctionActivity extends BaseActivity<ActivityChooseFunctionBinding> {
     public static final int REQUEST_CODE_SELECT_FIRMWARE = 0x10;
-
     private int mSelectedDeviceType;
     private String mSelectedDeviceName;
     private String mSelectedDeviceMac;
+    private boolean isUpdate;
+    private boolean isOTASuccess;
+    private boolean isOTAFailed;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_choose_function);
-        ButterKnife.bind(this);
+    protected void onCreate() {
         mSelectedDeviceName = getIntent().getStringExtra(AppConstants.EXTRA_KEY_SELECTED_DEVICE_NAME);
         mSelectedDeviceMac = getIntent().getStringExtra(AppConstants.EXTRA_KEY_SELECTED_DEVICE_MAC);
         mSelectedDeviceType = getIntent().getIntExtra(AppConstants.EXTRA_KEY_SELECTED_DEVICE_TYPE, 0);
+        XLog.i(mSelectedDeviceMac);
+    }
+
+    @Override
+    protected ActivityChooseFunctionBinding getViewBinding() {
+        return ActivityChooseFunctionBinding.inflate(getLayoutInflater());
     }
 
     @Override
@@ -61,13 +64,10 @@ public class ChooseFunctionActivity extends BaseActivity {
         MokoSupport.getInstance().disConnectBle();
     }
 
-
     public void onBack(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         back();
     }
-
 
     @Subscribe(threadMode = ThreadMode.POSTING, priority = 100)
     public void onConnectStatusEvent(ConnectStatusEvent event) {
@@ -79,17 +79,15 @@ public class ChooseFunctionActivity extends BaseActivity {
         if (MokoConstants.ACTION_DISCONNECTED.equals(action)) {
             runOnUiThread(() -> {
                 dismissLoadingProgressDialog();
-                ToastUtils.showToast(ChooseFunctionActivity.this,"Disconnected!");
+                ToastUtils.showToast(ChooseFunctionActivity.this, "Disconnected!");
                 setResult(RESULT_OK);
                 finish();
             });
         }
     }
 
-
     public void onMQTTSettingForDevice(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         // 跳转配置页面
         Intent intent = new Intent(this, SetDeviceMQTTActivity.class);
         intent.putExtra(AppConstants.EXTRA_KEY_SELECTED_DEVICE_MAC, mSelectedDeviceMac);
@@ -99,14 +97,9 @@ public class ChooseFunctionActivity extends BaseActivity {
     }
 
     public void onDFU(View view) {
-        if (isWindowLocked())
-            return;
+        if (isWindowLocked()) return;
         chooseFirmwareFile();
     }
-
-    private boolean isUpdate;
-    private boolean isOTASuccess;
-    private boolean isOTAFailed;
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
