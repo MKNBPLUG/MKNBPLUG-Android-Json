@@ -50,13 +50,13 @@ final class MokoBleConfig extends MokoBleManager {
 
     @Override
     public void init() {
-        enablePasswordNotify();
-        enableDisconnectedNotify();
-        enableDebugNotify();
-        enableParamNotify();
-        requestMtu(247).with(((device, mtu) -> {
+        requestMtu(240).with(((device, mtu) -> {
+            XLog.i("=========New mtu:" + mtu + "=========");
         })).then((device -> {
-            mMokoResponseCallback.onServicesDiscovered(gatt);
+            enablePasswordNotify();
+            enableDisconnectedNotify();
+            enableDebugNotify();
+            enableParamNotify();
         })).enqueue();
     }
 
@@ -132,7 +132,9 @@ final class MokoBleConfig extends MokoBleManager {
             XLog.e("device to app : " + MokoUtils.bytesToHexString(value));
             mMokoResponseCallback.onCharacteristicChanged(paramsCharacteristic, value);
         });
-        enableNotifications(paramsCharacteristic).enqueue();
+        enableNotifications(paramsCharacteristic).done(device -> {
+            mMokoResponseCallback.onServicesDiscovered(gatt);
+        }).enqueue();
     }
 
     public void disableParamNotify() {
